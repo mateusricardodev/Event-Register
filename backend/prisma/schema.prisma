@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  admin
+  organizer
+  user
+}
+
+enum RegistrationStatus {
+  pending
+  confirmed
+  canceled
+}
+
+enum PaymentStatus {
+  pending
+  paid
+  failed
+}
+
+model User {
+  id            String         @id @default(uuid())
+  name          String
+  email         String         @unique
+  password      String
+  role          Role           @default(user)
+  createdAt     DateTime       @default(now())
+  events        Event[]
+  registrations Registration[]
+}
+
+model Event {
+  id            String         @id @default(uuid())
+  title         String
+  description   String?
+  location      String?
+  date          DateTime
+  bannerUrl     String?
+  createdBy     String
+  createdAt     DateTime       @default(now())
+  user          User           @relation(fields: [createdBy], references: [id])
+  tickets       Ticket[]
+  registrations Registration[]
+}
+
+model Ticket {
+  id            String         @id @default(uuid())
+  eventId       String
+  name          String
+  price         Decimal        @default(0)
+  quantity      Int
+  createdAt     DateTime       @default(now())
+  event         Event          @relation(fields: [eventId], references: [id])
+  registrations Registration[]
+}
+
+model Registration {
+  id        String             @id @default(uuid())
+  userId    String
+  eventId   String
+  ticketId  String
+  status    RegistrationStatus @default(pending)
+  createdAt DateTime           @default(now())
+  user      User               @relation(fields: [userId], references: [id])
+  event     Event              @relation(fields: [eventId], references: [id])
+  ticket    Ticket             @relation(fields: [ticketId], references: [id])
+  payment   Payment?
+}
+
+model Payment {
+  id             String        @id @default(uuid())
+  registrationId String        @unique
+  amount         Decimal
+  status         PaymentStatus @default(pending)
+  provider       String        @default("mock")
+  createdAt      DateTime      @default(now())
+  registration   Registration  @relation(fields: [registrationId], references: [id])
+}
