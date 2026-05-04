@@ -74,16 +74,13 @@ let RegistrationsService = class RegistrationsService {
         const event = await this.prisma.db.event.findUnique({ where: { id: eventId } });
         if (!event)
             throw new NotFoundException('Evento não encontrado');
-        const ticket = await this.prisma.db.ticket.findUnique({ where: { id: dto.ticketId } });
-        if (!ticket)
-            throw new NotFoundException('Ticket não encontrado');
-        if (ticket.eventId !== eventId)
-            throw new BadRequestException('Ticket não pertence a este evento');
-        const used = await this.prisma.db.registration.count({
-            where: { ticketId: dto.ticketId, status: { not: 'canceled' } },
-        });
-        if (used >= ticket.quantity)
-            throw new BadRequestException('Ingressos esgotados para este ticket');
+        if (event.maxParticipants) {
+            const count = await this.prisma.db.registration.count({
+                where: { eventId, status: { not: 'canceled' } },
+            });
+            if (count >= event.maxParticipants)
+                throw new BadRequestException('Evento lotado');
+        }
         let user = await this.prisma.db.user.findUnique({ where: { email: dto.email } });
         if (!user) {
             const randomPassword = await bcrypt.hash(Math.random().toString(36), 10);
@@ -91,11 +88,10 @@ let RegistrationsService = class RegistrationsService {
                 data: { name: dto.name, email: dto.email, password: randomPassword },
             });
         }
-        const registration = await this.prisma.db.registration.create({
+        return this.prisma.db.registration.create({
             data: {
                 userId: user.id,
                 eventId,
-                ticketId: dto.ticketId,
                 status: 'confirmed',
                 cpf: dto.cpf,
                 phone: dto.phone,
@@ -103,20 +99,8 @@ let RegistrationsService = class RegistrationsService {
             },
             include: {
                 user: { select: { id: true, name: true, email: true } },
-                ticket: { select: { id: true, name: true, price: true } },
             },
         });
-        if (Number(ticket.price) > 0) {
-            await this.prisma.db.payment.create({
-                data: {
-                    registrationId: registration.id,
-                    amount: ticket.price,
-                    status: 'paid',
-                    provider: dto.paymentCategory ?? 'mock',
-                },
-            });
-        }
-        return registration;
     }
     async update(id, dto) {
         const registration = await this.prisma.db.registration.findUnique({
@@ -155,6 +139,41 @@ let RegistrationsService = class RegistrationsService {
         return this.prisma.db.registration.update({
             where: { id },
             data: { status: 'canceled' },
+        });
+    }
+    async createPublic(slug, dto) {
+        const event = await this.prisma.db.event.findUnique({ where: { slug } });
+        if (!event)
+            throw new NotFoundException('Evento não encontrado');
+        if (!event.isPublished)
+            throw new BadRequestException('Este evento não está disponível para inscrições');
+        if (event.maxParticipants) {
+            const count = await this.prisma.db.registration.count({
+                where: { eventId: event.id, status: { not: 'canceled' } },
+            });
+            if (count >= event.maxParticipants)
+                throw new BadRequestException('Evento lotado');
+        }
+        let user = await this.prisma.db.user.findUnique({ where: { email: dto.email } });
+        if (!user) {
+            const randomPassword = await bcrypt.hash(Math.random().toString(36), 10);
+            user = await this.prisma.db.user.create({
+                data: { name: dto.name, email: dto.email, password: randomPassword },
+            });
+        }
+        return this.prisma.db.registration.create({
+            data: {
+                userId: user.id,
+                eventId: event.id,
+                status: 'confirmed',
+                cpf: dto.cpf,
+                phone: dto.phone,
+                birthDate: dto.birthDate ? new Date(dto.birthDate) : null,
+                extraFields: dto.extraFields ? JSON.stringify(dto.extraFields) : null,
+            },
+            include: {
+                event: { select: { id: true, title: true, date: true } },
+            },
         });
     }
     async search(q) {

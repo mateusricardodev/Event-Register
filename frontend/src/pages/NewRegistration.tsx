@@ -1,19 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Navbar } from '../components/Navbar'
 import api from '../api/axios'
-
-interface Ticket {
-  id: string
-  name: string
-  price: string
-}
 
 export function NewRegistration() {
   const { id: eventId } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
-  const [tickets, setTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
@@ -24,17 +17,8 @@ export function NewRegistration() {
     cpf: '',
     phone: '',
     birthDate: '',
-    ticketId: '',
-    paymentCategory: 'Gratuito',
   })
 
-  useEffect(() => {
-    if (!eventId) return
-    api.get(`/events/${eventId}/tickets`).then(({ data }) => {
-      setTickets(data)
-      if (data.length > 0) setForm((f) => ({ ...f, ticketId: data[0].id }))
-    })
-  }, [eventId])
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
@@ -67,10 +51,8 @@ export function NewRegistration() {
         name: form.name,
         email: form.email,
         cpf: form.cpf.replace(/\D/g, ''),
-        phone: form.phone.replace(/\D/g, ''),
+        phone: form.phone.replace(/\D/g, '') || undefined,
         birthDate: form.birthDate || undefined,
-        ticketId: form.ticketId,
-        paymentCategory: form.paymentCategory,
       })
 
       setSuccess(true)
@@ -119,44 +101,6 @@ export function NewRegistration() {
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 shadow-sm divide-y divide-gray-100">
-          {/* Categoria de pagamento */}
-          <div className="px-6 py-5">
-            <h2 className="font-semibold text-gray-700 mb-4">Categoria de pagamento</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Tipo de ingresso</label>
-                <select
-                  name="ticketId"
-                  value={form.ticketId}
-                  onChange={handleChange}
-                  required
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 bg-white"
-                >
-                  {tickets.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name} {Number(t.price) > 0 ? `— R$ ${Number(t.price).toFixed(2)}` : '— Gratuito'}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Forma de pagamento</label>
-                <select
-                  name="paymentCategory"
-                  value={form.paymentCategory}
-                  onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 bg-white"
-                >
-                  <option>Gratuito</option>
-                  <option>Pix</option>
-                  <option>Dinheiro</option>
-                  <option>Cartão de crédito</option>
-                  <option>Cartão de débito</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
           {/* Dados básicos */}
           <div className="px-6 py-5">
             <h2 className="font-semibold text-gray-700 mb-4">Dados básicos do participante</h2>

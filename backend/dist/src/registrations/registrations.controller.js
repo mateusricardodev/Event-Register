@@ -43,6 +43,9 @@ let RegistrationsController = class RegistrationsController {
     cancel(id) {
         return this.registrationsService.cancel(id);
     }
+    createPublic(slug, dto) {
+        return this.registrationsService.createPublic(slug, dto);
+    }
 };
 __decorate([
     UseGuards(JwtGuard),
@@ -103,6 +106,14 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], RegistrationsController.prototype, "cancel", null);
+__decorate([
+    Post('events/public/:slug/register'),
+    __param(0, Param('slug')),
+    __param(1, Body()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, CreateRegistrationOrganizerDto]),
+    __metadata("design:returntype", void 0)
+], RegistrationsController.prototype, "createPublic", null);
 RegistrationsController = __decorate([
     Controller(),
     __metadata("design:paramtypes", [RegistrationsService])

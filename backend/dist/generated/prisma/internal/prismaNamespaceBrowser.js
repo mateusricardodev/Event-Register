@@ -75,6 +75,7 @@ export const RegistrationScalarFieldEnum = {
     cpf: 'cpf',
     phone: 'phone',
     birthDate: 'birthDate',
+    extraFields: 'extraFields',
     createdAt: 'createdAt'
 };
 export const PaymentScalarFieldEnum = {

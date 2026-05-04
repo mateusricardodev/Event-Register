@@ -10,7 +10,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards, } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Put, UploadedFile, UseGuards, UseInterceptors, } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import multer from 'multer';
+import { extname, join } from 'path';
 import { EventsService } from './events.service.js';
 import { CreateEventDto } from './dto/create-event.dto.js';
 import { UpdateEventDto } from './dto/update-event.dto.js';
@@ -45,6 +48,11 @@ let EventsController = class EventsController {
     }
     addPaymentMethod(id, user, dto) {
         return this.eventsService.addPaymentMethod(id, user.id, dto);
+    }
+    async uploadBanner(id, user, file) {
+        if (!file)
+            throw new BadRequestException('Nenhum arquivo enviado');
+        return this.eventsService.uploadBanner(id, user.id, file.filename);
     }
     removePaymentMethod(id, methodId, user) {
         return this.eventsService.removePaymentMethod(id, methodId, user.id);
@@ -118,6 +126,32 @@ __decorate([
     __metadata("design:paramtypes", [String, Object, CreatePaymentMethodDto]),
     __metadata("design:returntype", void 0)
 ], EventsController.prototype, "addPaymentMethod", null);
+__decorate([
+    UseGuards(JwtGuard),
+    Post(':id/banner'),
+    UseInterceptors(FileInterceptor('file', {
+        storage: multer.diskStorage({
+            destination: join(process.cwd(), 'uploads'),
+            filename: (_req, file, cb) => {
+                const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+                cb(null, `${unique}${extname(file.originalname)}`);
+            },
+        }),
+        fileFilter: (_req, file, cb) => {
+            if (!file.mimetype.match(/image\/(jpg|jpeg|png|gif|webp)/)) {
+                return cb(new BadRequestException('Apenas imagens são permitidas'), false);
+            }
+            cb(null, true);
+        },
+        limits: { fileSize: 5 * 1024 * 1024 },
+    })),
+    __param(0, Param('id')),
+    __param(1, CurrentUser()),
+    __param(2, UploadedFile()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", Promise)
+], EventsController.prototype, "uploadBanner", null);
 __decorate([
     UseGuards(JwtGuard),
     Delete(':id/payment-methods/:methodId'),

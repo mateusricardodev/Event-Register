@@ -10,7 +10,7 @@ export declare class PaymentsController {
             id: string;
             status: string;
             eventId: string;
-            ticketId: string;
+            ticketId: string | null;
         };
         id: string;
         createdAt: Date;

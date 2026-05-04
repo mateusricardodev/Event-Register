@@ -156,6 +156,13 @@ export class EventsService {
     return { message: 'Modalidade removida' };
   }
 
+  async uploadBanner(id: string, userId: string, filename: string) {
+    await this.checkOwnership(id, userId);
+    const bannerUrl = `/uploads/${filename}`;
+    await this.prisma.db.event.update({ where: { id }, data: { bannerUrl } });
+    return { bannerUrl };
+  }
+
   async getPaymentMethods(eventId: string) {
     return this.prisma.db.eventPaymentMethod.findMany({
       where: { eventId },

@@ -141,6 +141,12 @@ let EventsService = class EventsService {
         await this.prisma.db.eventPaymentMethod.delete({ where: { id: methodId } });
         return { message: 'Modalidade removida' };
     }
+    async uploadBanner(id, userId, filename) {
+        await this.checkOwnership(id, userId);
+        const bannerUrl = `/uploads/${filename}`;
+        await this.prisma.db.event.update({ where: { id }, data: { bannerUrl } });
+        return { bannerUrl };
+    }
     async getPaymentMethods(eventId) {
         return this.prisma.db.eventPaymentMethod.findMany({
             where: { eventId },

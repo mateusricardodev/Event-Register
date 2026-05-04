@@ -3,12 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Navbar } from '../components/Navbar'
 import api from '../api/axios'
 
-interface Ticket {
-  id: string
-  name: string
-  price: string
-}
-
 interface Registration {
   id: string
   status: string
@@ -16,14 +10,13 @@ interface Registration {
   phone: string | null
   birthDate: string | null
   user: { id: string; name: string; email: string }
-  ticket: { id: string; name: string; price: string }
+  ticket: { id: string; name: string; price: string } | null
 }
 
 export function EditRegistration() {
   const { id: eventId, regId } = useParams<{ id: string; regId: string }>()
   const navigate = useNavigate()
 
-  const [tickets, setTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -35,17 +28,12 @@ export function EditRegistration() {
     cpf: '',
     phone: '',
     birthDate: '',
-    ticketId: '',
   })
 
   useEffect(() => {
     if (!eventId || !regId) return
-    Promise.all([
-      api.get(`/events/${eventId}/tickets`),
-      api.get(`/events/${eventId}/registrations`),
-    ]).then(([ticketsRes, regsRes]) => {
-      setTickets(ticketsRes.data)
-      const reg: Registration = regsRes.data.find((r: Registration) => r.id === regId)
+    api.get(`/events/${eventId}/registrations`).then(({ data }) => {
+      const reg: Registration = data.find((r: Registration) => r.id === regId)
       if (reg) {
         setForm({
           name: reg.user.name,
@@ -57,14 +45,13 @@ export function EditRegistration() {
             ? reg.phone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')
             : '',
           birthDate: reg.birthDate ? reg.birthDate.split('T')[0] : '',
-          ticketId: reg.ticket.id,
         })
       }
       setLoading(false)
     })
   }, [eventId, regId])
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
   }
 
@@ -94,9 +81,8 @@ export function EditRegistration() {
       await api.put(`/registrations/${regId}`, {
         name: form.name,
         cpf: form.cpf.replace(/\D/g, ''),
-        phone: form.phone.replace(/\D/g, ''),
+        phone: form.phone.replace(/\D/g, '') || undefined,
         birthDate: form.birthDate || undefined,
-        ticketId: form.ticketId,
       })
 
       setSuccess(true)
@@ -152,26 +138,6 @@ export function EditRegistration() {
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 shadow-sm divide-y divide-gray-100">
-          {/* Tipo de ingresso */}
-          <div className="px-6 py-5">
-            <h2 className="font-semibold text-gray-700 mb-4">Categoria de pagamento</h2>
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Tipo de ingresso</label>
-              <select
-                name="ticketId"
-                value={form.ticketId}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 bg-white"
-              >
-                {tickets.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name} {Number(t.price) > 0 ? `— R$ ${Number(t.price).toFixed(2)}` : '— Gratuito'}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
           {/* Dados básicos */}
           <div className="px-6 py-5">
             <h2 className="font-semibold text-gray-700 mb-4">Dados básicos do participante</h2>

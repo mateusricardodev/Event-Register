@@ -190,6 +190,11 @@ export declare class EventsController {
         installments: number;
         startDate: Date | null;
     }>;
+    uploadBanner(id: string, user: {
+        id: string;
+    }, file: Express.Multer.File): Promise<{
+        bannerUrl: string;
+    }>;
     removePaymentMethod(id: string, methodId: string, user: {
         id: string;
     }): Promise<{

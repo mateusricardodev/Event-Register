@@ -32,7 +32,7 @@ let PaymentsService = class PaymentsService {
             this.prisma.db.payment.create({
                 data: {
                     registrationId: registration.id,
-                    amount: registration.ticket.price,
+                    amount: registration.ticket?.price ?? 0,
                     status: 'paid',
                     provider: 'mock',
                 },

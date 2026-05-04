@@ -13,6 +13,8 @@ export function EventSetupPage() {
   const [aboutEnabled, setAboutEnabled] = useState(false)
   const [isPublished, setIsPublished] = useState(false)
   const [slug, setSlug] = useState('')
+  const [bannerUrl, setBannerUrl] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [publishing, setPublishing] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -26,6 +28,7 @@ export function EventSetupPage() {
       setAboutEnabled(!!data.about)
       setIsPublished(data.isPublished ?? false)
       setSlug(data.slug ?? '')
+      setBannerUrl(data.bannerUrl ?? null)
     })
   }, [id])
 
@@ -60,6 +63,22 @@ export function EventSetupPage() {
       setTimeout(() => navigate('/dashboard'), 2500)
     } finally {
       setPublishing(false)
+    }
+  }
+
+  async function handleBannerUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !id) return
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const { data } = await api.post(`/events/${id}/banner`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      setBannerUrl(data.bannerUrl)
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -124,15 +143,49 @@ export function EventSetupPage() {
           {/* Cover image */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
             <label className="block text-sm font-semibold text-gray-700 mb-1">Imagem de capa</label>
-            <label className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-teal-400 transition-colors bg-gray-50">
-              <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+            {bannerUrl ? (
+              <div className="relative w-full h-36 rounded-lg overflow-hidden">
+                <img
+                  src={`http://localhost:3000${bannerUrl}`}
+                  alt="Capa do evento"
+                  className="w-full h-full object-cover"
                 />
-              </svg>
-              <span className="text-sm text-gray-400">Clique para anexar uma imagem</span>
-              <input type="file" accept="image/*" className="hidden" />
-            </label>
+                <label className="absolute inset-0 flex items-center justify-center bg-black/40 cursor-pointer hover:bg-black/50 transition-colors">
+                  <span className="text-white text-sm font-medium">
+                    {uploading ? 'Enviando...' : 'Alterar imagem'}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleBannerUpload}
+                    disabled={uploading}
+                  />
+                </label>
+              </div>
+            ) : (
+              <label className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-teal-400 transition-colors bg-gray-50">
+                {uploading ? (
+                  <span className="text-sm text-gray-400">Enviando...</span>
+                ) : (
+                  <>
+                    <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                    <span className="text-sm text-gray-400">Clique para anexar uma imagem</span>
+                  </>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleBannerUpload}
+                  disabled={uploading}
+                />
+              </label>
+            )}
           </div>
 
           {/* Sobre */}

@@ -11,7 +11,7 @@ interface Registration {
   phone: string | null
   birthDate: string | null
   user: { id: string; name: string; email: string }
-  ticket: { id: string; name: string; price: string }
+  ticket: { id: string; name: string; price: string } | null
   payment: { id: string; status: string; amount: string } | null
 }
 
@@ -247,7 +247,7 @@ export function EventDetail() {
                   </span>
 
                   <span className="text-gray-400 text-sm hidden md:block w-28 truncate">
-                    {reg.ticket.name}
+                    {reg.ticket?.name ?? '—'}
                   </span>
 
                   <span

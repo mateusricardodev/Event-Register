@@ -16,6 +16,7 @@ export type RegistrationMinAggregateOutputType = {
     cpf: string | null;
     phone: string | null;
     birthDate: Date | null;
+    extraFields: string | null;
     createdAt: Date | null;
 };
 export type RegistrationMaxAggregateOutputType = {
@@ -27,6 +28,7 @@ export type RegistrationMaxAggregateOutputType = {
     cpf: string | null;
     phone: string | null;
     birthDate: Date | null;
+    extraFields: string | null;
     createdAt: Date | null;
 };
 export type RegistrationCountAggregateOutputType = {
@@ -38,6 +40,7 @@ export type RegistrationCountAggregateOutputType = {
     cpf: number;
     phone: number;
     birthDate: number;
+    extraFields: number;
     createdAt: number;
     _all: number;
 };
@@ -50,6 +53,7 @@ export type RegistrationMinAggregateInputType = {
     cpf?: true;
     phone?: true;
     birthDate?: true;
+    extraFields?: true;
     createdAt?: true;
 };
 export type RegistrationMaxAggregateInputType = {
@@ -61,6 +65,7 @@ export type RegistrationMaxAggregateInputType = {
     cpf?: true;
     phone?: true;
     birthDate?: true;
+    extraFields?: true;
     createdAt?: true;
 };
 export type RegistrationCountAggregateInputType = {
@@ -72,6 +77,7 @@ export type RegistrationCountAggregateInputType = {
     cpf?: true;
     phone?: true;
     birthDate?: true;
+    extraFields?: true;
     createdAt?: true;
     _all?: true;
 };
@@ -103,11 +109,12 @@ export type RegistrationGroupByOutputType = {
     id: string;
     userId: string;
     eventId: string;
-    ticketId: string;
+    ticketId: string | null;
     status: $Enums.RegistrationStatus;
     cpf: string | null;
     phone: string | null;
     birthDate: Date | null;
+    extraFields: string | null;
     createdAt: Date;
     _count: RegistrationCountAggregateOutputType | null;
     _min: RegistrationMinAggregateOutputType | null;
@@ -123,26 +130,28 @@ export type RegistrationWhereInput = {
     id?: Prisma.StringFilter<"Registration"> | string;
     userId?: Prisma.StringFilter<"Registration"> | string;
     eventId?: Prisma.StringFilter<"Registration"> | string;
-    ticketId?: Prisma.StringFilter<"Registration"> | string;
+    ticketId?: Prisma.StringNullableFilter<"Registration"> | string | null;
     status?: Prisma.EnumRegistrationStatusFilter<"Registration"> | $Enums.RegistrationStatus;
     cpf?: Prisma.StringNullableFilter<"Registration"> | string | null;
     phone?: Prisma.StringNullableFilter<"Registration"> | string | null;
     birthDate?: Prisma.DateTimeNullableFilter<"Registration"> | Date | string | null;
+    extraFields?: Prisma.StringNullableFilter<"Registration"> | string | null;
     createdAt?: Prisma.DateTimeFilter<"Registration"> | Date | string;
     user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>;
     event?: Prisma.XOR<Prisma.EventScalarRelationFilter, Prisma.EventWhereInput>;
-    ticket?: Prisma.XOR<Prisma.TicketScalarRelationFilter, Prisma.TicketWhereInput>;
+    ticket?: Prisma.XOR<Prisma.TicketNullableScalarRelationFilter, Prisma.TicketWhereInput> | null;
     payment?: Prisma.XOR<Prisma.PaymentNullableScalarRelationFilter, Prisma.PaymentWhereInput> | null;
 };
 export type RegistrationOrderByWithRelationInput = {
     id?: Prisma.SortOrder;
     userId?: Prisma.SortOrder;
     eventId?: Prisma.SortOrder;
-    ticketId?: Prisma.SortOrder;
+    ticketId?: Prisma.SortOrderInput | Prisma.SortOrder;
     status?: Prisma.SortOrder;
     cpf?: Prisma.SortOrderInput | Prisma.SortOrder;
     phone?: Prisma.SortOrderInput | Prisma.SortOrder;
     birthDate?: Prisma.SortOrderInput | Prisma.SortOrder;
+    extraFields?: Prisma.SortOrderInput | Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
     user?: Prisma.UserOrderByWithRelationInput;
     event?: Prisma.EventOrderByWithRelationInput;
@@ -156,26 +165,28 @@ export type RegistrationWhereUniqueInput = Prisma.AtLeast<{
     NOT?: Prisma.RegistrationWhereInput | Prisma.RegistrationWhereInput[];
     userId?: Prisma.StringFilter<"Registration"> | string;
     eventId?: Prisma.StringFilter<"Registration"> | string;
-    ticketId?: Prisma.StringFilter<"Registration"> | string;
+    ticketId?: Prisma.StringNullableFilter<"Registration"> | string | null;
     status?: Prisma.EnumRegistrationStatusFilter<"Registration"> | $Enums.RegistrationStatus;
     cpf?: Prisma.StringNullableFilter<"Registration"> | string | null;
     phone?: Prisma.StringNullableFilter<"Registration"> | string | null;
     birthDate?: Prisma.DateTimeNullableFilter<"Registration"> | Date | string | null;
+    extraFields?: Prisma.StringNullableFilter<"Registration"> | string | null;
     createdAt?: Prisma.DateTimeFilter<"Registration"> | Date | string;
     user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>;
     event?: Prisma.XOR<Prisma.EventScalarRelationFilter, Prisma.EventWhereInput>;
-    ticket?: Prisma.XOR<Prisma.TicketScalarRelationFilter, Prisma.TicketWhereInput>;
+    ticket?: Prisma.XOR<Prisma.TicketNullableScalarRelationFilter, Prisma.TicketWhereInput> | null;
     payment?: Prisma.XOR<Prisma.PaymentNullableScalarRelationFilter, Prisma.PaymentWhereInput> | null;
 }, "id">;
 export type RegistrationOrderByWithAggregationInput = {
     id?: Prisma.SortOrder;
     userId?: Prisma.SortOrder;
     eventId?: Prisma.SortOrder;
-    ticketId?: Prisma.SortOrder;
+    ticketId?: Prisma.SortOrderInput | Prisma.SortOrder;
     status?: Prisma.SortOrder;
     cpf?: Prisma.SortOrderInput | Prisma.SortOrder;
     phone?: Prisma.SortOrderInput | Prisma.SortOrder;
     birthDate?: Prisma.SortOrderInput | Prisma.SortOrder;
+    extraFields?: Prisma.SortOrderInput | Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
     _count?: Prisma.RegistrationCountOrderByAggregateInput;
     _max?: Prisma.RegistrationMaxOrderByAggregateInput;
@@ -188,11 +199,12 @@ export type RegistrationScalarWhereWithAggregatesInput = {
     id?: Prisma.StringWithAggregatesFilter<"Registration"> | string;
     userId?: Prisma.StringWithAggregatesFilter<"Registration"> | string;
     eventId?: Prisma.StringWithAggregatesFilter<"Registration"> | string;
-    ticketId?: Prisma.StringWithAggregatesFilter<"Registration"> | string;
+    ticketId?: Prisma.StringNullableWithAggregatesFilter<"Registration"> | string | null;
     status?: Prisma.EnumRegistrationStatusWithAggregatesFilter<"Registration"> | $Enums.RegistrationStatus;
     cpf?: Prisma.StringNullableWithAggregatesFilter<"Registration"> | string | null;
     phone?: Prisma.StringNullableWithAggregatesFilter<"Registration"> | string | null;
     birthDate?: Prisma.DateTimeNullableWithAggregatesFilter<"Registration"> | Date | string | null;
+    extraFields?: Prisma.StringNullableWithAggregatesFilter<"Registration"> | string | null;
     createdAt?: Prisma.DateTimeWithAggregatesFilter<"Registration"> | Date | string;
 };
 export type RegistrationCreateInput = {
@@ -201,21 +213,23 @@ export type RegistrationCreateInput = {
     cpf?: string | null;
     phone?: string | null;
     birthDate?: Date | string | null;
+    extraFields?: string | null;
     createdAt?: Date | string;
     user: Prisma.UserCreateNestedOneWithoutRegistrationsInput;
     event: Prisma.EventCreateNestedOneWithoutRegistrationsInput;
-    ticket: Prisma.TicketCreateNestedOneWithoutRegistrationsInput;
+    ticket?: Prisma.TicketCreateNestedOneWithoutRegistrationsInput;
     payment?: Prisma.PaymentCreateNestedOneWithoutRegistrationInput;
 };
 export type RegistrationUncheckedCreateInput = {
     id?: string;
     userId: string;
     eventId: string;
-    ticketId: string;
+    ticketId?: string | null;
     status?: $Enums.RegistrationStatus;
     cpf?: string | null;
     phone?: string | null;
     birthDate?: Date | string | null;
+    extraFields?: string | null;
     createdAt?: Date | string;
     payment?: Prisma.PaymentUncheckedCreateNestedOneWithoutRegistrationInput;
 };
@@ -225,21 +239,23 @@ export type RegistrationUpdateInput = {
     cpf?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+    extraFields?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     user?: Prisma.UserUpdateOneRequiredWithoutRegistrationsNestedInput;
     event?: Prisma.EventUpdateOneRequiredWithoutRegistrationsNestedInput;
-    ticket?: Prisma.TicketUpdateOneRequiredWithoutRegistrationsNestedInput;
+    ticket?: Prisma.TicketUpdateOneWithoutRegistrationsNestedInput;
     payment?: Prisma.PaymentUpdateOneWithoutRegistrationNestedInput;
 };
 export type RegistrationUncheckedUpdateInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
     userId?: Prisma.StringFieldUpdateOperationsInput | string;
     eventId?: Prisma.StringFieldUpdateOperationsInput | string;
-    ticketId?: Prisma.StringFieldUpdateOperationsInput | string;
+    ticketId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     status?: Prisma.EnumRegistrationStatusFieldUpdateOperationsInput | $Enums.RegistrationStatus;
     cpf?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+    extraFields?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     payment?: Prisma.PaymentUncheckedUpdateOneWithoutRegistrationNestedInput;
 };
@@ -247,11 +263,12 @@ export type RegistrationCreateManyInput = {
     id?: string;
     userId: string;
     eventId: string;
-    ticketId: string;
+    ticketId?: string | null;
     status?: $Enums.RegistrationStatus;
     cpf?: string | null;
     phone?: string | null;
     birthDate?: Date | string | null;
+    extraFields?: string | null;
     createdAt?: Date | string;
 };
 export type RegistrationUpdateManyMutationInput = {
@@ -260,17 +277,19 @@ export type RegistrationUpdateManyMutationInput = {
     cpf?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+    extraFields?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
 export type RegistrationUncheckedUpdateManyInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
     userId?: Prisma.StringFieldUpdateOperationsInput | string;
     eventId?: Prisma.StringFieldUpdateOperationsInput | string;
-    ticketId?: Prisma.StringFieldUpdateOperationsInput | string;
+    ticketId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     status?: Prisma.EnumRegistrationStatusFieldUpdateOperationsInput | $Enums.RegistrationStatus;
     cpf?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+    extraFields?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
 export type RegistrationListRelationFilter = {
@@ -290,6 +309,7 @@ export type RegistrationCountOrderByAggregateInput = {
     cpf?: Prisma.SortOrder;
     phone?: Prisma.SortOrder;
     birthDate?: Prisma.SortOrder;
+    extraFields?: Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
 };
 export type RegistrationMaxOrderByAggregateInput = {
@@ -301,6 +321,7 @@ export type RegistrationMaxOrderByAggregateInput = {
     cpf?: Prisma.SortOrder;
     phone?: Prisma.SortOrder;
     birthDate?: Prisma.SortOrder;
+    extraFields?: Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
 };
 export type RegistrationMinOrderByAggregateInput = {
@@ -312,6 +333,7 @@ export type RegistrationMinOrderByAggregateInput = {
     cpf?: Prisma.SortOrder;
     phone?: Prisma.SortOrder;
     birthDate?: Prisma.SortOrder;
+    extraFields?: Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
 };
 export type RegistrationScalarRelationFilter = {
@@ -453,19 +475,21 @@ export type RegistrationCreateWithoutUserInput = {
     cpf?: string | null;
     phone?: string | null;
     birthDate?: Date | string | null;
+    extraFields?: string | null;
     createdAt?: Date | string;
     event: Prisma.EventCreateNestedOneWithoutRegistrationsInput;
-    ticket: Prisma.TicketCreateNestedOneWithoutRegistrationsInput;
+    ticket?: Prisma.TicketCreateNestedOneWithoutRegistrationsInput;
     payment?: Prisma.PaymentCreateNestedOneWithoutRegistrationInput;
 };
 export type RegistrationUncheckedCreateWithoutUserInput = {
     id?: string;
     eventId: string;
-    ticketId: string;
+    ticketId?: string | null;
     status?: $Enums.RegistrationStatus;
     cpf?: string | null;
     phone?: string | null;
     birthDate?: Date | string | null;
+    extraFields?: string | null;
     createdAt?: Date | string;
     payment?: Prisma.PaymentUncheckedCreateNestedOneWithoutRegistrationInput;
 };
@@ -497,11 +521,12 @@ export type RegistrationScalarWhereInput = {
     id?: Prisma.StringFilter<"Registration"> | string;
     userId?: Prisma.StringFilter<"Registration"> | string;
     eventId?: Prisma.StringFilter<"Registration"> | string;
-    ticketId?: Prisma.StringFilter<"Registration"> | string;
+    ticketId?: Prisma.StringNullableFilter<"Registration"> | string | null;
     status?: Prisma.EnumRegistrationStatusFilter<"Registration"> | $Enums.RegistrationStatus;
     cpf?: Prisma.StringNullableFilter<"Registration"> | string | null;
     phone?: Prisma.StringNullableFilter<"Registration"> | string | null;
     birthDate?: Prisma.DateTimeNullableFilter<"Registration"> | Date | string | null;
+    extraFields?: Prisma.StringNullableFilter<"Registration"> | string | null;
     createdAt?: Prisma.DateTimeFilter<"Registration"> | Date | string;
 };
 export type RegistrationCreateWithoutEventInput = {
@@ -510,19 +535,21 @@ export type RegistrationCreateWithoutEventInput = {
     cpf?: string | null;
     phone?: string | null;
     birthDate?: Date | string | null;
+    extraFields?: string | null;
     createdAt?: Date | string;
     user: Prisma.UserCreateNestedOneWithoutRegistrationsInput;
-    ticket: Prisma.TicketCreateNestedOneWithoutRegistrationsInput;
+    ticket?: Prisma.TicketCreateNestedOneWithoutRegistrationsInput;
     payment?: Prisma.PaymentCreateNestedOneWithoutRegistrationInput;
 };
 export type RegistrationUncheckedCreateWithoutEventInput = {
     id?: string;
     userId: string;
-    ticketId: string;
+    ticketId?: string | null;
     status?: $Enums.RegistrationStatus;
     cpf?: string | null;
     phone?: string | null;
     birthDate?: Date | string | null;
+    extraFields?: string | null;
     createdAt?: Date | string;
     payment?: Prisma.PaymentUncheckedCreateNestedOneWithoutRegistrationInput;
 };
@@ -553,6 +580,7 @@ export type RegistrationCreateWithoutTicketInput = {
     cpf?: string | null;
     phone?: string | null;
     birthDate?: Date | string | null;
+    extraFields?: string | null;
     createdAt?: Date | string;
     user: Prisma.UserCreateNestedOneWithoutRegistrationsInput;
     event: Prisma.EventCreateNestedOneWithoutRegistrationsInput;
@@ -566,6 +594,7 @@ export type RegistrationUncheckedCreateWithoutTicketInput = {
     cpf?: string | null;
     phone?: string | null;
     birthDate?: Date | string | null;
+    extraFields?: string | null;
     createdAt?: Date | string;
     payment?: Prisma.PaymentUncheckedCreateNestedOneWithoutRegistrationInput;
 };
@@ -596,20 +625,22 @@ export type RegistrationCreateWithoutPaymentInput = {
     cpf?: string | null;
     phone?: string | null;
     birthDate?: Date | string | null;
+    extraFields?: string | null;
     createdAt?: Date | string;
     user: Prisma.UserCreateNestedOneWithoutRegistrationsInput;
     event: Prisma.EventCreateNestedOneWithoutRegistrationsInput;
-    ticket: Prisma.TicketCreateNestedOneWithoutRegistrationsInput;
+    ticket?: Prisma.TicketCreateNestedOneWithoutRegistrationsInput;
 };
 export type RegistrationUncheckedCreateWithoutPaymentInput = {
     id?: string;
     userId: string;
     eventId: string;
-    ticketId: string;
+    ticketId?: string | null;
     status?: $Enums.RegistrationStatus;
     cpf?: string | null;
     phone?: string | null;
     birthDate?: Date | string | null;
+    extraFields?: string | null;
     createdAt?: Date | string;
 };
 export type RegistrationCreateOrConnectWithoutPaymentInput = {
@@ -631,30 +662,33 @@ export type RegistrationUpdateWithoutPaymentInput = {
     cpf?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+    extraFields?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     user?: Prisma.UserUpdateOneRequiredWithoutRegistrationsNestedInput;
     event?: Prisma.EventUpdateOneRequiredWithoutRegistrationsNestedInput;
-    ticket?: Prisma.TicketUpdateOneRequiredWithoutRegistrationsNestedInput;
+    ticket?: Prisma.TicketUpdateOneWithoutRegistrationsNestedInput;
 };
 export type RegistrationUncheckedUpdateWithoutPaymentInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
     userId?: Prisma.StringFieldUpdateOperationsInput | string;
     eventId?: Prisma.StringFieldUpdateOperationsInput | string;
-    ticketId?: Prisma.StringFieldUpdateOperationsInput | string;
+    ticketId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     status?: Prisma.EnumRegistrationStatusFieldUpdateOperationsInput | $Enums.RegistrationStatus;
     cpf?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+    extraFields?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
 export type RegistrationCreateManyUserInput = {
     id?: string;
     eventId: string;
-    ticketId: string;
+    ticketId?: string | null;
     status?: $Enums.RegistrationStatus;
     cpf?: string | null;
     phone?: string | null;
     birthDate?: Date | string | null;
+    extraFields?: string | null;
     createdAt?: Date | string;
 };
 export type RegistrationUpdateWithoutUserInput = {
@@ -663,40 +697,44 @@ export type RegistrationUpdateWithoutUserInput = {
     cpf?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+    extraFields?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     event?: Prisma.EventUpdateOneRequiredWithoutRegistrationsNestedInput;
-    ticket?: Prisma.TicketUpdateOneRequiredWithoutRegistrationsNestedInput;
+    ticket?: Prisma.TicketUpdateOneWithoutRegistrationsNestedInput;
     payment?: Prisma.PaymentUpdateOneWithoutRegistrationNestedInput;
 };
 export type RegistrationUncheckedUpdateWithoutUserInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
     eventId?: Prisma.StringFieldUpdateOperationsInput | string;
-    ticketId?: Prisma.StringFieldUpdateOperationsInput | string;
+    ticketId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     status?: Prisma.EnumRegistrationStatusFieldUpdateOperationsInput | $Enums.RegistrationStatus;
     cpf?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+    extraFields?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     payment?: Prisma.PaymentUncheckedUpdateOneWithoutRegistrationNestedInput;
 };
 export type RegistrationUncheckedUpdateManyWithoutUserInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
     eventId?: Prisma.StringFieldUpdateOperationsInput | string;
-    ticketId?: Prisma.StringFieldUpdateOperationsInput | string;
+    ticketId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     status?: Prisma.EnumRegistrationStatusFieldUpdateOperationsInput | $Enums.RegistrationStatus;
     cpf?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+    extraFields?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
 export type RegistrationCreateManyEventInput = {
     id?: string;
     userId: string;
-    ticketId: string;
+    ticketId?: string | null;
     status?: $Enums.RegistrationStatus;
     cpf?: string | null;
     phone?: string | null;
     birthDate?: Date | string | null;
+    extraFields?: string | null;
     createdAt?: Date | string;
 };
 export type RegistrationUpdateWithoutEventInput = {
@@ -705,30 +743,33 @@ export type RegistrationUpdateWithoutEventInput = {
     cpf?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+    extraFields?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     user?: Prisma.UserUpdateOneRequiredWithoutRegistrationsNestedInput;
-    ticket?: Prisma.TicketUpdateOneRequiredWithoutRegistrationsNestedInput;
+    ticket?: Prisma.TicketUpdateOneWithoutRegistrationsNestedInput;
     payment?: Prisma.PaymentUpdateOneWithoutRegistrationNestedInput;
 };
 export type RegistrationUncheckedUpdateWithoutEventInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
     userId?: Prisma.StringFieldUpdateOperationsInput | string;
-    ticketId?: Prisma.StringFieldUpdateOperationsInput | string;
+    ticketId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     status?: Prisma.EnumRegistrationStatusFieldUpdateOperationsInput | $Enums.RegistrationStatus;
     cpf?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+    extraFields?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     payment?: Prisma.PaymentUncheckedUpdateOneWithoutRegistrationNestedInput;
 };
 export type RegistrationUncheckedUpdateManyWithoutEventInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
     userId?: Prisma.StringFieldUpdateOperationsInput | string;
-    ticketId?: Prisma.StringFieldUpdateOperationsInput | string;
+    ticketId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     status?: Prisma.EnumRegistrationStatusFieldUpdateOperationsInput | $Enums.RegistrationStatus;
     cpf?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+    extraFields?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
 export type RegistrationCreateManyTicketInput = {
@@ -739,6 +780,7 @@ export type RegistrationCreateManyTicketInput = {
     cpf?: string | null;
     phone?: string | null;
     birthDate?: Date | string | null;
+    extraFields?: string | null;
     createdAt?: Date | string;
 };
 export type RegistrationUpdateWithoutTicketInput = {
@@ -747,6 +789,7 @@ export type RegistrationUpdateWithoutTicketInput = {
     cpf?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+    extraFields?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     user?: Prisma.UserUpdateOneRequiredWithoutRegistrationsNestedInput;
     event?: Prisma.EventUpdateOneRequiredWithoutRegistrationsNestedInput;
@@ -760,6 +803,7 @@ export type RegistrationUncheckedUpdateWithoutTicketInput = {
     cpf?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+    extraFields?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     payment?: Prisma.PaymentUncheckedUpdateOneWithoutRegistrationNestedInput;
 };
@@ -771,6 +815,7 @@ export type RegistrationUncheckedUpdateManyWithoutTicketInput = {
     cpf?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+    extraFields?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
 export type RegistrationSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -782,10 +827,11 @@ export type RegistrationSelect<ExtArgs extends runtime.Types.Extensions.Internal
     cpf?: boolean;
     phone?: boolean;
     birthDate?: boolean;
+    extraFields?: boolean;
     createdAt?: boolean;
     user?: boolean | Prisma.UserDefaultArgs<ExtArgs>;
     event?: boolean | Prisma.EventDefaultArgs<ExtArgs>;
-    ticket?: boolean | Prisma.TicketDefaultArgs<ExtArgs>;
+    ticket?: boolean | Prisma.Registration$ticketArgs<ExtArgs>;
     payment?: boolean | Prisma.Registration$paymentArgs<ExtArgs>;
 }, ExtArgs["result"]["registration"]>;
 export type RegistrationSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -797,10 +843,11 @@ export type RegistrationSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
     cpf?: boolean;
     phone?: boolean;
     birthDate?: boolean;
+    extraFields?: boolean;
     createdAt?: boolean;
     user?: boolean | Prisma.UserDefaultArgs<ExtArgs>;
     event?: boolean | Prisma.EventDefaultArgs<ExtArgs>;
-    ticket?: boolean | Prisma.TicketDefaultArgs<ExtArgs>;
+    ticket?: boolean | Prisma.Registration$ticketArgs<ExtArgs>;
 }, ExtArgs["result"]["registration"]>;
 export type RegistrationSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
     id?: boolean;
@@ -811,10 +858,11 @@ export type RegistrationSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
     cpf?: boolean;
     phone?: boolean;
     birthDate?: boolean;
+    extraFields?: boolean;
     createdAt?: boolean;
     user?: boolean | Prisma.UserDefaultArgs<ExtArgs>;
     event?: boolean | Prisma.EventDefaultArgs<ExtArgs>;
-    ticket?: boolean | Prisma.TicketDefaultArgs<ExtArgs>;
+    ticket?: boolean | Prisma.Registration$ticketArgs<ExtArgs>;
 }, ExtArgs["result"]["registration"]>;
 export type RegistrationSelectScalar = {
     id?: boolean;
@@ -825,42 +873,44 @@ export type RegistrationSelectScalar = {
     cpf?: boolean;
     phone?: boolean;
     birthDate?: boolean;
+    extraFields?: boolean;
     createdAt?: boolean;
 };
-export type RegistrationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "eventId" | "ticketId" | "status" | "cpf" | "phone" | "birthDate" | "createdAt", ExtArgs["result"]["registration"]>;
+export type RegistrationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "eventId" | "ticketId" | "status" | "cpf" | "phone" | "birthDate" | "extraFields" | "createdAt", ExtArgs["result"]["registration"]>;
 export type RegistrationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     user?: boolean | Prisma.UserDefaultArgs<ExtArgs>;
     event?: boolean | Prisma.EventDefaultArgs<ExtArgs>;
-    ticket?: boolean | Prisma.TicketDefaultArgs<ExtArgs>;
+    ticket?: boolean | Prisma.Registration$ticketArgs<ExtArgs>;
     payment?: boolean | Prisma.Registration$paymentArgs<ExtArgs>;
 };
 export type RegistrationIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     user?: boolean | Prisma.UserDefaultArgs<ExtArgs>;
     event?: boolean | Prisma.EventDefaultArgs<ExtArgs>;
-    ticket?: boolean | Prisma.TicketDefaultArgs<ExtArgs>;
+    ticket?: boolean | Prisma.Registration$ticketArgs<ExtArgs>;
 };
 export type RegistrationIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     user?: boolean | Prisma.UserDefaultArgs<ExtArgs>;
     event?: boolean | Prisma.EventDefaultArgs<ExtArgs>;
-    ticket?: boolean | Prisma.TicketDefaultArgs<ExtArgs>;
+    ticket?: boolean | Prisma.Registration$ticketArgs<ExtArgs>;
 };
 export type $RegistrationPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     name: "Registration";
     objects: {
         user: Prisma.$UserPayload<ExtArgs>;
         event: Prisma.$EventPayload<ExtArgs>;
-        ticket: Prisma.$TicketPayload<ExtArgs>;
+        ticket: Prisma.$TicketPayload<ExtArgs> | null;
         payment: Prisma.$PaymentPayload<ExtArgs> | null;
     };
     scalars: runtime.Types.Extensions.GetPayloadResult<{
         id: string;
         userId: string;
         eventId: string;
-        ticketId: string;
+        ticketId: string | null;
         status: $Enums.RegistrationStatus;
         cpf: string | null;
         phone: string | null;
         birthDate: Date | null;
+        extraFields: string | null;
         createdAt: Date;
     }, ExtArgs["result"]["registration"]>;
     composites: {};
@@ -916,7 +966,7 @@ export interface Prisma__RegistrationClient<T, Null = never, ExtArgs extends run
     readonly [Symbol.toStringTag]: "PrismaPromise";
     user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>;
     event<T extends Prisma.EventDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.EventDefaultArgs<ExtArgs>>): Prisma.Prisma__EventClient<runtime.Types.Result.GetResult<Prisma.$EventPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>;
-    ticket<T extends Prisma.TicketDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TicketDefaultArgs<ExtArgs>>): Prisma.Prisma__TicketClient<runtime.Types.Result.GetResult<Prisma.$TicketPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>;
+    ticket<T extends Prisma.Registration$ticketArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Registration$ticketArgs<ExtArgs>>): Prisma.Prisma__TicketClient<runtime.Types.Result.GetResult<Prisma.$TicketPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>;
     payment<T extends Prisma.Registration$paymentArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Registration$paymentArgs<ExtArgs>>): Prisma.Prisma__PaymentClient<runtime.Types.Result.GetResult<Prisma.$PaymentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>;
     then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): runtime.Types.Utils.JsPromise<TResult1 | TResult2>;
     catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): runtime.Types.Utils.JsPromise<T | TResult>;
@@ -931,6 +981,7 @@ export interface RegistrationFieldRefs {
     readonly cpf: Prisma.FieldRef<"Registration", 'String'>;
     readonly phone: Prisma.FieldRef<"Registration", 'String'>;
     readonly birthDate: Prisma.FieldRef<"Registration", 'DateTime'>;
+    readonly extraFields: Prisma.FieldRef<"Registration", 'String'>;
     readonly createdAt: Prisma.FieldRef<"Registration", 'DateTime'>;
 }
 export type RegistrationFindUniqueArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1032,6 +1083,12 @@ export type RegistrationDeleteArgs<ExtArgs extends runtime.Types.Extensions.Inte
 export type RegistrationDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     where?: Prisma.RegistrationWhereInput;
     limit?: number;
+};
+export type Registration$ticketArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+    select?: Prisma.TicketSelect<ExtArgs> | null;
+    omit?: Prisma.TicketOmit<ExtArgs> | null;
+    include?: Prisma.TicketInclude<ExtArgs> | null;
+    where?: Prisma.TicketWhereInput;
 };
 export type Registration$paymentArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     select?: Prisma.PaymentSelect<ExtArgs> | null;

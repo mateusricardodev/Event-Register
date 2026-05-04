@@ -7,7 +7,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsObject, IsOptional, IsString } from 'class-validator';
 export class CreateRegistrationOrganizerDto {
     name;
     email;
@@ -16,6 +16,7 @@ export class CreateRegistrationOrganizerDto {
     phone;
     birthDate;
     paymentCategory;
+    extraFields;
 }
 __decorate([
     IsString(),
@@ -33,7 +34,7 @@ __decorate([
 ], CreateRegistrationOrganizerDto.prototype, "cpf", void 0);
 __decorate([
     IsString(),
-    IsNotEmpty(),
+    IsOptional(),
     __metadata("design:type", String)
 ], CreateRegistrationOrganizerDto.prototype, "ticketId", void 0);
 __decorate([
@@ -51,4 +52,9 @@ __decorate([
     IsOptional(),
     __metadata("design:type", String)
 ], CreateRegistrationOrganizerDto.prototype, "paymentCategory", void 0);
+__decorate([
+    IsObject(),
+    IsOptional(),
+    __metadata("design:type", Object)
+], CreateRegistrationOrganizerDto.prototype, "extraFields", void 0);
 //# sourceMappingURL=create-registration-organizer.dto.js.map

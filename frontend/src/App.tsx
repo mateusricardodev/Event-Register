@@ -11,6 +11,7 @@ import { EventSetupPayment } from './pages/EventSetupPayment'
 import { EventSetupForm } from './pages/EventSetupForm'
 import { EventSetupPage } from './pages/EventSetupPage'
 import { EventPublic } from './pages/EventPublic'
+import { PublicRegistration } from './pages/PublicRegistration'
 import { ProtectedRoute } from './components/ProtectedRoute'
 
 export default function App() {
@@ -21,6 +22,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/evento/:slug" element={<EventPublic />} />
+        <Route path="/evento/:slug/inscricao" element={<PublicRegistration />} />
         <Route
           path="/dashboard"
           element={

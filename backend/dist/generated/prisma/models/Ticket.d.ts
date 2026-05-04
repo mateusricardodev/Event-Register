@@ -277,9 +277,9 @@ export type TicketSumOrderByAggregateInput = {
     price?: Prisma.SortOrder;
     quantity?: Prisma.SortOrder;
 };
-export type TicketScalarRelationFilter = {
-    is?: Prisma.TicketWhereInput;
-    isNot?: Prisma.TicketWhereInput;
+export type TicketNullableScalarRelationFilter = {
+    is?: Prisma.TicketWhereInput | null;
+    isNot?: Prisma.TicketWhereInput | null;
 };
 export type TicketCreateNestedManyWithoutEventInput = {
     create?: Prisma.XOR<Prisma.TicketCreateWithoutEventInput, Prisma.TicketUncheckedCreateWithoutEventInput> | Prisma.TicketCreateWithoutEventInput[] | Prisma.TicketUncheckedCreateWithoutEventInput[];
@@ -324,10 +324,12 @@ export type TicketCreateNestedOneWithoutRegistrationsInput = {
     connectOrCreate?: Prisma.TicketCreateOrConnectWithoutRegistrationsInput;
     connect?: Prisma.TicketWhereUniqueInput;
 };
-export type TicketUpdateOneRequiredWithoutRegistrationsNestedInput = {
+export type TicketUpdateOneWithoutRegistrationsNestedInput = {
     create?: Prisma.XOR<Prisma.TicketCreateWithoutRegistrationsInput, Prisma.TicketUncheckedCreateWithoutRegistrationsInput>;
     connectOrCreate?: Prisma.TicketCreateOrConnectWithoutRegistrationsInput;
     upsert?: Prisma.TicketUpsertWithoutRegistrationsInput;
+    disconnect?: Prisma.TicketWhereInput | boolean;
+    delete?: Prisma.TicketWhereInput | boolean;
     connect?: Prisma.TicketWhereUniqueInput;
     update?: Prisma.XOR<Prisma.XOR<Prisma.TicketUpdateToOneWithWhereWithoutRegistrationsInput, Prisma.TicketUpdateWithoutRegistrationsInput>, Prisma.TicketUncheckedUpdateWithoutRegistrationsInput>;
 };

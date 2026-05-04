@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsObject, IsOptional, IsString } from 'class-validator';
 
 export class CreateRegistrationOrganizerDto {
   @IsString()
@@ -13,8 +13,8 @@ export class CreateRegistrationOrganizerDto {
   cpf: string;
 
   @IsString()
-  @IsNotEmpty()
-  ticketId: string;
+  @IsOptional()
+  ticketId?: string;
 
   @IsString()
   @IsOptional()
@@ -27,4 +27,8 @@ export class CreateRegistrationOrganizerDto {
   @IsString()
   @IsOptional()
   paymentCategory?: string;
+
+  @IsObject()
+  @IsOptional()
+  extraFields?: Record<string, string>;
 }

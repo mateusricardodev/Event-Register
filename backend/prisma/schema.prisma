@@ -86,16 +86,17 @@ model Registration {
   id        String             @id @default(uuid())
   userId    String
   eventId   String
-  ticketId  String
-  status    RegistrationStatus @default(pending)
-  cpf       String?
-  phone     String?
-  birthDate DateTime?
-  createdAt DateTime           @default(now())
-  user      User               @relation(fields: [userId], references: [id])
-  event     Event              @relation(fields: [eventId], references: [id])
-  ticket    Ticket             @relation(fields: [ticketId], references: [id])
-  payment   Payment?
+  ticketId    String?
+  status      RegistrationStatus @default(pending)
+  cpf         String?
+  phone       String?
+  birthDate   DateTime?
+  extraFields String?
+  createdAt   DateTime           @default(now())
+  user        User               @relation(fields: [userId], references: [id])
+  event       Event              @relation(fields: [eventId], references: [id])
+  ticket      Ticket?            @relation(fields: [ticketId], references: [id])
+  payment     Payment?
 }
 
 model Payment {

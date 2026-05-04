@@ -711,6 +711,7 @@ export declare const RegistrationScalarFieldEnum: {
     readonly cpf: "cpf";
     readonly phone: "phone";
     readonly birthDate: "birthDate";
+    readonly extraFields: "extraFields";
     readonly createdAt: "createdAt";
 };
 export type RegistrationScalarFieldEnum = (typeof RegistrationScalarFieldEnum)[keyof typeof RegistrationScalarFieldEnum];
