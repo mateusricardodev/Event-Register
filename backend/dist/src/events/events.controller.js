@@ -14,6 +14,7 @@ import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards, } from '@ne
 import { EventsService } from './events.service.js';
 import { CreateEventDto } from './dto/create-event.dto.js';
 import { UpdateEventDto } from './dto/update-event.dto.js';
+import { CreatePaymentMethodDto } from './dto/create-payment-method.dto.js';
 import { JwtGuard } from '../auth/guards/jwt.guard.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 let EventsController = class EventsController {
@@ -21,8 +22,11 @@ let EventsController = class EventsController {
     constructor(eventsService) {
         this.eventsService = eventsService;
     }
-    findAll() {
-        return this.eventsService.findAll();
+    findAll(user) {
+        return this.eventsService.findAll(user.id);
+    }
+    findBySlug(slug) {
+        return this.eventsService.findBySlug(slug);
     }
     findOne(id) {
         return this.eventsService.findOne(id);
@@ -36,13 +40,31 @@ let EventsController = class EventsController {
     remove(id, user) {
         return this.eventsService.remove(id, user.id);
     }
+    getPaymentMethods(id) {
+        return this.eventsService.getPaymentMethods(id);
+    }
+    addPaymentMethod(id, user, dto) {
+        return this.eventsService.addPaymentMethod(id, user.id, dto);
+    }
+    removePaymentMethod(id, methodId, user) {
+        return this.eventsService.removePaymentMethod(id, methodId, user.id);
+    }
 };
 __decorate([
+    UseGuards(JwtGuard),
     Get(),
+    __param(0, CurrentUser()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], EventsController.prototype, "findAll", null);
+__decorate([
+    Get('public/:slug'),
+    __param(0, Param('slug')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], EventsController.prototype, "findBySlug", null);
 __decorate([
     Get(':id'),
     __param(0, Param('id')),
@@ -78,6 +100,34 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], EventsController.prototype, "remove", null);
+__decorate([
+    UseGuards(JwtGuard),
+    Get(':id/payment-methods'),
+    __param(0, Param('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], EventsController.prototype, "getPaymentMethods", null);
+__decorate([
+    UseGuards(JwtGuard),
+    Post(':id/payment-methods'),
+    __param(0, Param('id')),
+    __param(1, CurrentUser()),
+    __param(2, Body()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, CreatePaymentMethodDto]),
+    __metadata("design:returntype", void 0)
+], EventsController.prototype, "addPaymentMethod", null);
+__decorate([
+    UseGuards(JwtGuard),
+    Delete(':id/payment-methods/:methodId'),
+    __param(0, Param('id')),
+    __param(1, Param('methodId')),
+    __param(2, CurrentUser()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", void 0)
+], EventsController.prototype, "removePaymentMethod", null);
 EventsController = __decorate([
     Controller('events'),
     __metadata("design:paramtypes", [EventsService])

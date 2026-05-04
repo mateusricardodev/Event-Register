@@ -13,6 +13,7 @@ export declare const AnyNull: import("@prisma/client-runtime-utils").AnyNullClas
 export declare const ModelName: {
     readonly User: "User";
     readonly Event: "Event";
+    readonly EventPaymentMethod: "EventPaymentMethod";
     readonly Ticket: "Ticket";
     readonly Registration: "Registration";
     readonly Payment: "Payment";
@@ -40,11 +41,30 @@ export declare const EventScalarFieldEnum: {
     readonly description: "description";
     readonly location: "location";
     readonly date: "date";
+    readonly endDate: "endDate";
     readonly bannerUrl: "bannerUrl";
+    readonly slug: "slug";
+    readonly category: "category";
+    readonly maxParticipants: "maxParticipants";
+    readonly organizerPhone: "organizerPhone";
+    readonly isPublished: "isPublished";
+    readonly about: "about";
+    readonly formFields: "formFields";
     readonly createdBy: "createdBy";
     readonly createdAt: "createdAt";
 };
 export type EventScalarFieldEnum = (typeof EventScalarFieldEnum)[keyof typeof EventScalarFieldEnum];
+export declare const EventPaymentMethodScalarFieldEnum: {
+    readonly id: "id";
+    readonly eventId: "eventId";
+    readonly type: "type";
+    readonly value: "value";
+    readonly installments: "installments";
+    readonly startDate: "startDate";
+    readonly endDate: "endDate";
+    readonly createdAt: "createdAt";
+};
+export type EventPaymentMethodScalarFieldEnum = (typeof EventPaymentMethodScalarFieldEnum)[keyof typeof EventPaymentMethodScalarFieldEnum];
 export declare const TicketScalarFieldEnum: {
     readonly id: "id";
     readonly eventId: "eventId";
@@ -60,6 +80,9 @@ export declare const RegistrationScalarFieldEnum: {
     readonly eventId: "eventId";
     readonly ticketId: "ticketId";
     readonly status: "status";
+    readonly cpf: "cpf";
+    readonly phone: "phone";
+    readonly birthDate: "birthDate";
     readonly createdAt: "createdAt";
 };
 export type RegistrationScalarFieldEnum = (typeof RegistrationScalarFieldEnum)[keyof typeof RegistrationScalarFieldEnum];

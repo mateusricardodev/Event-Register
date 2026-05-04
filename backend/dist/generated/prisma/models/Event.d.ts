@@ -3,8 +3,16 @@ import type * as Prisma from "../internal/prismaNamespace.js";
 export type EventModel = runtime.Types.Result.DefaultSelection<Prisma.$EventPayload>;
 export type AggregateEvent = {
     _count: EventCountAggregateOutputType | null;
+    _avg: EventAvgAggregateOutputType | null;
+    _sum: EventSumAggregateOutputType | null;
     _min: EventMinAggregateOutputType | null;
     _max: EventMaxAggregateOutputType | null;
+};
+export type EventAvgAggregateOutputType = {
+    maxParticipants: number | null;
+};
+export type EventSumAggregateOutputType = {
+    maxParticipants: number | null;
 };
 export type EventMinAggregateOutputType = {
     id: string | null;
@@ -12,7 +20,15 @@ export type EventMinAggregateOutputType = {
     description: string | null;
     location: string | null;
     date: Date | null;
+    endDate: Date | null;
     bannerUrl: string | null;
+    slug: string | null;
+    category: string | null;
+    maxParticipants: number | null;
+    organizerPhone: string | null;
+    isPublished: boolean | null;
+    about: string | null;
+    formFields: string | null;
     createdBy: string | null;
     createdAt: Date | null;
 };
@@ -22,7 +38,15 @@ export type EventMaxAggregateOutputType = {
     description: string | null;
     location: string | null;
     date: Date | null;
+    endDate: Date | null;
     bannerUrl: string | null;
+    slug: string | null;
+    category: string | null;
+    maxParticipants: number | null;
+    organizerPhone: string | null;
+    isPublished: boolean | null;
+    about: string | null;
+    formFields: string | null;
     createdBy: string | null;
     createdAt: Date | null;
 };
@@ -32,10 +56,24 @@ export type EventCountAggregateOutputType = {
     description: number;
     location: number;
     date: number;
+    endDate: number;
     bannerUrl: number;
+    slug: number;
+    category: number;
+    maxParticipants: number;
+    organizerPhone: number;
+    isPublished: number;
+    about: number;
+    formFields: number;
     createdBy: number;
     createdAt: number;
     _all: number;
+};
+export type EventAvgAggregateInputType = {
+    maxParticipants?: true;
+};
+export type EventSumAggregateInputType = {
+    maxParticipants?: true;
 };
 export type EventMinAggregateInputType = {
     id?: true;
@@ -43,7 +81,15 @@ export type EventMinAggregateInputType = {
     description?: true;
     location?: true;
     date?: true;
+    endDate?: true;
     bannerUrl?: true;
+    slug?: true;
+    category?: true;
+    maxParticipants?: true;
+    organizerPhone?: true;
+    isPublished?: true;
+    about?: true;
+    formFields?: true;
     createdBy?: true;
     createdAt?: true;
 };
@@ -53,7 +99,15 @@ export type EventMaxAggregateInputType = {
     description?: true;
     location?: true;
     date?: true;
+    endDate?: true;
     bannerUrl?: true;
+    slug?: true;
+    category?: true;
+    maxParticipants?: true;
+    organizerPhone?: true;
+    isPublished?: true;
+    about?: true;
+    formFields?: true;
     createdBy?: true;
     createdAt?: true;
 };
@@ -63,7 +117,15 @@ export type EventCountAggregateInputType = {
     description?: true;
     location?: true;
     date?: true;
+    endDate?: true;
     bannerUrl?: true;
+    slug?: true;
+    category?: true;
+    maxParticipants?: true;
+    organizerPhone?: true;
+    isPublished?: true;
+    about?: true;
+    formFields?: true;
     createdBy?: true;
     createdAt?: true;
     _all?: true;
@@ -75,6 +137,8 @@ export type EventAggregateArgs<ExtArgs extends runtime.Types.Extensions.Internal
     take?: number;
     skip?: number;
     _count?: true | EventCountAggregateInputType;
+    _avg?: EventAvgAggregateInputType;
+    _sum?: EventSumAggregateInputType;
     _min?: EventMinAggregateInputType;
     _max?: EventMaxAggregateInputType;
 };
@@ -89,6 +153,8 @@ export type EventGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
     take?: number;
     skip?: number;
     _count?: EventCountAggregateInputType | true;
+    _avg?: EventAvgAggregateInputType;
+    _sum?: EventSumAggregateInputType;
     _min?: EventMinAggregateInputType;
     _max?: EventMaxAggregateInputType;
 };
@@ -98,10 +164,20 @@ export type EventGroupByOutputType = {
     description: string | null;
     location: string | null;
     date: Date;
+    endDate: Date | null;
     bannerUrl: string | null;
+    slug: string | null;
+    category: string | null;
+    maxParticipants: number | null;
+    organizerPhone: string | null;
+    isPublished: boolean;
+    about: string | null;
+    formFields: string | null;
     createdBy: string;
     createdAt: Date;
     _count: EventCountAggregateOutputType | null;
+    _avg: EventAvgAggregateOutputType | null;
+    _sum: EventSumAggregateOutputType | null;
     _min: EventMinAggregateOutputType | null;
     _max: EventMaxAggregateOutputType | null;
 };
@@ -117,12 +193,21 @@ export type EventWhereInput = {
     description?: Prisma.StringNullableFilter<"Event"> | string | null;
     location?: Prisma.StringNullableFilter<"Event"> | string | null;
     date?: Prisma.DateTimeFilter<"Event"> | Date | string;
+    endDate?: Prisma.DateTimeNullableFilter<"Event"> | Date | string | null;
     bannerUrl?: Prisma.StringNullableFilter<"Event"> | string | null;
+    slug?: Prisma.StringNullableFilter<"Event"> | string | null;
+    category?: Prisma.StringNullableFilter<"Event"> | string | null;
+    maxParticipants?: Prisma.IntNullableFilter<"Event"> | number | null;
+    organizerPhone?: Prisma.StringNullableFilter<"Event"> | string | null;
+    isPublished?: Prisma.BoolFilter<"Event"> | boolean;
+    about?: Prisma.StringNullableFilter<"Event"> | string | null;
+    formFields?: Prisma.StringNullableFilter<"Event"> | string | null;
     createdBy?: Prisma.StringFilter<"Event"> | string;
     createdAt?: Prisma.DateTimeFilter<"Event"> | Date | string;
     user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>;
     tickets?: Prisma.TicketListRelationFilter;
     registrations?: Prisma.RegistrationListRelationFilter;
+    paymentMethods?: Prisma.EventPaymentMethodListRelationFilter;
 };
 export type EventOrderByWithRelationInput = {
     id?: Prisma.SortOrder;
@@ -130,15 +215,25 @@ export type EventOrderByWithRelationInput = {
     description?: Prisma.SortOrderInput | Prisma.SortOrder;
     location?: Prisma.SortOrderInput | Prisma.SortOrder;
     date?: Prisma.SortOrder;
+    endDate?: Prisma.SortOrderInput | Prisma.SortOrder;
     bannerUrl?: Prisma.SortOrderInput | Prisma.SortOrder;
+    slug?: Prisma.SortOrderInput | Prisma.SortOrder;
+    category?: Prisma.SortOrderInput | Prisma.SortOrder;
+    maxParticipants?: Prisma.SortOrderInput | Prisma.SortOrder;
+    organizerPhone?: Prisma.SortOrderInput | Prisma.SortOrder;
+    isPublished?: Prisma.SortOrder;
+    about?: Prisma.SortOrderInput | Prisma.SortOrder;
+    formFields?: Prisma.SortOrderInput | Prisma.SortOrder;
     createdBy?: Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
     user?: Prisma.UserOrderByWithRelationInput;
     tickets?: Prisma.TicketOrderByRelationAggregateInput;
     registrations?: Prisma.RegistrationOrderByRelationAggregateInput;
+    paymentMethods?: Prisma.EventPaymentMethodOrderByRelationAggregateInput;
 };
 export type EventWhereUniqueInput = Prisma.AtLeast<{
     id?: string;
+    slug?: string;
     AND?: Prisma.EventWhereInput | Prisma.EventWhereInput[];
     OR?: Prisma.EventWhereInput[];
     NOT?: Prisma.EventWhereInput | Prisma.EventWhereInput[];
@@ -146,25 +241,43 @@ export type EventWhereUniqueInput = Prisma.AtLeast<{
     description?: Prisma.StringNullableFilter<"Event"> | string | null;
     location?: Prisma.StringNullableFilter<"Event"> | string | null;
     date?: Prisma.DateTimeFilter<"Event"> | Date | string;
+    endDate?: Prisma.DateTimeNullableFilter<"Event"> | Date | string | null;
     bannerUrl?: Prisma.StringNullableFilter<"Event"> | string | null;
+    category?: Prisma.StringNullableFilter<"Event"> | string | null;
+    maxParticipants?: Prisma.IntNullableFilter<"Event"> | number | null;
+    organizerPhone?: Prisma.StringNullableFilter<"Event"> | string | null;
+    isPublished?: Prisma.BoolFilter<"Event"> | boolean;
+    about?: Prisma.StringNullableFilter<"Event"> | string | null;
+    formFields?: Prisma.StringNullableFilter<"Event"> | string | null;
     createdBy?: Prisma.StringFilter<"Event"> | string;
     createdAt?: Prisma.DateTimeFilter<"Event"> | Date | string;
     user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>;
     tickets?: Prisma.TicketListRelationFilter;
     registrations?: Prisma.RegistrationListRelationFilter;
-}, "id">;
+    paymentMethods?: Prisma.EventPaymentMethodListRelationFilter;
+}, "id" | "slug">;
 export type EventOrderByWithAggregationInput = {
     id?: Prisma.SortOrder;
     title?: Prisma.SortOrder;
     description?: Prisma.SortOrderInput | Prisma.SortOrder;
     location?: Prisma.SortOrderInput | Prisma.SortOrder;
     date?: Prisma.SortOrder;
+    endDate?: Prisma.SortOrderInput | Prisma.SortOrder;
     bannerUrl?: Prisma.SortOrderInput | Prisma.SortOrder;
+    slug?: Prisma.SortOrderInput | Prisma.SortOrder;
+    category?: Prisma.SortOrderInput | Prisma.SortOrder;
+    maxParticipants?: Prisma.SortOrderInput | Prisma.SortOrder;
+    organizerPhone?: Prisma.SortOrderInput | Prisma.SortOrder;
+    isPublished?: Prisma.SortOrder;
+    about?: Prisma.SortOrderInput | Prisma.SortOrder;
+    formFields?: Prisma.SortOrderInput | Prisma.SortOrder;
     createdBy?: Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
     _count?: Prisma.EventCountOrderByAggregateInput;
+    _avg?: Prisma.EventAvgOrderByAggregateInput;
     _max?: Prisma.EventMaxOrderByAggregateInput;
     _min?: Prisma.EventMinOrderByAggregateInput;
+    _sum?: Prisma.EventSumOrderByAggregateInput;
 };
 export type EventScalarWhereWithAggregatesInput = {
     AND?: Prisma.EventScalarWhereWithAggregatesInput | Prisma.EventScalarWhereWithAggregatesInput[];
@@ -175,7 +288,15 @@ export type EventScalarWhereWithAggregatesInput = {
     description?: Prisma.StringNullableWithAggregatesFilter<"Event"> | string | null;
     location?: Prisma.StringNullableWithAggregatesFilter<"Event"> | string | null;
     date?: Prisma.DateTimeWithAggregatesFilter<"Event"> | Date | string;
+    endDate?: Prisma.DateTimeNullableWithAggregatesFilter<"Event"> | Date | string | null;
     bannerUrl?: Prisma.StringNullableWithAggregatesFilter<"Event"> | string | null;
+    slug?: Prisma.StringNullableWithAggregatesFilter<"Event"> | string | null;
+    category?: Prisma.StringNullableWithAggregatesFilter<"Event"> | string | null;
+    maxParticipants?: Prisma.IntNullableWithAggregatesFilter<"Event"> | number | null;
+    organizerPhone?: Prisma.StringNullableWithAggregatesFilter<"Event"> | string | null;
+    isPublished?: Prisma.BoolWithAggregatesFilter<"Event"> | boolean;
+    about?: Prisma.StringNullableWithAggregatesFilter<"Event"> | string | null;
+    formFields?: Prisma.StringNullableWithAggregatesFilter<"Event"> | string | null;
     createdBy?: Prisma.StringWithAggregatesFilter<"Event"> | string;
     createdAt?: Prisma.DateTimeWithAggregatesFilter<"Event"> | Date | string;
 };
@@ -185,11 +306,20 @@ export type EventCreateInput = {
     description?: string | null;
     location?: string | null;
     date: Date | string;
+    endDate?: Date | string | null;
     bannerUrl?: string | null;
+    slug?: string | null;
+    category?: string | null;
+    maxParticipants?: number | null;
+    organizerPhone?: string | null;
+    isPublished?: boolean;
+    about?: string | null;
+    formFields?: string | null;
     createdAt?: Date | string;
     user: Prisma.UserCreateNestedOneWithoutEventsInput;
     tickets?: Prisma.TicketCreateNestedManyWithoutEventInput;
     registrations?: Prisma.RegistrationCreateNestedManyWithoutEventInput;
+    paymentMethods?: Prisma.EventPaymentMethodCreateNestedManyWithoutEventInput;
 };
 export type EventUncheckedCreateInput = {
     id?: string;
@@ -197,11 +327,20 @@ export type EventUncheckedCreateInput = {
     description?: string | null;
     location?: string | null;
     date: Date | string;
+    endDate?: Date | string | null;
     bannerUrl?: string | null;
+    slug?: string | null;
+    category?: string | null;
+    maxParticipants?: number | null;
+    organizerPhone?: string | null;
+    isPublished?: boolean;
+    about?: string | null;
+    formFields?: string | null;
     createdBy: string;
     createdAt?: Date | string;
     tickets?: Prisma.TicketUncheckedCreateNestedManyWithoutEventInput;
     registrations?: Prisma.RegistrationUncheckedCreateNestedManyWithoutEventInput;
+    paymentMethods?: Prisma.EventPaymentMethodUncheckedCreateNestedManyWithoutEventInput;
 };
 export type EventUpdateInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -209,11 +348,20 @@ export type EventUpdateInput = {
     description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    endDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     bannerUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    maxParticipants?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+    organizerPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    isPublished?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    about?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    formFields?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     user?: Prisma.UserUpdateOneRequiredWithoutEventsNestedInput;
     tickets?: Prisma.TicketUpdateManyWithoutEventNestedInput;
     registrations?: Prisma.RegistrationUpdateManyWithoutEventNestedInput;
+    paymentMethods?: Prisma.EventPaymentMethodUpdateManyWithoutEventNestedInput;
 };
 export type EventUncheckedUpdateInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -221,11 +369,20 @@ export type EventUncheckedUpdateInput = {
     description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    endDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     bannerUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    maxParticipants?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+    organizerPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    isPublished?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    about?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    formFields?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdBy?: Prisma.StringFieldUpdateOperationsInput | string;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     tickets?: Prisma.TicketUncheckedUpdateManyWithoutEventNestedInput;
     registrations?: Prisma.RegistrationUncheckedUpdateManyWithoutEventNestedInput;
+    paymentMethods?: Prisma.EventPaymentMethodUncheckedUpdateManyWithoutEventNestedInput;
 };
 export type EventCreateManyInput = {
     id?: string;
@@ -233,7 +390,15 @@ export type EventCreateManyInput = {
     description?: string | null;
     location?: string | null;
     date: Date | string;
+    endDate?: Date | string | null;
     bannerUrl?: string | null;
+    slug?: string | null;
+    category?: string | null;
+    maxParticipants?: number | null;
+    organizerPhone?: string | null;
+    isPublished?: boolean;
+    about?: string | null;
+    formFields?: string | null;
     createdBy: string;
     createdAt?: Date | string;
 };
@@ -243,7 +408,15 @@ export type EventUpdateManyMutationInput = {
     description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    endDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     bannerUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    maxParticipants?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+    organizerPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    isPublished?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    about?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    formFields?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
 export type EventUncheckedUpdateManyInput = {
@@ -252,7 +425,15 @@ export type EventUncheckedUpdateManyInput = {
     description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    endDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     bannerUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    maxParticipants?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+    organizerPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    isPublished?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    about?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    formFields?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdBy?: Prisma.StringFieldUpdateOperationsInput | string;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
@@ -270,9 +451,20 @@ export type EventCountOrderByAggregateInput = {
     description?: Prisma.SortOrder;
     location?: Prisma.SortOrder;
     date?: Prisma.SortOrder;
+    endDate?: Prisma.SortOrder;
     bannerUrl?: Prisma.SortOrder;
+    slug?: Prisma.SortOrder;
+    category?: Prisma.SortOrder;
+    maxParticipants?: Prisma.SortOrder;
+    organizerPhone?: Prisma.SortOrder;
+    isPublished?: Prisma.SortOrder;
+    about?: Prisma.SortOrder;
+    formFields?: Prisma.SortOrder;
     createdBy?: Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
+};
+export type EventAvgOrderByAggregateInput = {
+    maxParticipants?: Prisma.SortOrder;
 };
 export type EventMaxOrderByAggregateInput = {
     id?: Prisma.SortOrder;
@@ -280,7 +472,15 @@ export type EventMaxOrderByAggregateInput = {
     description?: Prisma.SortOrder;
     location?: Prisma.SortOrder;
     date?: Prisma.SortOrder;
+    endDate?: Prisma.SortOrder;
     bannerUrl?: Prisma.SortOrder;
+    slug?: Prisma.SortOrder;
+    category?: Prisma.SortOrder;
+    maxParticipants?: Prisma.SortOrder;
+    organizerPhone?: Prisma.SortOrder;
+    isPublished?: Prisma.SortOrder;
+    about?: Prisma.SortOrder;
+    formFields?: Prisma.SortOrder;
     createdBy?: Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
 };
@@ -290,9 +490,20 @@ export type EventMinOrderByAggregateInput = {
     description?: Prisma.SortOrder;
     location?: Prisma.SortOrder;
     date?: Prisma.SortOrder;
+    endDate?: Prisma.SortOrder;
     bannerUrl?: Prisma.SortOrder;
+    slug?: Prisma.SortOrder;
+    category?: Prisma.SortOrder;
+    maxParticipants?: Prisma.SortOrder;
+    organizerPhone?: Prisma.SortOrder;
+    isPublished?: Prisma.SortOrder;
+    about?: Prisma.SortOrder;
+    formFields?: Prisma.SortOrder;
     createdBy?: Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
+};
+export type EventSumOrderByAggregateInput = {
+    maxParticipants?: Prisma.SortOrder;
 };
 export type EventScalarRelationFilter = {
     is?: Prisma.EventWhereInput;
@@ -339,6 +550,31 @@ export type EventUncheckedUpdateManyWithoutUserNestedInput = {
 export type NullableStringFieldUpdateOperationsInput = {
     set?: string | null;
 };
+export type NullableDateTimeFieldUpdateOperationsInput = {
+    set?: Date | string | null;
+};
+export type NullableIntFieldUpdateOperationsInput = {
+    set?: number | null;
+    increment?: number;
+    decrement?: number;
+    multiply?: number;
+    divide?: number;
+};
+export type BoolFieldUpdateOperationsInput = {
+    set?: boolean;
+};
+export type EventCreateNestedOneWithoutPaymentMethodsInput = {
+    create?: Prisma.XOR<Prisma.EventCreateWithoutPaymentMethodsInput, Prisma.EventUncheckedCreateWithoutPaymentMethodsInput>;
+    connectOrCreate?: Prisma.EventCreateOrConnectWithoutPaymentMethodsInput;
+    connect?: Prisma.EventWhereUniqueInput;
+};
+export type EventUpdateOneRequiredWithoutPaymentMethodsNestedInput = {
+    create?: Prisma.XOR<Prisma.EventCreateWithoutPaymentMethodsInput, Prisma.EventUncheckedCreateWithoutPaymentMethodsInput>;
+    connectOrCreate?: Prisma.EventCreateOrConnectWithoutPaymentMethodsInput;
+    upsert?: Prisma.EventUpsertWithoutPaymentMethodsInput;
+    connect?: Prisma.EventWhereUniqueInput;
+    update?: Prisma.XOR<Prisma.XOR<Prisma.EventUpdateToOneWithWhereWithoutPaymentMethodsInput, Prisma.EventUpdateWithoutPaymentMethodsInput>, Prisma.EventUncheckedUpdateWithoutPaymentMethodsInput>;
+};
 export type EventCreateNestedOneWithoutTicketsInput = {
     create?: Prisma.XOR<Prisma.EventCreateWithoutTicketsInput, Prisma.EventUncheckedCreateWithoutTicketsInput>;
     connectOrCreate?: Prisma.EventCreateOrConnectWithoutTicketsInput;
@@ -369,10 +605,19 @@ export type EventCreateWithoutUserInput = {
     description?: string | null;
     location?: string | null;
     date: Date | string;
+    endDate?: Date | string | null;
     bannerUrl?: string | null;
+    slug?: string | null;
+    category?: string | null;
+    maxParticipants?: number | null;
+    organizerPhone?: string | null;
+    isPublished?: boolean;
+    about?: string | null;
+    formFields?: string | null;
     createdAt?: Date | string;
     tickets?: Prisma.TicketCreateNestedManyWithoutEventInput;
     registrations?: Prisma.RegistrationCreateNestedManyWithoutEventInput;
+    paymentMethods?: Prisma.EventPaymentMethodCreateNestedManyWithoutEventInput;
 };
 export type EventUncheckedCreateWithoutUserInput = {
     id?: string;
@@ -380,10 +625,19 @@ export type EventUncheckedCreateWithoutUserInput = {
     description?: string | null;
     location?: string | null;
     date: Date | string;
+    endDate?: Date | string | null;
     bannerUrl?: string | null;
+    slug?: string | null;
+    category?: string | null;
+    maxParticipants?: number | null;
+    organizerPhone?: string | null;
+    isPublished?: boolean;
+    about?: string | null;
+    formFields?: string | null;
     createdAt?: Date | string;
     tickets?: Prisma.TicketUncheckedCreateNestedManyWithoutEventInput;
     registrations?: Prisma.RegistrationUncheckedCreateNestedManyWithoutEventInput;
+    paymentMethods?: Prisma.EventPaymentMethodUncheckedCreateNestedManyWithoutEventInput;
 };
 export type EventCreateOrConnectWithoutUserInput = {
     where: Prisma.EventWhereUniqueInput;
@@ -415,9 +669,110 @@ export type EventScalarWhereInput = {
     description?: Prisma.StringNullableFilter<"Event"> | string | null;
     location?: Prisma.StringNullableFilter<"Event"> | string | null;
     date?: Prisma.DateTimeFilter<"Event"> | Date | string;
+    endDate?: Prisma.DateTimeNullableFilter<"Event"> | Date | string | null;
     bannerUrl?: Prisma.StringNullableFilter<"Event"> | string | null;
+    slug?: Prisma.StringNullableFilter<"Event"> | string | null;
+    category?: Prisma.StringNullableFilter<"Event"> | string | null;
+    maxParticipants?: Prisma.IntNullableFilter<"Event"> | number | null;
+    organizerPhone?: Prisma.StringNullableFilter<"Event"> | string | null;
+    isPublished?: Prisma.BoolFilter<"Event"> | boolean;
+    about?: Prisma.StringNullableFilter<"Event"> | string | null;
+    formFields?: Prisma.StringNullableFilter<"Event"> | string | null;
     createdBy?: Prisma.StringFilter<"Event"> | string;
     createdAt?: Prisma.DateTimeFilter<"Event"> | Date | string;
+};
+export type EventCreateWithoutPaymentMethodsInput = {
+    id?: string;
+    title: string;
+    description?: string | null;
+    location?: string | null;
+    date: Date | string;
+    endDate?: Date | string | null;
+    bannerUrl?: string | null;
+    slug?: string | null;
+    category?: string | null;
+    maxParticipants?: number | null;
+    organizerPhone?: string | null;
+    isPublished?: boolean;
+    about?: string | null;
+    formFields?: string | null;
+    createdAt?: Date | string;
+    user: Prisma.UserCreateNestedOneWithoutEventsInput;
+    tickets?: Prisma.TicketCreateNestedManyWithoutEventInput;
+    registrations?: Prisma.RegistrationCreateNestedManyWithoutEventInput;
+};
+export type EventUncheckedCreateWithoutPaymentMethodsInput = {
+    id?: string;
+    title: string;
+    description?: string | null;
+    location?: string | null;
+    date: Date | string;
+    endDate?: Date | string | null;
+    bannerUrl?: string | null;
+    slug?: string | null;
+    category?: string | null;
+    maxParticipants?: number | null;
+    organizerPhone?: string | null;
+    isPublished?: boolean;
+    about?: string | null;
+    formFields?: string | null;
+    createdBy: string;
+    createdAt?: Date | string;
+    tickets?: Prisma.TicketUncheckedCreateNestedManyWithoutEventInput;
+    registrations?: Prisma.RegistrationUncheckedCreateNestedManyWithoutEventInput;
+};
+export type EventCreateOrConnectWithoutPaymentMethodsInput = {
+    where: Prisma.EventWhereUniqueInput;
+    create: Prisma.XOR<Prisma.EventCreateWithoutPaymentMethodsInput, Prisma.EventUncheckedCreateWithoutPaymentMethodsInput>;
+};
+export type EventUpsertWithoutPaymentMethodsInput = {
+    update: Prisma.XOR<Prisma.EventUpdateWithoutPaymentMethodsInput, Prisma.EventUncheckedUpdateWithoutPaymentMethodsInput>;
+    create: Prisma.XOR<Prisma.EventCreateWithoutPaymentMethodsInput, Prisma.EventUncheckedCreateWithoutPaymentMethodsInput>;
+    where?: Prisma.EventWhereInput;
+};
+export type EventUpdateToOneWithWhereWithoutPaymentMethodsInput = {
+    where?: Prisma.EventWhereInput;
+    data: Prisma.XOR<Prisma.EventUpdateWithoutPaymentMethodsInput, Prisma.EventUncheckedUpdateWithoutPaymentMethodsInput>;
+};
+export type EventUpdateWithoutPaymentMethodsInput = {
+    id?: Prisma.StringFieldUpdateOperationsInput | string;
+    title?: Prisma.StringFieldUpdateOperationsInput | string;
+    description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    endDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+    bannerUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    maxParticipants?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+    organizerPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    isPublished?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    about?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    formFields?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    user?: Prisma.UserUpdateOneRequiredWithoutEventsNestedInput;
+    tickets?: Prisma.TicketUpdateManyWithoutEventNestedInput;
+    registrations?: Prisma.RegistrationUpdateManyWithoutEventNestedInput;
+};
+export type EventUncheckedUpdateWithoutPaymentMethodsInput = {
+    id?: Prisma.StringFieldUpdateOperationsInput | string;
+    title?: Prisma.StringFieldUpdateOperationsInput | string;
+    description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    endDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+    bannerUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    maxParticipants?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+    organizerPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    isPublished?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    about?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    formFields?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    createdBy?: Prisma.StringFieldUpdateOperationsInput | string;
+    createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    tickets?: Prisma.TicketUncheckedUpdateManyWithoutEventNestedInput;
+    registrations?: Prisma.RegistrationUncheckedUpdateManyWithoutEventNestedInput;
 };
 export type EventCreateWithoutTicketsInput = {
     id?: string;
@@ -425,10 +780,19 @@ export type EventCreateWithoutTicketsInput = {
     description?: string | null;
     location?: string | null;
     date: Date | string;
+    endDate?: Date | string | null;
     bannerUrl?: string | null;
+    slug?: string | null;
+    category?: string | null;
+    maxParticipants?: number | null;
+    organizerPhone?: string | null;
+    isPublished?: boolean;
+    about?: string | null;
+    formFields?: string | null;
     createdAt?: Date | string;
     user: Prisma.UserCreateNestedOneWithoutEventsInput;
     registrations?: Prisma.RegistrationCreateNestedManyWithoutEventInput;
+    paymentMethods?: Prisma.EventPaymentMethodCreateNestedManyWithoutEventInput;
 };
 export type EventUncheckedCreateWithoutTicketsInput = {
     id?: string;
@@ -436,10 +800,19 @@ export type EventUncheckedCreateWithoutTicketsInput = {
     description?: string | null;
     location?: string | null;
     date: Date | string;
+    endDate?: Date | string | null;
     bannerUrl?: string | null;
+    slug?: string | null;
+    category?: string | null;
+    maxParticipants?: number | null;
+    organizerPhone?: string | null;
+    isPublished?: boolean;
+    about?: string | null;
+    formFields?: string | null;
     createdBy: string;
     createdAt?: Date | string;
     registrations?: Prisma.RegistrationUncheckedCreateNestedManyWithoutEventInput;
+    paymentMethods?: Prisma.EventPaymentMethodUncheckedCreateNestedManyWithoutEventInput;
 };
 export type EventCreateOrConnectWithoutTicketsInput = {
     where: Prisma.EventWhereUniqueInput;
@@ -460,10 +833,19 @@ export type EventUpdateWithoutTicketsInput = {
     description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    endDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     bannerUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    maxParticipants?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+    organizerPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    isPublished?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    about?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    formFields?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     user?: Prisma.UserUpdateOneRequiredWithoutEventsNestedInput;
     registrations?: Prisma.RegistrationUpdateManyWithoutEventNestedInput;
+    paymentMethods?: Prisma.EventPaymentMethodUpdateManyWithoutEventNestedInput;
 };
 export type EventUncheckedUpdateWithoutTicketsInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -471,10 +853,19 @@ export type EventUncheckedUpdateWithoutTicketsInput = {
     description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    endDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     bannerUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    maxParticipants?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+    organizerPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    isPublished?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    about?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    formFields?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdBy?: Prisma.StringFieldUpdateOperationsInput | string;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     registrations?: Prisma.RegistrationUncheckedUpdateManyWithoutEventNestedInput;
+    paymentMethods?: Prisma.EventPaymentMethodUncheckedUpdateManyWithoutEventNestedInput;
 };
 export type EventCreateWithoutRegistrationsInput = {
     id?: string;
@@ -482,10 +873,19 @@ export type EventCreateWithoutRegistrationsInput = {
     description?: string | null;
     location?: string | null;
     date: Date | string;
+    endDate?: Date | string | null;
     bannerUrl?: string | null;
+    slug?: string | null;
+    category?: string | null;
+    maxParticipants?: number | null;
+    organizerPhone?: string | null;
+    isPublished?: boolean;
+    about?: string | null;
+    formFields?: string | null;
     createdAt?: Date | string;
     user: Prisma.UserCreateNestedOneWithoutEventsInput;
     tickets?: Prisma.TicketCreateNestedManyWithoutEventInput;
+    paymentMethods?: Prisma.EventPaymentMethodCreateNestedManyWithoutEventInput;
 };
 export type EventUncheckedCreateWithoutRegistrationsInput = {
     id?: string;
@@ -493,10 +893,19 @@ export type EventUncheckedCreateWithoutRegistrationsInput = {
     description?: string | null;
     location?: string | null;
     date: Date | string;
+    endDate?: Date | string | null;
     bannerUrl?: string | null;
+    slug?: string | null;
+    category?: string | null;
+    maxParticipants?: number | null;
+    organizerPhone?: string | null;
+    isPublished?: boolean;
+    about?: string | null;
+    formFields?: string | null;
     createdBy: string;
     createdAt?: Date | string;
     tickets?: Prisma.TicketUncheckedCreateNestedManyWithoutEventInput;
+    paymentMethods?: Prisma.EventPaymentMethodUncheckedCreateNestedManyWithoutEventInput;
 };
 export type EventCreateOrConnectWithoutRegistrationsInput = {
     where: Prisma.EventWhereUniqueInput;
@@ -517,10 +926,19 @@ export type EventUpdateWithoutRegistrationsInput = {
     description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    endDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     bannerUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    maxParticipants?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+    organizerPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    isPublished?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    about?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    formFields?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     user?: Prisma.UserUpdateOneRequiredWithoutEventsNestedInput;
     tickets?: Prisma.TicketUpdateManyWithoutEventNestedInput;
+    paymentMethods?: Prisma.EventPaymentMethodUpdateManyWithoutEventNestedInput;
 };
 export type EventUncheckedUpdateWithoutRegistrationsInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -528,10 +946,19 @@ export type EventUncheckedUpdateWithoutRegistrationsInput = {
     description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    endDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     bannerUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    maxParticipants?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+    organizerPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    isPublished?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    about?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    formFields?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdBy?: Prisma.StringFieldUpdateOperationsInput | string;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     tickets?: Prisma.TicketUncheckedUpdateManyWithoutEventNestedInput;
+    paymentMethods?: Prisma.EventPaymentMethodUncheckedUpdateManyWithoutEventNestedInput;
 };
 export type EventCreateManyUserInput = {
     id?: string;
@@ -539,7 +966,15 @@ export type EventCreateManyUserInput = {
     description?: string | null;
     location?: string | null;
     date: Date | string;
+    endDate?: Date | string | null;
     bannerUrl?: string | null;
+    slug?: string | null;
+    category?: string | null;
+    maxParticipants?: number | null;
+    organizerPhone?: string | null;
+    isPublished?: boolean;
+    about?: string | null;
+    formFields?: string | null;
     createdAt?: Date | string;
 };
 export type EventUpdateWithoutUserInput = {
@@ -548,10 +983,19 @@ export type EventUpdateWithoutUserInput = {
     description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    endDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     bannerUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    maxParticipants?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+    organizerPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    isPublished?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    about?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    formFields?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     tickets?: Prisma.TicketUpdateManyWithoutEventNestedInput;
     registrations?: Prisma.RegistrationUpdateManyWithoutEventNestedInput;
+    paymentMethods?: Prisma.EventPaymentMethodUpdateManyWithoutEventNestedInput;
 };
 export type EventUncheckedUpdateWithoutUserInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -559,10 +1003,19 @@ export type EventUncheckedUpdateWithoutUserInput = {
     description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    endDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     bannerUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    maxParticipants?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+    organizerPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    isPublished?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    about?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    formFields?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     tickets?: Prisma.TicketUncheckedUpdateManyWithoutEventNestedInput;
     registrations?: Prisma.RegistrationUncheckedUpdateManyWithoutEventNestedInput;
+    paymentMethods?: Prisma.EventPaymentMethodUncheckedUpdateManyWithoutEventNestedInput;
 };
 export type EventUncheckedUpdateManyWithoutUserInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -570,16 +1023,26 @@ export type EventUncheckedUpdateManyWithoutUserInput = {
     description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    endDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     bannerUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    maxParticipants?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+    organizerPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    isPublished?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    about?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    formFields?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
 export type EventCountOutputType = {
     tickets: number;
     registrations: number;
+    paymentMethods: number;
 };
 export type EventCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     tickets?: boolean | EventCountOutputTypeCountTicketsArgs;
     registrations?: boolean | EventCountOutputTypeCountRegistrationsArgs;
+    paymentMethods?: boolean | EventCountOutputTypeCountPaymentMethodsArgs;
 };
 export type EventCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     select?: Prisma.EventCountOutputTypeSelect<ExtArgs> | null;
@@ -590,18 +1053,30 @@ export type EventCountOutputTypeCountTicketsArgs<ExtArgs extends runtime.Types.E
 export type EventCountOutputTypeCountRegistrationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     where?: Prisma.RegistrationWhereInput;
 };
+export type EventCountOutputTypeCountPaymentMethodsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+    where?: Prisma.EventPaymentMethodWhereInput;
+};
 export type EventSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
     id?: boolean;
     title?: boolean;
     description?: boolean;
     location?: boolean;
     date?: boolean;
+    endDate?: boolean;
     bannerUrl?: boolean;
+    slug?: boolean;
+    category?: boolean;
+    maxParticipants?: boolean;
+    organizerPhone?: boolean;
+    isPublished?: boolean;
+    about?: boolean;
+    formFields?: boolean;
     createdBy?: boolean;
     createdAt?: boolean;
     user?: boolean | Prisma.UserDefaultArgs<ExtArgs>;
     tickets?: boolean | Prisma.Event$ticketsArgs<ExtArgs>;
     registrations?: boolean | Prisma.Event$registrationsArgs<ExtArgs>;
+    paymentMethods?: boolean | Prisma.Event$paymentMethodsArgs<ExtArgs>;
     _count?: boolean | Prisma.EventCountOutputTypeDefaultArgs<ExtArgs>;
 }, ExtArgs["result"]["event"]>;
 export type EventSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -610,7 +1085,15 @@ export type EventSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
     description?: boolean;
     location?: boolean;
     date?: boolean;
+    endDate?: boolean;
     bannerUrl?: boolean;
+    slug?: boolean;
+    category?: boolean;
+    maxParticipants?: boolean;
+    organizerPhone?: boolean;
+    isPublished?: boolean;
+    about?: boolean;
+    formFields?: boolean;
     createdBy?: boolean;
     createdAt?: boolean;
     user?: boolean | Prisma.UserDefaultArgs<ExtArgs>;
@@ -621,7 +1104,15 @@ export type EventSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
     description?: boolean;
     location?: boolean;
     date?: boolean;
+    endDate?: boolean;
     bannerUrl?: boolean;
+    slug?: boolean;
+    category?: boolean;
+    maxParticipants?: boolean;
+    organizerPhone?: boolean;
+    isPublished?: boolean;
+    about?: boolean;
+    formFields?: boolean;
     createdBy?: boolean;
     createdAt?: boolean;
     user?: boolean | Prisma.UserDefaultArgs<ExtArgs>;
@@ -632,15 +1123,24 @@ export type EventSelectScalar = {
     description?: boolean;
     location?: boolean;
     date?: boolean;
+    endDate?: boolean;
     bannerUrl?: boolean;
+    slug?: boolean;
+    category?: boolean;
+    maxParticipants?: boolean;
+    organizerPhone?: boolean;
+    isPublished?: boolean;
+    about?: boolean;
+    formFields?: boolean;
     createdBy?: boolean;
     createdAt?: boolean;
 };
-export type EventOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "description" | "location" | "date" | "bannerUrl" | "createdBy" | "createdAt", ExtArgs["result"]["event"]>;
+export type EventOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "description" | "location" | "date" | "endDate" | "bannerUrl" | "slug" | "category" | "maxParticipants" | "organizerPhone" | "isPublished" | "about" | "formFields" | "createdBy" | "createdAt", ExtArgs["result"]["event"]>;
 export type EventInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     user?: boolean | Prisma.UserDefaultArgs<ExtArgs>;
     tickets?: boolean | Prisma.Event$ticketsArgs<ExtArgs>;
     registrations?: boolean | Prisma.Event$registrationsArgs<ExtArgs>;
+    paymentMethods?: boolean | Prisma.Event$paymentMethodsArgs<ExtArgs>;
     _count?: boolean | Prisma.EventCountOutputTypeDefaultArgs<ExtArgs>;
 };
 export type EventIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -655,6 +1155,7 @@ export type $EventPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
         user: Prisma.$UserPayload<ExtArgs>;
         tickets: Prisma.$TicketPayload<ExtArgs>[];
         registrations: Prisma.$RegistrationPayload<ExtArgs>[];
+        paymentMethods: Prisma.$EventPaymentMethodPayload<ExtArgs>[];
     };
     scalars: runtime.Types.Extensions.GetPayloadResult<{
         id: string;
@@ -662,7 +1163,15 @@ export type $EventPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
         description: string | null;
         location: string | null;
         date: Date;
+        endDate: Date | null;
         bannerUrl: string | null;
+        slug: string | null;
+        category: string | null;
+        maxParticipants: number | null;
+        organizerPhone: string | null;
+        isPublished: boolean;
+        about: string | null;
+        formFields: string | null;
         createdBy: string;
         createdAt: Date;
     }, ExtArgs["result"]["event"]>;
@@ -720,6 +1229,7 @@ export interface Prisma__EventClient<T, Null = never, ExtArgs extends runtime.Ty
     user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>;
     tickets<T extends Prisma.Event$ticketsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Event$ticketsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TicketPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>;
     registrations<T extends Prisma.Event$registrationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Event$registrationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RegistrationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>;
+    paymentMethods<T extends Prisma.Event$paymentMethodsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Event$paymentMethodsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$EventPaymentMethodPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>;
     then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): runtime.Types.Utils.JsPromise<TResult1 | TResult2>;
     catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): runtime.Types.Utils.JsPromise<T | TResult>;
     finally(onfinally?: (() => void) | undefined | null): runtime.Types.Utils.JsPromise<T>;
@@ -730,7 +1240,15 @@ export interface EventFieldRefs {
     readonly description: Prisma.FieldRef<"Event", 'String'>;
     readonly location: Prisma.FieldRef<"Event", 'String'>;
     readonly date: Prisma.FieldRef<"Event", 'DateTime'>;
+    readonly endDate: Prisma.FieldRef<"Event", 'DateTime'>;
     readonly bannerUrl: Prisma.FieldRef<"Event", 'String'>;
+    readonly slug: Prisma.FieldRef<"Event", 'String'>;
+    readonly category: Prisma.FieldRef<"Event", 'String'>;
+    readonly maxParticipants: Prisma.FieldRef<"Event", 'Int'>;
+    readonly organizerPhone: Prisma.FieldRef<"Event", 'String'>;
+    readonly isPublished: Prisma.FieldRef<"Event", 'Boolean'>;
+    readonly about: Prisma.FieldRef<"Event", 'String'>;
+    readonly formFields: Prisma.FieldRef<"Event", 'String'>;
     readonly createdBy: Prisma.FieldRef<"Event", 'String'>;
     readonly createdAt: Prisma.FieldRef<"Event", 'DateTime'>;
 }
@@ -855,6 +1373,17 @@ export type Event$registrationsArgs<ExtArgs extends runtime.Types.Extensions.Int
     take?: number;
     skip?: number;
     distinct?: Prisma.RegistrationScalarFieldEnum | Prisma.RegistrationScalarFieldEnum[];
+};
+export type Event$paymentMethodsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+    select?: Prisma.EventPaymentMethodSelect<ExtArgs> | null;
+    omit?: Prisma.EventPaymentMethodOmit<ExtArgs> | null;
+    include?: Prisma.EventPaymentMethodInclude<ExtArgs> | null;
+    where?: Prisma.EventPaymentMethodWhereInput;
+    orderBy?: Prisma.EventPaymentMethodOrderByWithRelationInput | Prisma.EventPaymentMethodOrderByWithRelationInput[];
+    cursor?: Prisma.EventPaymentMethodWhereUniqueInput;
+    take?: number;
+    skip?: number;
+    distinct?: Prisma.EventPaymentMethodScalarFieldEnum | Prisma.EventPaymentMethodScalarFieldEnum[];
 };
 export type EventDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     select?: Prisma.EventSelect<ExtArgs> | null;

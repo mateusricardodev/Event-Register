@@ -36,6 +36,9 @@ export interface PrismaClient<in LogOpts extends Prisma.LogLevel = never, in out
     get event(): Prisma.EventDelegate<ExtArgs, {
         omit: OmitOpts;
     }>;
+    get eventPaymentMethod(): Prisma.EventPaymentMethodDelegate<ExtArgs, {
+        omit: OmitOpts;
+    }>;
     get ticket(): Prisma.TicketDelegate<ExtArgs, {
         omit: OmitOpts;
     }>;

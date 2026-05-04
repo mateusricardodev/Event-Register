@@ -26,6 +26,7 @@ export const AnyNull = runtime.AnyNull;
 export const ModelName = {
     User: 'User',
     Event: 'Event',
+    EventPaymentMethod: 'EventPaymentMethod',
     Ticket: 'Ticket',
     Registration: 'Registration',
     Payment: 'Payment'
@@ -50,8 +51,26 @@ export const EventScalarFieldEnum = {
     description: 'description',
     location: 'location',
     date: 'date',
+    endDate: 'endDate',
     bannerUrl: 'bannerUrl',
+    slug: 'slug',
+    category: 'category',
+    maxParticipants: 'maxParticipants',
+    organizerPhone: 'organizerPhone',
+    isPublished: 'isPublished',
+    about: 'about',
+    formFields: 'formFields',
     createdBy: 'createdBy',
+    createdAt: 'createdAt'
+};
+export const EventPaymentMethodScalarFieldEnum = {
+    id: 'id',
+    eventId: 'eventId',
+    type: 'type',
+    value: 'value',
+    installments: 'installments',
+    startDate: 'startDate',
+    endDate: 'endDate',
     createdAt: 'createdAt'
 };
 export const TicketScalarFieldEnum = {
@@ -68,6 +87,9 @@ export const RegistrationScalarFieldEnum = {
     eventId: 'eventId',
     ticketId: 'ticketId',
     status: 'status',
+    cpf: 'cpf',
+    phone: 'phone',
+    birthDate: 'birthDate',
     createdAt: 'createdAt'
 };
 export const PaymentScalarFieldEnum = {

@@ -22,6 +22,9 @@ export function Navbar() {
             <Link to="/dashboard" className="hover:text-teal-300 transition-colors">
               meus eventos
             </Link>
+            <Link to="/buscar-inscricoes" className="hover:text-teal-300 transition-colors">
+              buscar inscrições
+            </Link>
             <Link to="/dashboard" className="hover:text-teal-300 transition-colors">
               minha conta
             </Link>

@@ -159,6 +159,7 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 export declare const ModelName: {
     readonly User: "User";
     readonly Event: "Event";
+    readonly EventPaymentMethod: "EventPaymentMethod";
     readonly Ticket: "Ticket";
     readonly Registration: "Registration";
     readonly Payment: "Payment";
@@ -174,7 +175,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         omit: GlobalOmitOptions;
     };
     meta: {
-        modelProps: "user" | "event" | "ticket" | "registration" | "payment";
+        modelProps: "user" | "event" | "eventPaymentMethod" | "ticket" | "registration" | "payment";
         txIsolationLevel: TransactionIsolationLevel;
     };
     model: {
@@ -323,6 +324,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
                 count: {
                     args: Prisma.EventCountArgs<ExtArgs>;
                     result: runtime.Types.Utils.Optional<Prisma.EventCountAggregateOutputType> | number;
+                };
+            };
+        };
+        EventPaymentMethod: {
+            payload: Prisma.$EventPaymentMethodPayload<ExtArgs>;
+            fields: Prisma.EventPaymentMethodFieldRefs;
+            operations: {
+                findUnique: {
+                    args: Prisma.EventPaymentMethodFindUniqueArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$EventPaymentMethodPayload> | null;
+                };
+                findUniqueOrThrow: {
+                    args: Prisma.EventPaymentMethodFindUniqueOrThrowArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$EventPaymentMethodPayload>;
+                };
+                findFirst: {
+                    args: Prisma.EventPaymentMethodFindFirstArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$EventPaymentMethodPayload> | null;
+                };
+                findFirstOrThrow: {
+                    args: Prisma.EventPaymentMethodFindFirstOrThrowArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$EventPaymentMethodPayload>;
+                };
+                findMany: {
+                    args: Prisma.EventPaymentMethodFindManyArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$EventPaymentMethodPayload>[];
+                };
+                create: {
+                    args: Prisma.EventPaymentMethodCreateArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$EventPaymentMethodPayload>;
+                };
+                createMany: {
+                    args: Prisma.EventPaymentMethodCreateManyArgs<ExtArgs>;
+                    result: BatchPayload;
+                };
+                createManyAndReturn: {
+                    args: Prisma.EventPaymentMethodCreateManyAndReturnArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$EventPaymentMethodPayload>[];
+                };
+                delete: {
+                    args: Prisma.EventPaymentMethodDeleteArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$EventPaymentMethodPayload>;
+                };
+                update: {
+                    args: Prisma.EventPaymentMethodUpdateArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$EventPaymentMethodPayload>;
+                };
+                deleteMany: {
+                    args: Prisma.EventPaymentMethodDeleteManyArgs<ExtArgs>;
+                    result: BatchPayload;
+                };
+                updateMany: {
+                    args: Prisma.EventPaymentMethodUpdateManyArgs<ExtArgs>;
+                    result: BatchPayload;
+                };
+                updateManyAndReturn: {
+                    args: Prisma.EventPaymentMethodUpdateManyAndReturnArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$EventPaymentMethodPayload>[];
+                };
+                upsert: {
+                    args: Prisma.EventPaymentMethodUpsertArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$EventPaymentMethodPayload>;
+                };
+                aggregate: {
+                    args: Prisma.EventPaymentMethodAggregateArgs<ExtArgs>;
+                    result: runtime.Types.Utils.Optional<Prisma.AggregateEventPaymentMethod>;
+                };
+                groupBy: {
+                    args: Prisma.EventPaymentMethodGroupByArgs<ExtArgs>;
+                    result: runtime.Types.Utils.Optional<Prisma.EventPaymentMethodGroupByOutputType>[];
+                };
+                count: {
+                    args: Prisma.EventPaymentMethodCountArgs<ExtArgs>;
+                    result: runtime.Types.Utils.Optional<Prisma.EventPaymentMethodCountAggregateOutputType> | number;
                 };
             };
         };
@@ -594,11 +669,30 @@ export declare const EventScalarFieldEnum: {
     readonly description: "description";
     readonly location: "location";
     readonly date: "date";
+    readonly endDate: "endDate";
     readonly bannerUrl: "bannerUrl";
+    readonly slug: "slug";
+    readonly category: "category";
+    readonly maxParticipants: "maxParticipants";
+    readonly organizerPhone: "organizerPhone";
+    readonly isPublished: "isPublished";
+    readonly about: "about";
+    readonly formFields: "formFields";
     readonly createdBy: "createdBy";
     readonly createdAt: "createdAt";
 };
 export type EventScalarFieldEnum = (typeof EventScalarFieldEnum)[keyof typeof EventScalarFieldEnum];
+export declare const EventPaymentMethodScalarFieldEnum: {
+    readonly id: "id";
+    readonly eventId: "eventId";
+    readonly type: "type";
+    readonly value: "value";
+    readonly installments: "installments";
+    readonly startDate: "startDate";
+    readonly endDate: "endDate";
+    readonly createdAt: "createdAt";
+};
+export type EventPaymentMethodScalarFieldEnum = (typeof EventPaymentMethodScalarFieldEnum)[keyof typeof EventPaymentMethodScalarFieldEnum];
 export declare const TicketScalarFieldEnum: {
     readonly id: "id";
     readonly eventId: "eventId";
@@ -614,6 +708,9 @@ export declare const RegistrationScalarFieldEnum: {
     readonly eventId: "eventId";
     readonly ticketId: "ticketId";
     readonly status: "status";
+    readonly cpf: "cpf";
+    readonly phone: "phone";
+    readonly birthDate: "birthDate";
     readonly createdAt: "createdAt";
 };
 export type RegistrationScalarFieldEnum = (typeof RegistrationScalarFieldEnum)[keyof typeof RegistrationScalarFieldEnum];
@@ -647,10 +744,11 @@ export type EnumRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel
 export type ListEnumRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Role[]'>;
 export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>;
 export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>;
-export type DecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal'>;
-export type ListDecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal[]'>;
 export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>;
 export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>;
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>;
+export type DecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal'>;
+export type ListDecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal[]'>;
 export type EnumRegistrationStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RegistrationStatus'>;
 export type ListEnumRegistrationStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RegistrationStatus[]'>;
 export type EnumPaymentStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PaymentStatus'>;
@@ -684,6 +782,7 @@ export type PrismaClientOptions = ({
 export type GlobalOmitConfig = {
     user?: Prisma.UserOmit;
     event?: Prisma.EventOmit;
+    eventPaymentMethod?: Prisma.EventPaymentMethodOmit;
     ticket?: Prisma.TicketOmit;
     registration?: Prisma.RegistrationOmit;
     payment?: Prisma.PaymentOmit;

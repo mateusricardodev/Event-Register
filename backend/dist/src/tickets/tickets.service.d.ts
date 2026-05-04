@@ -8,20 +8,20 @@ export declare class TicketsService {
             registrations: number;
         };
     } & {
-        name: string;
         id: string;
+        name: string;
         createdAt: Date;
+        eventId: string;
         price: import("@prisma/client-runtime-utils").Decimal;
         quantity: number;
-        eventId: string;
     })[]>;
     create(eventId: string, userId: string, dto: CreateTicketDto): Promise<{
-        name: string;
         id: string;
+        name: string;
         createdAt: Date;
+        eventId: string;
         price: import("@prisma/client-runtime-utils").Decimal;
         quantity: number;
-        eventId: string;
     }>;
     private checkEventExists;
 }

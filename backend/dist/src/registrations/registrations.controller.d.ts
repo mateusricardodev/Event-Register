@@ -1,5 +1,7 @@
 import { RegistrationsService } from './registrations.service.js';
 import { CreateRegistrationDto } from './dto/create-registration.dto.js';
+import { CreateRegistrationOrganizerDto } from './dto/create-registration-organizer.dto.js';
+import { UpdateRegistrationDto } from './dto/update-registration.dto.js';
 export declare class RegistrationsController {
     private readonly registrationsService;
     constructor(registrationsService: RegistrationsService);
@@ -12,17 +14,20 @@ export declare class RegistrationsController {
             date: Date;
         };
         ticket: {
-            name: string;
             id: string;
+            name: string;
             price: import("@prisma/client-runtime-utils").Decimal;
         };
     } & {
         id: string;
         createdAt: Date;
         eventId: string;
+        userId: string;
         ticketId: string;
         status: import("../../generated/prisma/enums.js").RegistrationStatus;
-        userId: string;
+        cpf: string | null;
+        phone: string | null;
+        birthDate: Date | null;
     }>;
     myRegistrations(user: {
         id: string;
@@ -34,8 +39,8 @@ export declare class RegistrationsController {
             date: Date;
         };
         ticket: {
-            name: string;
             id: string;
+            name: string;
             price: import("@prisma/client-runtime-utils").Decimal;
         };
         payment: {
@@ -47,8 +52,129 @@ export declare class RegistrationsController {
         id: string;
         createdAt: Date;
         eventId: string;
+        userId: string;
         ticketId: string;
         status: import("../../generated/prisma/enums.js").RegistrationStatus;
-        userId: string;
+        cpf: string | null;
+        phone: string | null;
+        birthDate: Date | null;
     })[]>;
+    findByEvent(eventId: string): Promise<({
+        user: {
+            id: string;
+            email: string;
+            name: string;
+        };
+        ticket: {
+            id: string;
+            name: string;
+            price: import("@prisma/client-runtime-utils").Decimal;
+        };
+        payment: {
+            id: string;
+            status: import("../../generated/prisma/enums.js").PaymentStatus;
+            amount: import("@prisma/client-runtime-utils").Decimal;
+        } | null;
+    } & {
+        id: string;
+        createdAt: Date;
+        eventId: string;
+        userId: string;
+        ticketId: string;
+        status: import("../../generated/prisma/enums.js").RegistrationStatus;
+        cpf: string | null;
+        phone: string | null;
+        birthDate: Date | null;
+    })[]>;
+    createByOrganizer(eventId: string, dto: CreateRegistrationOrganizerDto): Promise<{
+        user: {
+            id: string;
+            email: string;
+            name: string;
+        };
+        ticket: {
+            id: string;
+            name: string;
+            price: import("@prisma/client-runtime-utils").Decimal;
+        };
+    } & {
+        id: string;
+        createdAt: Date;
+        eventId: string;
+        userId: string;
+        ticketId: string;
+        status: import("../../generated/prisma/enums.js").RegistrationStatus;
+        cpf: string | null;
+        phone: string | null;
+        birthDate: Date | null;
+    }>;
+    search(q: string): Promise<({
+        user: {
+            id: string;
+            email: string;
+            name: string;
+        };
+        event: {
+            id: string;
+            title: string;
+        };
+        ticket: {
+            id: string;
+            name: string;
+            price: import("@prisma/client-runtime-utils").Decimal;
+        };
+        payment: {
+            id: string;
+            status: import("../../generated/prisma/enums.js").PaymentStatus;
+            amount: import("@prisma/client-runtime-utils").Decimal;
+        } | null;
+    } & {
+        id: string;
+        createdAt: Date;
+        eventId: string;
+        userId: string;
+        ticketId: string;
+        status: import("../../generated/prisma/enums.js").RegistrationStatus;
+        cpf: string | null;
+        phone: string | null;
+        birthDate: Date | null;
+    })[]>;
+    update(id: string, dto: UpdateRegistrationDto): Promise<{
+        user: {
+            id: string;
+            email: string;
+            name: string;
+        };
+        ticket: {
+            id: string;
+            name: string;
+            price: import("@prisma/client-runtime-utils").Decimal;
+        };
+        payment: {
+            id: string;
+            status: import("../../generated/prisma/enums.js").PaymentStatus;
+            amount: import("@prisma/client-runtime-utils").Decimal;
+        } | null;
+    } & {
+        id: string;
+        createdAt: Date;
+        eventId: string;
+        userId: string;
+        ticketId: string;
+        status: import("../../generated/prisma/enums.js").RegistrationStatus;
+        cpf: string | null;
+        phone: string | null;
+        birthDate: Date | null;
+    }>;
+    cancel(id: string): Promise<{
+        id: string;
+        createdAt: Date;
+        eventId: string;
+        userId: string;
+        ticketId: string;
+        status: import("../../generated/prisma/enums.js").RegistrationStatus;
+        cpf: string | null;
+        phone: string | null;
+        birthDate: Date | null;
+    }>;
 }

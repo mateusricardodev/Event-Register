@@ -7,13 +7,21 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { IsDateString, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsDateString, IsInt, IsNotEmpty, IsOptional, IsString, Min, } from 'class-validator';
 export class CreateEventDto {
     title;
     description;
     location;
     date;
+    endDate;
     bannerUrl;
+    slug;
+    category;
+    maxParticipants;
+    organizerPhone;
+    isPublished;
+    about;
+    formFields;
 }
 __decorate([
     IsString(),
@@ -35,8 +43,49 @@ __decorate([
     __metadata("design:type", String)
 ], CreateEventDto.prototype, "date", void 0);
 __decorate([
+    IsDateString(),
+    IsOptional(),
+    __metadata("design:type", String)
+], CreateEventDto.prototype, "endDate", void 0);
+__decorate([
     IsString(),
     IsOptional(),
     __metadata("design:type", String)
 ], CreateEventDto.prototype, "bannerUrl", void 0);
+__decorate([
+    IsString(),
+    IsOptional(),
+    __metadata("design:type", String)
+], CreateEventDto.prototype, "slug", void 0);
+__decorate([
+    IsString(),
+    IsOptional(),
+    __metadata("design:type", String)
+], CreateEventDto.prototype, "category", void 0);
+__decorate([
+    IsInt(),
+    Min(1),
+    IsOptional(),
+    __metadata("design:type", Number)
+], CreateEventDto.prototype, "maxParticipants", void 0);
+__decorate([
+    IsString(),
+    IsOptional(),
+    __metadata("design:type", String)
+], CreateEventDto.prototype, "organizerPhone", void 0);
+__decorate([
+    IsBoolean(),
+    IsOptional(),
+    __metadata("design:type", Boolean)
+], CreateEventDto.prototype, "isPublished", void 0);
+__decorate([
+    IsString(),
+    IsOptional(),
+    __metadata("design:type", String)
+], CreateEventDto.prototype, "about", void 0);
+__decorate([
+    IsString(),
+    IsOptional(),
+    __metadata("design:type", String)
+], CreateEventDto.prototype, "formFields", void 0);
 //# sourceMappingURL=create-event.dto.js.map

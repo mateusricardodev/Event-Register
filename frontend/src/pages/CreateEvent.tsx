@@ -1,22 +1,39 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../components/Navbar'
+import { EventWizardHeader } from '../components/EventWizardHeader'
+import { useAuthStore } from '../store/auth.store'
 import api from '../api/axios'
 
-export function CreateEvent() {
-  const [form, setForm] = useState({
-    title: '',
-    description: '',
-    location: '',
-    date: '',
-    bannerUrl: '',
-  })
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const navigate = useNavigate()
+const CATEGORIES = [
+  'Acampamentos', 'Ação Social', 'Conferências', 'Congressos', 'Cultos',
+  'Encontros', 'Eventos esportivos', 'Feiras e exposições', 'Humor',
+  'Legendários', 'Missa', 'Retiros', 'Shows e Festas', 'Workshops e Cursos',
+]
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
-    setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
+export function CreateEvent() {
+  const { user } = useAuthStore()
+  const navigate = useNavigate()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const [form, setForm] = useState({
+    slug: '',
+    title: '',
+    category: '',
+    maxParticipants: '',
+    date: '',
+    endDate: '',
+    location: '',
+  })
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
+    const { name, value } = e.target
+    if (name === 'slug') {
+      setForm((f) => ({ ...f, slug: value.toLowerCase().replace(/[^a-z0-9-]/g, '-') }))
+    } else {
+      setForm((f) => ({ ...f, [name]: value }))
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -24,11 +41,16 @@ export function CreateEvent() {
     setError('')
     setLoading(true)
     try {
-      await api.post('/events', {
-        ...form,
+      const { data } = await api.post('/events', {
+        title: form.title,
+        slug: form.slug || undefined,
+        category: form.category || undefined,
+        maxParticipants: form.maxParticipants ? Number(form.maxParticipants) : undefined,
         date: new Date(form.date).toISOString(),
+        endDate: form.endDate ? new Date(form.endDate).toISOString() : undefined,
+        location: form.location || undefined,
       })
-      navigate('/dashboard')
+      navigate(`/events/${data.id}/setup/payment`)
     } catch (err: any) {
       setError(err.response?.data?.message || 'Erro ao criar evento')
     } finally {
@@ -36,99 +58,166 @@ export function CreateEvent() {
     }
   }
 
+  const baseUrl = `${window.location.origin}/evento/`
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
+      <EventWizardHeader active="info" />
 
-      <main className="max-w-2xl mx-auto px-4 py-10">
-        <h1 className="text-xl font-semibold text-gray-800 mb-6">Novo Evento</h1>
-
+      <main className="max-w-2xl mx-auto px-4 py-8">
         {error && (
           <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-lg p-6 flex flex-col gap-5 shadow-sm">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+          {/* URL do evento */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              * Título do evento
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Escolha o endereço da página do evento
+            </label>
+            <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-teal-400">
+              <span className="bg-gray-50 px-3 py-2 text-sm text-teal-600 border-r border-gray-300 whitespace-nowrap">
+                {baseUrl}
+              </span>
+              <input
+                name="slug"
+                value={form.slug}
+                onChange={handleChange}
+                placeholder="nome-do-evento"
+                className="flex-1 px-3 py-2 text-sm focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Nome do evento */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              * Nome do evento
             </label>
             <input
               name="title"
               value={form.title}
               onChange={handleChange}
               required
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-purple-500"
+              placeholder="Nome será destacado na página do evento"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
             />
           </div>
 
+          {/* Tipo do evento */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Descrição
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              * Tipo do evento
             </label>
-            <textarea
-              name="description"
-              value={form.description}
-              onChange={handleChange}
-              rows={4}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-purple-500 resize-none"
-            />
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input type="radio" checked readOnly className="mt-0.5 accent-teal-500" />
+              <div>
+                <span className="text-sm font-medium text-gray-800">Presencial</span>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Use o E-Inscrição para fazer a gestão completa do seu evento presencial
+                </p>
+              </div>
+            </label>
           </div>
 
+          {/* Categoria */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Local
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              * Categoria do evento
+            </label>
+            <select
+              name="category"
+              value={form.category}
+              onChange={handleChange}
+              required
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 bg-white"
+            >
+              <option value="">Selecione...</option>
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Limite e datas */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Limite máximo de inscritos
+              </label>
+              <input
+                name="maxParticipants"
+                type="number"
+                min={1}
+                value={form.maxParticipants}
+                onChange={handleChange}
+                placeholder="Sem limite"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                * Data de início
+              </label>
+              <input
+                name="date"
+                type="datetime-local"
+                value={form.date}
+                onChange={handleChange}
+                required
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                * Data do fim
+              </label>
+              <input
+                name="endDate"
+                type="datetime-local"
+                value={form.endDate}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+              />
+            </div>
+          </div>
+
+          {/* Local */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Local do evento
             </label>
             <input
               name="location"
               value={form.location}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-purple-500"
+              placeholder="Ex: Centro de Convenções - São Paulo, SP"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
             />
           </div>
 
+          {/* Email do organizador */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              * Data e hora
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Email do organizador
             </label>
             <input
-              name="date"
-              type="datetime-local"
-              value={form.date}
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-purple-500"
+              value={user?.email ?? ''}
+              disabled
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-400 cursor-not-allowed"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              URL do banner
-            </label>
-            <input
-              name="bannerUrl"
-              value={form.bannerUrl}
-              onChange={handleChange}
-              placeholder="https://..."
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-purple-500"
-            />
-          </div>
-
-          <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={() => navigate('/dashboard')}
-              className="text-sm text-gray-500 hover:text-gray-700 px-4 py-2"
-            >
-              Cancelar
-            </button>
+          <div className="flex justify-end pt-2">
             <button
               type="submit"
               disabled={loading}
-              className="bg-teal-500 hover:bg-teal-600 text-white text-sm font-semibold px-6 py-2 rounded-full transition-colors disabled:opacity-60"
+              className="bg-teal-500 hover:bg-teal-600 disabled:opacity-60 text-white font-semibold px-8 py-2 rounded-full text-sm transition-colors"
             >
-              {loading ? 'CRIANDO...' : 'CRIAR EVENTO'}
+              {loading ? 'CRIANDO...' : 'PRÓXIMO PASSO'}
             </button>
           </div>
         </form>

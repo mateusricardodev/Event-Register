@@ -4,6 +4,7 @@ export * as $Enums from './enums.js';
 export * from './enums.js';
 export type User = Prisma.UserModel;
 export type Event = Prisma.EventModel;
+export type EventPaymentMethod = Prisma.EventPaymentMethodModel;
 export type Ticket = Prisma.TicketModel;
 export type Registration = Prisma.RegistrationModel;
 export type Payment = Prisma.PaymentModel;

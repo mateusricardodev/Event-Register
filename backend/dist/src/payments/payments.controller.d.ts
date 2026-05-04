@@ -15,8 +15,8 @@ export declare class PaymentsController {
         id: string;
         createdAt: Date;
         status: import("../../generated/prisma/enums.js").PaymentStatus;
-        registrationId: string;
         amount: import("@prisma/client-runtime-utils").Decimal;
         provider: string;
+        registrationId: string;
     }>;
 }

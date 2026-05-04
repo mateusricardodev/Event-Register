@@ -7,9 +7,9 @@ export declare class AuthService {
     private readonly jwt;
     constructor(prisma: PrismaService, jwt: JwtService);
     register(dto: RegisterDto): Promise<{
-        name: string;
-        email: string;
         id: string;
+        email: string;
+        name: string;
         role: import("../../generated/prisma/enums.js").Role;
         createdAt: Date;
     }>;
@@ -17,9 +17,9 @@ export declare class AuthService {
         access_token: string;
     }>;
     me(userId: string): Promise<{
-        name: string;
-        email: string;
         id: string;
+        email: string;
+        name: string;
         role: import("../../generated/prisma/enums.js").Role;
         createdAt: Date;
     } | null>;

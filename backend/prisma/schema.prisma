@@ -37,17 +37,38 @@ model User {
 }
 
 model Event {
-  id            String         @id @default(uuid())
-  title         String
-  description   String?
-  location      String?
-  date          DateTime
-  bannerUrl     String?
-  createdBy     String
-  createdAt     DateTime       @default(now())
-  user          User           @relation(fields: [createdBy], references: [id])
-  tickets       Ticket[]
-  registrations Registration[]
+  id              String               @id @default(uuid())
+  title           String
+  description     String?
+  location        String?
+  date            DateTime
+  endDate         DateTime?
+  bannerUrl       String?
+  slug            String?              @unique
+  category        String?
+  maxParticipants Int?
+  organizerPhone  String?
+  isPublished     Boolean              @default(false)
+  about           String?
+  formFields      String?
+  createdBy       String
+  createdAt       DateTime             @default(now())
+  user            User                 @relation(fields: [createdBy], references: [id])
+  tickets         Ticket[]
+  registrations   Registration[]
+  paymentMethods  EventPaymentMethod[]
+}
+
+model EventPaymentMethod {
+  id           String    @id @default(uuid())
+  eventId      String
+  type         String
+  value        Decimal   @default(0)
+  installments Int       @default(1)
+  startDate    DateTime?
+  endDate      DateTime?
+  createdAt    DateTime  @default(now())
+  event        Event     @relation(fields: [eventId], references: [id])
 }
 
 model Ticket {
@@ -67,6 +88,9 @@ model Registration {
   eventId   String
   ticketId  String
   status    RegistrationStatus @default(pending)
+  cpf       String?
+  phone     String?
+  birthDate DateTime?
   createdAt DateTime           @default(now())
   user      User               @relation(fields: [userId], references: [id])
   event     Event              @relation(fields: [eventId], references: [id])

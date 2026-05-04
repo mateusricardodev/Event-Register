@@ -1,6 +1,8 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { RegistrationsService } from './registrations.service.js';
 import { CreateRegistrationDto } from './dto/create-registration.dto.js';
+import { CreateRegistrationOrganizerDto } from './dto/create-registration-organizer.dto.js';
+import { UpdateRegistrationDto } from './dto/update-registration.dto.js';
 import { JwtGuard } from '../auth/guards/jwt.guard.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 
@@ -21,5 +23,38 @@ export class RegistrationsController {
   @Get('my-registrations')
   myRegistrations(@CurrentUser() user: { id: string }) {
     return this.registrationsService.findMyRegistrations(user.id);
+  }
+
+  @UseGuards(JwtGuard)
+  @Get('events/:eventId/registrations')
+  findByEvent(@Param('eventId') eventId: string) {
+    return this.registrationsService.findByEvent(eventId);
+  }
+
+  @UseGuards(JwtGuard)
+  @Post('events/:eventId/registrations')
+  createByOrganizer(
+    @Param('eventId') eventId: string,
+    @Body() dto: CreateRegistrationOrganizerDto,
+  ) {
+    return this.registrationsService.createByOrganizer(eventId, dto);
+  }
+
+  @UseGuards(JwtGuard)
+  @Get('registrations/search')
+  search(@Query('q') q: string) {
+    return this.registrationsService.search(q ?? '');
+  }
+
+  @UseGuards(JwtGuard)
+  @Put('registrations/:id')
+  update(@Param('id') id: string, @Body() dto: UpdateRegistrationDto) {
+    return this.registrationsService.update(id, dto);
+  }
+
+  @UseGuards(JwtGuard)
+  @Patch('registrations/:id/cancel')
+  cancel(@Param('id') id: string) {
+    return this.registrationsService.cancel(id);
   }
 }
