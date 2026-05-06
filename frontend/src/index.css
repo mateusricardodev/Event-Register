@@ -1,1 +1,8 @@
 @import "tailwindcss";
+
+@theme {
+  --color-brand-purple: #7e22ce;
+  --color-brand-purple-light: #a855f7;
+  --color-brand-teal: #2dd4bf;
+  --color-brand-teal-dark: #0f766e;
+}
