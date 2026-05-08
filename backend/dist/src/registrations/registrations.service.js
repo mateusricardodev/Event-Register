@@ -10,10 +10,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 import { Injectable, NotFoundException, BadRequestException, } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { MailService } from '../mail/mail.service.js';
 let RegistrationsService = class RegistrationsService {
     prisma;
-    constructor(prisma) {
+    mail;
+    constructor(prisma, mail) {
         this.prisma = prisma;
+        this.mail = mail;
     }
     async create(userId, dto) {
         const event = await this.prisma.db.event.findUnique({
@@ -88,7 +91,7 @@ let RegistrationsService = class RegistrationsService {
                 data: { name: dto.name, email: dto.email, password: randomPassword },
             });
         }
-        return this.prisma.db.registration.create({
+        const registration = await this.prisma.db.registration.create({
             data: {
                 userId: user.id,
                 eventId,
@@ -101,6 +104,15 @@ let RegistrationsService = class RegistrationsService {
                 user: { select: { id: true, name: true, email: true } },
             },
         });
+        void this.mail.sendRegistrationConfirmation({
+            participantName: dto.name,
+            participantEmail: dto.email,
+            eventTitle: event.title,
+            eventDate: event.date,
+            eventLocation: event.location,
+            registrationId: registration.id,
+        });
+        return registration;
     }
     async update(id, dto) {
         const registration = await this.prisma.db.registration.findUnique({
@@ -161,7 +173,7 @@ let RegistrationsService = class RegistrationsService {
                 data: { name: dto.name, email: dto.email, password: randomPassword },
             });
         }
-        return this.prisma.db.registration.create({
+        const registration = await this.prisma.db.registration.create({
             data: {
                 userId: user.id,
                 eventId: event.id,
@@ -175,6 +187,15 @@ let RegistrationsService = class RegistrationsService {
                 event: { select: { id: true, title: true, date: true } },
             },
         });
+        void this.mail.sendRegistrationConfirmation({
+            participantName: dto.name,
+            participantEmail: dto.email,
+            eventTitle: event.title,
+            eventDate: event.date,
+            eventLocation: event.location,
+            registrationId: registration.id,
+        });
+        return registration;
     }
     async search(q) {
         if (!q || q.trim().length < 2)
@@ -201,7 +222,8 @@ let RegistrationsService = class RegistrationsService {
 };
 RegistrationsService = __decorate([
     Injectable(),
-    __metadata("design:paramtypes", [PrismaService])
+    __metadata("design:paramtypes", [PrismaService,
+        MailService])
 ], RegistrationsService);
 export { RegistrationsService };
 //# sourceMappingURL=registrations.service.js.map

@@ -1,10 +1,12 @@
 import { PrismaService } from '../prisma/prisma.service.js';
+import { MailService } from '../mail/mail.service.js';
 import { CreateRegistrationDto } from './dto/create-registration.dto.js';
 import { CreateRegistrationOrganizerDto } from './dto/create-registration-organizer.dto.js';
 import { UpdateRegistrationDto } from './dto/update-registration.dto.js';
 export declare class RegistrationsService {
     private readonly prisma;
-    constructor(prisma: PrismaService);
+    private readonly mail;
+    constructor(prisma: PrismaService, mail: MailService);
     create(userId: string, dto: CreateRegistrationDto): Promise<{
         event: {
             id: string;

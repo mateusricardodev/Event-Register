@@ -5,13 +5,17 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { MailService } from '../mail/mail.service.js';
 import { CreateRegistrationDto } from './dto/create-registration.dto.js';
 import { CreateRegistrationOrganizerDto } from './dto/create-registration-organizer.dto.js';
 import { UpdateRegistrationDto } from './dto/update-registration.dto.js';
 
 @Injectable()
 export class RegistrationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mail: MailService,
+  ) {}
 
   async create(userId: string, dto: CreateRegistrationDto) {
     const event = await this.prisma.db.event.findUnique({
@@ -92,7 +96,7 @@ export class RegistrationsService {
       });
     }
 
-    return this.prisma.db.registration.create({
+    const registration = await this.prisma.db.registration.create({
       data: {
         userId: user.id,
         eventId,
@@ -105,6 +109,17 @@ export class RegistrationsService {
         user: { select: { id: true, name: true, email: true } },
       },
     });
+
+    void this.mail.sendRegistrationConfirmation({
+      participantName: dto.name,
+      participantEmail: dto.email,
+      eventTitle: event.title,
+      eventDate: event.date,
+      eventLocation: event.location,
+      registrationId: registration.id,
+    });
+
+    return registration;
   }
 
   async update(id: string, dto: UpdateRegistrationDto) {
@@ -171,7 +186,7 @@ export class RegistrationsService {
       });
     }
 
-    return this.prisma.db.registration.create({
+    const registration = await this.prisma.db.registration.create({
       data: {
         userId: user.id,
         eventId: event.id,
@@ -185,6 +200,17 @@ export class RegistrationsService {
         event: { select: { id: true, title: true, date: true } },
       },
     });
+
+    void this.mail.sendRegistrationConfirmation({
+      participantName: dto.name,
+      participantEmail: dto.email,
+      eventTitle: event.title,
+      eventDate: event.date,
+      eventLocation: event.location,
+      registrationId: registration.id,
+    });
+
+    return registration;
   }
 
   async search(q: string) {
