@@ -7,6 +7,16 @@
 
 ---
 
+## ⏳ Pendências (não implementadas ainda)
+
+| ID | Descrição | Motivo do adiamento |
+|---|---|---|
+| M-02 | `formFields` e `extraFields` sem schema de validação | Exige definir lista de campos permitidos no backend (DTO) e sincronizar com a UI — tarefa de média complexidade |
+| M-07 | Usuários criados automaticamente nas inscrições nunca conseguem logar | Requer fluxo de "definir senha por email" (convite) — feature separada |
+| A-01 | CPF armazenado em texto puro (LGPD) | Exige migração de banco + criptografia AES-256-GCM — alto impacto, fazer antes do deploy em produção |
+
+---
+
 ## Sumário Executivo
 
 | Severidade | Quantidade |
