@@ -14,12 +14,16 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import multer from 'multer';
 import { extname, join } from 'path';
+import { readFileSync, unlinkSync } from 'fs';
+import { fileTypeFromBuffer } from 'file-type';
 import { EventsService } from './events.service.js';
 import { CreateEventDto } from './dto/create-event.dto.js';
 import { UpdateEventDto } from './dto/update-event.dto.js';
 import { CreatePaymentMethodDto } from './dto/create-payment-method.dto.js';
 import { JwtGuard } from '../auth/guards/jwt.guard.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
 
 @Controller('events')
 export class EventsController {
@@ -112,6 +116,14 @@ export class EventsController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (!file) throw new BadRequestException('Nenhum arquivo enviado');
+
+    const buffer = readFileSync(file.path);
+    const detected = await fileTypeFromBuffer(buffer);
+    if (!detected || !ALLOWED_IMAGE_TYPES.has(detected.mime)) {
+      unlinkSync(file.path);
+      throw new BadRequestException('Arquivo não é uma imagem válida');
+    }
+
     return this.eventsService.uploadBanner(id, user.id, file.filename);
   }
 

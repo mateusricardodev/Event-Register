@@ -14,6 +14,7 @@ const mockDb: any = {
     count: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
+    aggregate: jest.fn(),
   },
   user: {
     findUnique: jest.fn(),
@@ -210,12 +211,13 @@ describe('RegistrationsService', () => {
   // ─── findByEvent ────────────────────────────────────────────────────────────
 
   describe('findByEvent', () => {
-    it('retorna inscrições quando é o dono do evento', async () => {
+    it('retorna inscrições paginadas quando é o dono do evento', async () => {
       mockDb.event.findUnique.mockResolvedValue(baseEvent);
       mockDb.registration.findMany.mockResolvedValue([{ id: 'r1' }]);
+      mockDb.registration.count.mockResolvedValue(1);
 
       const result = await service.findByEvent(EVENT_ID, OWNER_ID);
-      expect(result).toHaveLength(1);
+      expect(result).toMatchObject({ data: [{ id: 'r1' }], total: 1, page: 1 });
     });
 
     it('lança ForbiddenException quando não é o dono do evento', async () => {

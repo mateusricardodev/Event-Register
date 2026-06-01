@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, ParseIntPipe, Post, Put, Query, UseGuards, DefaultValuePipe } from '@nestjs/common';
 import { RegistrationsService } from './registrations.service.js';
 import { CreateRegistrationDto } from './dto/create-registration.dto.js';
 import { CreateRegistrationOrganizerDto } from './dto/create-registration-organizer.dto.js';
@@ -21,8 +21,12 @@ export class RegistrationsController {
 
   @UseGuards(JwtGuard)
   @Get('my-registrations')
-  myRegistrations(@CurrentUser() user: { id: string }) {
-    return this.registrationsService.findMyRegistrations(user.id);
+  myRegistrations(
+    @CurrentUser() user: { id: string },
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
+  ) {
+    return this.registrationsService.findMyRegistrations(user.id, page, limit);
   }
 
   @UseGuards(JwtGuard)
@@ -30,8 +34,10 @@ export class RegistrationsController {
   findByEvent(
     @Param('eventId') eventId: string,
     @CurrentUser() user: { id: string },
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(50), ParseIntPipe) limit: number,
   ) {
-    return this.registrationsService.findByEvent(eventId, user.id);
+    return this.registrationsService.findByEvent(eventId, user.id, page, limit);
   }
 
   @UseGuards(JwtGuard)

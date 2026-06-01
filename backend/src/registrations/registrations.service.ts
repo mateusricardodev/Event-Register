@@ -45,33 +45,47 @@ export class RegistrationsService {
     }, { isolationLevel: 'Serializable' as never });
   }
 
-  async findMyRegistrations(userId: string) {
-    return this.prisma.db.registration.findMany({
-      where: { userId },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        event: { select: { id: true, title: true, date: true, location: true } },
-        ticket: { select: { id: true, name: true, price: true } },
-        payment: { select: { id: true, status: true, amount: true } },
-      },
-    });
+  async findMyRegistrations(userId: string, page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.prisma.db.registration.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+        include: {
+          event: { select: { id: true, title: true, date: true, location: true } },
+          ticket: { select: { id: true, name: true, price: true } },
+          payment: { select: { id: true, status: true, amount: true } },
+        },
+      }),
+      this.prisma.db.registration.count({ where: { userId } }),
+    ]);
+    return { data, total, page, limit };
   }
 
-  async findByEvent(eventId: string, userId: string) {
+  async findByEvent(eventId: string, userId: string, page = 1, limit = 50) {
     const event = await this.prisma.db.event.findUnique({ where: { id: eventId } });
     if (!event) throw new NotFoundException('Evento não encontrado');
     if (event.createdBy !== userId)
       throw new ForbiddenException('Sem permissão para acessar estas inscrições');
 
-    return this.prisma.db.registration.findMany({
-      where: { eventId },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        user: { select: { id: true, name: true, email: true } },
-        ticket: { select: { id: true, name: true, price: true } },
-        payment: { select: { id: true, status: true, amount: true } },
-      },
-    });
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.prisma.db.registration.findMany({
+        where: { eventId },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+        include: {
+          user: { select: { id: true, name: true, email: true } },
+          ticket: { select: { id: true, name: true, price: true } },
+          payment: { select: { id: true, status: true, amount: true } },
+        },
+      }),
+      this.prisma.db.registration.count({ where: { eventId } }),
+    ]);
+    return { data, total, page, limit };
   }
 
   async createByOrganizer(eventId: string, userId: string, dto: CreateRegistrationOrganizerDto) {
