@@ -5,6 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import { randomBytes } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { MailService } from '../mail/mail.service.js';
 import { CreateRegistrationDto } from './dto/create-registration.dto.js';
@@ -96,7 +97,7 @@ export class RegistrationsService {
 
       let user = await tx.user.findUnique({ where: { email: dto.email } });
       if (!user) {
-        const randomPassword = await bcrypt.hash(Math.random().toString(36), 10);
+        const randomPassword = await bcrypt.hash(randomBytes(32).toString('hex'), 10);
         user = await tx.user.create({
           data: { name: dto.name, email: dto.email, password: randomPassword },
         });
@@ -199,7 +200,7 @@ export class RegistrationsService {
 
       let user = await tx.user.findUnique({ where: { email: dto.email } });
       if (!user) {
-        const randomPassword = await bcrypt.hash(Math.random().toString(36), 10);
+        const randomPassword = await bcrypt.hash(randomBytes(32).toString('hex'), 10);
         user = await tx.user.create({
           data: { name: dto.name, email: dto.email, password: randomPassword },
         });
