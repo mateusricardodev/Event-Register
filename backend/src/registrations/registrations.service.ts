@@ -19,38 +19,29 @@ export class RegistrationsService {
   ) {}
 
   async create(userId: string, dto: CreateRegistrationDto) {
-    const event = await this.prisma.db.event.findUnique({
-      where: { id: dto.eventId },
-    });
+    const event = await this.prisma.db.event.findUnique({ where: { id: dto.eventId } });
     if (!event) throw new NotFoundException('Evento não encontrado');
 
-    const ticket = await this.prisma.db.ticket.findUnique({
-      where: { id: dto.ticketId },
-    });
+    const ticket = await this.prisma.db.ticket.findUnique({ where: { id: dto.ticketId } });
     if (!ticket) throw new NotFoundException('Ticket não encontrado');
     if (ticket.eventId !== dto.eventId)
       throw new BadRequestException('Ticket não pertence a este evento');
 
-    const used = await this.prisma.db.registration.count({
-      where: {
-        ticketId: dto.ticketId,
-        status: { not: 'canceled' },
-      },
-    });
-    if (used >= ticket.quantity)
-      throw new BadRequestException('Ingressos esgotados para este ticket');
+    return this.prisma.db.$transaction(async (tx) => {
+      const used = await tx.registration.count({
+        where: { ticketId: dto.ticketId, status: { not: 'canceled' } },
+      });
+      if (used >= ticket.quantity)
+        throw new BadRequestException('Ingressos esgotados para este ticket');
 
-    return this.prisma.db.registration.create({
-      data: {
-        userId,
-        eventId: dto.eventId,
-        ticketId: dto.ticketId,
-      },
-      include: {
-        event: { select: { id: true, title: true, date: true } },
-        ticket: { select: { id: true, name: true, price: true } },
-      },
-    });
+      return tx.registration.create({
+        data: { userId, eventId: dto.eventId, ticketId: dto.ticketId },
+        include: {
+          event: { select: { id: true, title: true, date: true } },
+          ticket: { select: { id: true, name: true, price: true } },
+        },
+      });
+    }, { isolationLevel: 'Serializable' as never });
   }
 
   async findMyRegistrations(userId: string) {
@@ -88,35 +79,35 @@ export class RegistrationsService {
     if (event.createdBy !== userId)
       throw new ForbiddenException('Sem permissão para adicionar inscrições a este evento');
 
-    if (event.maxParticipants) {
-      const count = await this.prisma.db.registration.count({
-        where: { eventId, status: { not: 'canceled' } },
-      });
-      if (count >= event.maxParticipants)
-        throw new BadRequestException('Evento lotado');
-    }
+    const registration = await this.prisma.db.$transaction(async (tx) => {
+      if (event.maxParticipants) {
+        const count = await tx.registration.count({
+          where: { eventId, status: { not: 'canceled' } },
+        });
+        if (count >= event.maxParticipants)
+          throw new BadRequestException('Evento lotado');
+      }
 
-    let user = await this.prisma.db.user.findUnique({ where: { email: dto.email } });
-    if (!user) {
-      const randomPassword = await bcrypt.hash(Math.random().toString(36), 10);
-      user = await this.prisma.db.user.create({
-        data: { name: dto.name, email: dto.email, password: randomPassword },
-      });
-    }
+      let user = await tx.user.findUnique({ where: { email: dto.email } });
+      if (!user) {
+        const randomPassword = await bcrypt.hash(Math.random().toString(36), 10);
+        user = await tx.user.create({
+          data: { name: dto.name, email: dto.email, password: randomPassword },
+        });
+      }
 
-    const registration = await this.prisma.db.registration.create({
-      data: {
-        userId: user.id,
-        eventId,
-        status: 'confirmed',
-        cpf: dto.cpf,
-        phone: dto.phone,
-        birthDate: dto.birthDate ? new Date(dto.birthDate) : null,
-      },
-      include: {
-        user: { select: { id: true, name: true, email: true } },
-      },
-    });
+      return tx.registration.create({
+        data: {
+          userId: user.id,
+          eventId,
+          status: 'confirmed',
+          cpf: dto.cpf,
+          phone: dto.phone,
+          birthDate: dto.birthDate ? new Date(dto.birthDate) : null,
+        },
+        include: { user: { select: { id: true, name: true, email: true } } },
+      });
+    }, { isolationLevel: 'Serializable' as never });
 
     void this.mail.sendRegistrationConfirmation({
       participantName: dto.name,
@@ -185,36 +176,36 @@ export class RegistrationsService {
     if (!event.isPublished)
       throw new BadRequestException('Este evento não está disponível para inscrições');
 
-    if (event.maxParticipants) {
-      const count = await this.prisma.db.registration.count({
-        where: { eventId: event.id, status: { not: 'canceled' } },
-      });
-      if (count >= event.maxParticipants)
-        throw new BadRequestException('Evento lotado');
-    }
+    const registration = await this.prisma.db.$transaction(async (tx) => {
+      if (event.maxParticipants) {
+        const count = await tx.registration.count({
+          where: { eventId: event.id, status: { not: 'canceled' } },
+        });
+        if (count >= event.maxParticipants)
+          throw new BadRequestException('Evento lotado');
+      }
 
-    let user = await this.prisma.db.user.findUnique({ where: { email: dto.email } });
-    if (!user) {
-      const randomPassword = await bcrypt.hash(Math.random().toString(36), 10);
-      user = await this.prisma.db.user.create({
-        data: { name: dto.name, email: dto.email, password: randomPassword },
-      });
-    }
+      let user = await tx.user.findUnique({ where: { email: dto.email } });
+      if (!user) {
+        const randomPassword = await bcrypt.hash(Math.random().toString(36), 10);
+        user = await tx.user.create({
+          data: { name: dto.name, email: dto.email, password: randomPassword },
+        });
+      }
 
-    const registration = await this.prisma.db.registration.create({
-      data: {
-        userId: user.id,
-        eventId: event.id,
-        status: 'confirmed',
-        cpf: dto.cpf,
-        phone: dto.phone,
-        birthDate: dto.birthDate ? new Date(dto.birthDate) : null,
-        extraFields: dto.extraFields ? JSON.stringify(dto.extraFields) : null,
-      },
-      include: {
-        event: { select: { id: true, title: true, date: true } },
-      },
-    });
+      return tx.registration.create({
+        data: {
+          userId: user.id,
+          eventId: event.id,
+          status: 'confirmed',
+          cpf: dto.cpf,
+          phone: dto.phone,
+          birthDate: dto.birthDate ? new Date(dto.birthDate) : null,
+          extraFields: dto.extraFields ? JSON.stringify(dto.extraFields) : null,
+        },
+        include: { event: { select: { id: true, title: true, date: true } } },
+      });
+    }, { isolationLevel: 'Serializable' as never });
 
     void this.mail.sendRegistrationConfirmation({
       participantName: dto.name,

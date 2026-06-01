@@ -4,7 +4,7 @@ import { RegistrationsService } from './registrations.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { MailService } from '../mail/mail.service.js';
 
-const mockDb = {
+const mockDb: any = {
   event: { findUnique: jest.fn() },
   ticket: { findUnique: jest.fn() },
   registration: {
@@ -19,6 +19,10 @@ const mockDb = {
     create: jest.fn(),
     update: jest.fn(),
   },
+  // executa o callback com o próprio mock, simulando a transação
+  $transaction: jest.fn().mockImplementation((cb: any) =>
+    typeof cb === 'function' ? cb(mockDb) : Promise.all(cb),
+  ),
 };
 
 const OWNER_ID = 'owner-uuid';
@@ -173,29 +177,19 @@ describe('RegistrationsService', () => {
       );
     });
 
-    // ─── PROVA DO BUG C-01: Race condition ────────────────────────────────────
-    it('BUG C-01 (race condition): permite N+1 inscrições em evento com 1 vaga', async () => {
-      const eventWith1Vaga = { ...baseEvent, maxParticipants: 1 };
-      mockDb.event.findUnique.mockResolvedValue(eventWith1Vaga);
+    // ─── C-01 CORRIGIDO: verifica que $transaction é usado com Serializable ───
+    it('C-01 (corrigido): usa $transaction com isolamento Serializable', async () => {
+      mockDb.event.findUnique.mockResolvedValue({ ...baseEvent, maxParticipants: 1 });
       mockDb.user.findUnique.mockResolvedValue(baseUser);
-
-      // Ambas as chamadas simultâneas leem count=0 (antes de qualquer create persistido)
       mockDb.registration.count.mockResolvedValue(0);
-      mockDb.registration.create
-        .mockResolvedValueOnce({ id: 'r1' })
-        .mockResolvedValueOnce({ id: 'r2' });
+      mockDb.registration.create.mockResolvedValue({ id: 'r1' });
 
-      // Dispara duas inscrições simultâneas
-      const [res1, res2] = await Promise.all([
-        service.createPublic('conf-2026', { ...dto, email: 'a@test.com' }),
-        service.createPublic('conf-2026', { ...dto, email: 'b@test.com' }),
-      ]);
+      await service.createPublic('conf-2026', dto);
 
-      // AMBAS retornam sucesso — o evento está lotado mas as duas inscrições foram criadas
-      // Este teste FALHA após a correção com transação Serializable (apenas 1 deve passar)
-      expect(res1).toHaveProperty('id', 'r1');
-      expect(res2).toHaveProperty('id', 'r2');
-      expect(mockDb.registration.create).toHaveBeenCalledTimes(2); // BUG: deveria ser 1
+      expect(mockDb.$transaction).toHaveBeenCalledWith(
+        expect.any(Function),
+        { isolationLevel: 'Serializable' },
+      );
     });
   });
 
