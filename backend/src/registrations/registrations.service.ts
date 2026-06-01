@@ -65,7 +65,12 @@ export class RegistrationsService {
     });
   }
 
-  async findByEvent(eventId: string) {
+  async findByEvent(eventId: string, userId: string) {
+    const event = await this.prisma.db.event.findUnique({ where: { id: eventId } });
+    if (!event) throw new NotFoundException('Evento não encontrado');
+    if (event.createdBy !== userId)
+      throw new ForbiddenException('Sem permissão para acessar estas inscrições');
+
     return this.prisma.db.registration.findMany({
       where: { eventId },
       orderBy: { createdAt: 'desc' },
@@ -77,9 +82,11 @@ export class RegistrationsService {
     });
   }
 
-  async createByOrganizer(eventId: string, dto: CreateRegistrationOrganizerDto) {
+  async createByOrganizer(eventId: string, userId: string, dto: CreateRegistrationOrganizerDto) {
     const event = await this.prisma.db.event.findUnique({ where: { id: eventId } });
     if (!event) throw new NotFoundException('Evento não encontrado');
+    if (event.createdBy !== userId)
+      throw new ForbiddenException('Sem permissão para adicionar inscrições a este evento');
 
     if (event.maxParticipants) {
       const count = await this.prisma.db.registration.count({

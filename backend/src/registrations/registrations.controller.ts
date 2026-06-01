@@ -27,17 +27,21 @@ export class RegistrationsController {
 
   @UseGuards(JwtGuard)
   @Get('events/:eventId/registrations')
-  findByEvent(@Param('eventId') eventId: string) {
-    return this.registrationsService.findByEvent(eventId);
+  findByEvent(
+    @Param('eventId') eventId: string,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this.registrationsService.findByEvent(eventId, user.id);
   }
 
   @UseGuards(JwtGuard)
   @Post('events/:eventId/registrations')
   createByOrganizer(
     @Param('eventId') eventId: string,
+    @CurrentUser() user: { id: string },
     @Body() dto: CreateRegistrationOrganizerDto,
   ) {
-    return this.registrationsService.createByOrganizer(eventId, dto);
+    return this.registrationsService.createByOrganizer(eventId, user.id, dto);
   }
 
   @UseGuards(JwtGuard)

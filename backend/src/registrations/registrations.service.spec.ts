@@ -38,6 +38,7 @@ const baseEvent = {
   maxParticipants: 100,
   date: new Date('2026-08-01'),
   location: 'São Paulo',
+  createdBy: OWNER_ID,
 };
 
 const baseTicket = {
@@ -198,6 +199,31 @@ describe('RegistrationsService', () => {
     });
   });
 
+  // ─── findByEvent ────────────────────────────────────────────────────────────
+
+  describe('findByEvent', () => {
+    it('retorna inscrições quando é o dono do evento', async () => {
+      mockDb.event.findUnique.mockResolvedValue(baseEvent);
+      mockDb.registration.findMany.mockResolvedValue([{ id: 'r1' }]);
+
+      const result = await service.findByEvent(EVENT_ID, OWNER_ID);
+      expect(result).toHaveLength(1);
+    });
+
+    it('lança ForbiddenException quando não é o dono do evento', async () => {
+      mockDb.event.findUnique.mockResolvedValue(baseEvent);
+
+      await expect(service.findByEvent(EVENT_ID, 'outro-user')).rejects.toThrow(ForbiddenException);
+      expect(mockDb.registration.findMany).not.toHaveBeenCalled();
+    });
+
+    it('lança NotFoundException para evento inexistente', async () => {
+      mockDb.event.findUnique.mockResolvedValue(null);
+
+      await expect(service.findByEvent('fake', OWNER_ID)).rejects.toThrow(NotFoundException);
+    });
+  });
+
   // ─── createByOrganizer ──────────────────────────────────────────────────────
 
   describe('createByOrganizer', () => {
@@ -209,15 +235,22 @@ describe('RegistrationsService', () => {
       mockDb.user.findUnique.mockResolvedValue(baseUser);
       mockDb.registration.create.mockResolvedValue({ id: 'r1', userId: USER_ID, eventId: EVENT_ID });
 
-      const result = await service.createByOrganizer(EVENT_ID, dto);
+      const result = await service.createByOrganizer(EVENT_ID, OWNER_ID, dto);
       expect(result).toHaveProperty('id');
+    });
+
+    it('lança ForbiddenException quando não é o dono do evento', async () => {
+      mockDb.event.findUnique.mockResolvedValue(baseEvent);
+
+      await expect(service.createByOrganizer(EVENT_ID, 'outro-user', dto))
+        .rejects.toThrow(ForbiddenException);
     });
 
     it('lança BadRequestException quando evento lotado', async () => {
       mockDb.event.findUnique.mockResolvedValue({ ...baseEvent, maxParticipants: 1 });
       mockDb.registration.count.mockResolvedValue(1);
 
-      await expect(service.createByOrganizer(EVENT_ID, dto)).rejects.toThrow(BadRequestException);
+      await expect(service.createByOrganizer(EVENT_ID, OWNER_ID, dto)).rejects.toThrow(BadRequestException);
     });
   });
 
