@@ -72,8 +72,8 @@ export class EventsController {
 
   @UseGuards(JwtGuard)
   @Get(':id/payment-methods')
-  getPaymentMethods(@Param('id') id: string) {
-    return this.eventsService.getPaymentMethods(id);
+  getPaymentMethods(@Param('id') id: string, @CurrentUser() user: { id: string }) {
+    return this.eventsService.getPaymentMethods(id, user.id);
   }
 
   @UseGuards(JwtGuard)

@@ -165,7 +165,8 @@ export class EventsService {
     return { bannerUrl };
   }
 
-  async getPaymentMethods(eventId: string) {
+  async getPaymentMethods(eventId: string, userId: string) {
+    await this.checkOwnership(eventId, userId);
     return this.prisma.db.eventPaymentMethod.findMany({
       where: { eventId },
       orderBy: { createdAt: 'asc' },

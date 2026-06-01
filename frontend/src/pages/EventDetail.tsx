@@ -50,9 +50,9 @@ export function EventDetail() {
 
   function loadRegistrations() {
     if (!id) return
-    api.get(`/events/${id}/registrations`).then(({ data }) => {
-      setRegistrations(data)
-    })
+    api.get(`/events/${id}/registrations`)
+      .then(({ data }) => setRegistrations(data))
+      .catch(() => {})
   }
 
   useEffect(() => {
@@ -60,11 +60,13 @@ export function EventDetail() {
     Promise.all([
       api.get(`/events/${id}`),
       api.get(`/events/${id}/registrations`),
-    ]).then(([evtRes, regRes]) => {
-      setEvent(evtRes.data)
-      setRegistrations(regRes.data)
-      setLoading(false)
-    })
+    ])
+      .then(([evtRes, regRes]) => {
+        setEvent(evtRes.data)
+        setRegistrations(regRes.data)
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
   }, [id])
 
   async function handleCancel(regId: string) {
