@@ -5,6 +5,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  Matches,
   Min,
 } from 'class-validator';
 
@@ -34,6 +35,9 @@ export class CreateEventDto {
 
   @IsString()
   @IsOptional()
+  @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
+    message: 'Slug deve conter apenas letras minúsculas, números e hífens',
+  })
   slug?: string;
 
   @IsString()
