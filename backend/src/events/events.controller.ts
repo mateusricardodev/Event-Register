@@ -36,6 +36,7 @@ export class EventsController {
     return this.eventsService.findBySlug(slug);
   }
 
+  @UseGuards(JwtGuard)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.eventsService.findOne(id);
