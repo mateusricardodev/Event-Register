@@ -1,4 +1,5 @@
 import { IsEmail, IsNotEmpty, IsObject, IsOptional, IsString } from 'class-validator';
+import { IsCpf } from '../../common/validators/is-cpf.validator.js';
 
 export class CreateRegistrationOrganizerDto {
   @IsString()
@@ -8,6 +9,7 @@ export class CreateRegistrationOrganizerDto {
   @IsEmail()
   email: string;
 
+  @IsCpf()
   @IsString()
   @IsNotEmpty()
   cpf: string;

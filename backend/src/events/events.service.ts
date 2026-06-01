@@ -114,17 +114,19 @@ export class EventsService {
   async remove(id: string, userId: string) {
     await this.checkOwnership(id, userId);
 
-    const registrations = await this.prisma.db.registration.findMany({
-      where: { eventId: id },
-      select: { id: true },
-    });
-    const regIds = registrations.map((r) => r.id);
+    await this.prisma.db.$transaction(async (tx) => {
+      const registrations = await tx.registration.findMany({
+        where: { eventId: id },
+        select: { id: true },
+      });
+      const regIds = registrations.map((r) => r.id);
 
-    await this.prisma.db.payment.deleteMany({ where: { registrationId: { in: regIds } } });
-    await this.prisma.db.registration.deleteMany({ where: { eventId: id } });
-    await this.prisma.db.eventPaymentMethod.deleteMany({ where: { eventId: id } });
-    await this.prisma.db.ticket.deleteMany({ where: { eventId: id } });
-    await this.prisma.db.event.delete({ where: { id } });
+      await tx.payment.deleteMany({ where: { registrationId: { in: regIds } } });
+      await tx.registration.deleteMany({ where: { eventId: id } });
+      await tx.eventPaymentMethod.deleteMany({ where: { eventId: id } });
+      await tx.ticket.deleteMany({ where: { eventId: id } });
+      await tx.event.delete({ where: { id } });
+    });
 
     return { message: 'Evento removido com sucesso' };
   }

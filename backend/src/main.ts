@@ -6,13 +6,19 @@ import { AppModule } from './app.module.js';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter.js';
 import { mkdirSync } from 'fs';
 import { join } from 'path';
+import helmet from 'helmet';
 
 async function bootstrap() {
   mkdirSync(join(process.cwd(), 'uploads'), { recursive: true });
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  app.enableCors();
+  app.use(helmet());
+
+  app.enableCors({
+    origin: process.env.FRONTEND_URL ?? 'http://localhost:5173',
+    credentials: true,
+  });
 
   app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });
 

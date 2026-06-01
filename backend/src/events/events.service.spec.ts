@@ -3,7 +3,7 @@ import { NotFoundException, ForbiddenException, ConflictException } from '@nestj
 import { EventsService } from './events.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
-const mockDb = {
+const mockDb: any = {
   event: {
     findUnique: jest.fn(),
     findFirst: jest.fn(),
@@ -25,6 +25,9 @@ const mockDb = {
     delete: jest.fn(),
     deleteMany: jest.fn(),
   },
+  $transaction: jest.fn().mockImplementation((cb: any) =>
+    typeof cb === 'function' ? cb(mockDb) : Promise.all(cb),
+  ),
 };
 
 const mockPrisma = { db: mockDb };
