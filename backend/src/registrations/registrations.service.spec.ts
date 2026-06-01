@@ -9,6 +9,7 @@ const mockDb: any = {
   ticket: { findUnique: jest.fn() },
   registration: {
     findUnique: jest.fn(),
+    findFirst: jest.fn(),
     findMany: jest.fn(),
     count: jest.fn(),
     create: jest.fn(),
@@ -125,6 +126,7 @@ describe('RegistrationsService', () => {
     it('cria inscrição pública com sucesso', async () => {
       mockDb.event.findUnique.mockResolvedValue(baseEvent);
       mockDb.registration.count.mockResolvedValue(0);
+      mockDb.registration.findFirst.mockResolvedValue(null);
       mockDb.user.findUnique.mockResolvedValue(baseUser);
       mockDb.registration.create.mockResolvedValue({ id: 'r1', eventId: EVENT_ID });
 
@@ -151,9 +153,19 @@ describe('RegistrationsService', () => {
       await expect(service.createPublic('conf-2026', dto)).rejects.toThrow(BadRequestException);
     });
 
+    it('lança BadRequestException para CPF já inscrito no mesmo evento', async () => {
+      mockDb.event.findUnique.mockResolvedValue(baseEvent);
+      mockDb.registration.count.mockResolvedValue(0);
+      mockDb.registration.findFirst.mockResolvedValue({ id: 'r-existente' }); // CPF duplicado
+
+      await expect(service.createPublic('conf-2026', dto)).rejects.toThrow(BadRequestException);
+      expect(mockDb.registration.create).not.toHaveBeenCalled();
+    });
+
     it('cria novo usuário quando email não existe no sistema', async () => {
       mockDb.event.findUnique.mockResolvedValue(baseEvent);
       mockDb.registration.count.mockResolvedValue(0);
+      mockDb.registration.findFirst.mockResolvedValue(null);
       mockDb.user.findUnique.mockResolvedValue(null); // usuário não existe
       mockDb.user.create.mockResolvedValue({ id: 'new-user', ...dto });
       mockDb.registration.create.mockResolvedValue({ id: 'r1', eventId: EVENT_ID });
@@ -165,6 +177,7 @@ describe('RegistrationsService', () => {
     it('envia email de confirmação de forma assíncrona', async () => {
       mockDb.event.findUnique.mockResolvedValue(baseEvent);
       mockDb.registration.count.mockResolvedValue(0);
+      mockDb.registration.findFirst.mockResolvedValue(null);
       mockDb.user.findUnique.mockResolvedValue(baseUser);
       mockDb.registration.create.mockResolvedValue({ id: 'r1', eventId: EVENT_ID });
 
@@ -182,6 +195,7 @@ describe('RegistrationsService', () => {
       mockDb.event.findUnique.mockResolvedValue({ ...baseEvent, maxParticipants: 1 });
       mockDb.user.findUnique.mockResolvedValue(baseUser);
       mockDb.registration.count.mockResolvedValue(0);
+      mockDb.registration.findFirst.mockResolvedValue(null);
       mockDb.registration.create.mockResolvedValue({ id: 'r1' });
 
       await service.createPublic('conf-2026', dto);
@@ -226,6 +240,7 @@ describe('RegistrationsService', () => {
     it('cria inscrição manual com sucesso', async () => {
       mockDb.event.findUnique.mockResolvedValue(baseEvent);
       mockDb.registration.count.mockResolvedValue(0);
+      mockDb.registration.findFirst.mockResolvedValue(null);
       mockDb.user.findUnique.mockResolvedValue(baseUser);
       mockDb.registration.create.mockResolvedValue({ id: 'r1', userId: USER_ID, eventId: EVENT_ID });
 

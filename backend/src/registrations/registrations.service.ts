@@ -88,6 +88,12 @@ export class RegistrationsService {
           throw new BadRequestException('Evento lotado');
       }
 
+      const duplicate = await tx.registration.findFirst({
+        where: { eventId, cpf: dto.cpf, status: { not: 'canceled' } },
+      });
+      if (duplicate)
+        throw new BadRequestException('CPF já inscrito neste evento');
+
       let user = await tx.user.findUnique({ where: { email: dto.email } });
       if (!user) {
         const randomPassword = await bcrypt.hash(Math.random().toString(36), 10);
@@ -184,6 +190,12 @@ export class RegistrationsService {
         if (count >= event.maxParticipants)
           throw new BadRequestException('Evento lotado');
       }
+
+      const duplicate = await tx.registration.findFirst({
+        where: { eventId: event.id, cpf: dto.cpf, status: { not: 'canceled' } },
+      });
+      if (duplicate)
+        throw new BadRequestException('CPF já inscrito neste evento');
 
       let user = await tx.user.findUnique({ where: { email: dto.email } });
       if (!user) {
