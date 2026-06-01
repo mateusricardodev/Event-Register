@@ -311,22 +311,28 @@ describe('RegistrationsService', () => {
   // ─── search ─────────────────────────────────────────────────────────────────
 
   describe('search', () => {
-    it('retorna resultados para query válida', async () => {
+    it('retorna apenas inscrições dos eventos do usuário autenticado', async () => {
       const regs = [{ id: 'r1', user: baseUser }];
       mockDb.registration.findMany.mockResolvedValue(regs);
 
-      const result = await service.search('joão');
+      const result = await service.search('joão', OWNER_ID);
+
       expect(result).toEqual(regs);
+      expect(mockDb.registration.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ event: { createdBy: OWNER_ID } }),
+        }),
+      );
     });
 
     it('retorna array vazio para query com menos de 2 caracteres', async () => {
-      const result = await service.search('j');
+      const result = await service.search('j', OWNER_ID);
       expect(result).toEqual([]);
       expect(mockDb.registration.findMany).not.toHaveBeenCalled();
     });
 
     it('retorna array vazio para query em branco', async () => {
-      const result = await service.search('');
+      const result = await service.search('', OWNER_ID);
       expect(result).toEqual([]);
     });
   });

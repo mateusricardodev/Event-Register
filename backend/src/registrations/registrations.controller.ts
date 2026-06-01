@@ -46,8 +46,8 @@ export class RegistrationsController {
 
   @UseGuards(JwtGuard)
   @Get('registrations/search')
-  search(@Query('q') q: string) {
-    return this.registrationsService.search(q ?? '');
+  search(@Query('q') q: string, @CurrentUser() user: { id: string }) {
+    return this.registrationsService.search(q ?? '', user.id);
   }
 
   @UseGuards(JwtGuard)

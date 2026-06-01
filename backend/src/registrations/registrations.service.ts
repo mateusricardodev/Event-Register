@@ -228,11 +228,12 @@ export class RegistrationsService {
     return registration;
   }
 
-  async search(q: string) {
+  async search(q: string, userId: string) {
     if (!q || q.trim().length < 2) return [];
 
     return this.prisma.db.registration.findMany({
       where: {
+        event: { createdBy: userId },
         OR: [
           { user: { name: { contains: q, mode: 'insensitive' } } },
           { user: { email: { contains: q, mode: 'insensitive' } } },
