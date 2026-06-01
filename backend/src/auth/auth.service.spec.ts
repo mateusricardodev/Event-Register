@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from './auth.service.js';
@@ -117,12 +117,10 @@ describe('AuthService', () => {
       expect(mockDb.user.findUnique).toHaveBeenCalledWith({ where: { id: 'u1' }, select: expect.any(Object) });
     });
 
-    it('BUG M-01: retorna null em vez de 404 quando usuário foi deletado', async () => {
+    it('lança NotFoundException quando usuário não existe (token de sessão órfão)', async () => {
       mockDb.user.findUnique.mockResolvedValue(null);
 
-      // Documenta o bug: deveria lançar NotFoundException
-      const result = await service.me('uuid-inexistente');
-      expect(result).toBeNull();
+      await expect(service.me('uuid-inexistente')).rejects.toThrow(NotFoundException);
     });
   });
 });

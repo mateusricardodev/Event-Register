@@ -1,3 +1,4 @@
+
 # QA Report — inscrições.app
 **Data:** 2026-06-01  
 **Auditor:** QA Engineer Sênior (Claude)  
