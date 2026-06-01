@@ -48,14 +48,18 @@ export class RegistrationsController {
 
   @UseGuards(JwtGuard)
   @Put('registrations/:id')
-  update(@Param('id') id: string, @Body() dto: UpdateRegistrationDto) {
-    return this.registrationsService.update(id, dto);
+  update(
+    @Param('id') id: string,
+    @CurrentUser() user: { id: string },
+    @Body() dto: UpdateRegistrationDto,
+  ) {
+    return this.registrationsService.update(id, user.id, dto);
   }
 
   @UseGuards(JwtGuard)
   @Patch('registrations/:id/cancel')
-  cancel(@Param('id') id: string) {
-    return this.registrationsService.cancel(id);
+  cancel(@Param('id') id: string, @CurrentUser() user: { id: string }) {
+    return this.registrationsService.cancel(id, user.id);
   }
 
   @Post('events/public/:slug/register')

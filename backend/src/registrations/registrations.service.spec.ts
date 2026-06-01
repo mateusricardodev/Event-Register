@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { RegistrationsService } from './registrations.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { MailService } from '../mail/mail.service.js';
@@ -20,6 +20,8 @@ const mockDb = {
     update: jest.fn(),
   },
 };
+
+const OWNER_ID = 'owner-uuid';
 
 const mockPrisma = { db: mockDb };
 const mockMail = { sendRegistrationConfirmation: jest.fn().mockResolvedValue(undefined) };
@@ -222,38 +224,54 @@ describe('RegistrationsService', () => {
   // ─── update ─────────────────────────────────────────────────────────────────
 
   describe('update', () => {
-    it('atualiza dados da inscrição', async () => {
-      const reg = { id: 'r1', userId: USER_ID, user: baseUser };
+    const reg = { id: 'r1', userId: USER_ID, user: baseUser, event: { createdBy: OWNER_ID } };
+
+    it('atualiza dados da inscrição quando é o dono do evento', async () => {
       mockDb.registration.findUnique.mockResolvedValue(reg);
       mockDb.user.update.mockResolvedValue({});
       mockDb.registration.update.mockResolvedValue({ ...reg, cpf: '99999999999' });
 
-      const result = await service.update('r1', { name: 'Novo nome', cpf: '99999999999' });
+      const result = await service.update('r1', OWNER_ID, { name: 'Novo nome', cpf: '99999999999' });
       expect(mockDb.registration.update).toHaveBeenCalledTimes(1);
       expect(result).toHaveProperty('cpf', '99999999999');
+    });
+
+    it('lança ForbiddenException quando não é o dono do evento', async () => {
+      mockDb.registration.findUnique.mockResolvedValue(reg);
+
+      await expect(service.update('r1', 'outro-user', { cpf: '99999999999' }))
+        .rejects.toThrow(ForbiddenException);
+      expect(mockDb.registration.update).not.toHaveBeenCalled();
     });
 
     it('lança NotFoundException para inscrição inexistente', async () => {
       mockDb.registration.findUnique.mockResolvedValue(null);
 
-      await expect(service.update('fake', { cpf: '12345678900' })).rejects.toThrow(NotFoundException);
+      await expect(service.update('fake', OWNER_ID, { cpf: '12345678900' })).rejects.toThrow(NotFoundException);
     });
   });
 
   // ─── cancel ─────────────────────────────────────────────────────────────────
 
   describe('cancel', () => {
-    it('cancela inscrição existente', async () => {
-      mockDb.registration.findUnique.mockResolvedValue({ id: 'r1', status: 'confirmed' });
+    it('cancela inscrição quando é o dono do evento', async () => {
+      mockDb.registration.findUnique.mockResolvedValue({ id: 'r1', status: 'confirmed', event: { createdBy: OWNER_ID } });
       mockDb.registration.update.mockResolvedValue({ id: 'r1', status: 'canceled' });
 
-      const result = await service.cancel('r1');
+      const result = await service.cancel('r1', OWNER_ID);
       expect(result.status).toBe('canceled');
+    });
+
+    it('lança ForbiddenException quando não é o dono do evento', async () => {
+      mockDb.registration.findUnique.mockResolvedValue({ id: 'r1', status: 'confirmed', event: { createdBy: OWNER_ID } });
+
+      await expect(service.cancel('r1', 'outro-user')).rejects.toThrow(ForbiddenException);
+      expect(mockDb.registration.update).not.toHaveBeenCalled();
     });
 
     it('lança NotFoundException para inscrição inexistente', async () => {
       mockDb.registration.findUnique.mockResolvedValue(null);
-      await expect(service.cancel('fake')).rejects.toThrow(NotFoundException);
+      await expect(service.cancel('fake', OWNER_ID)).rejects.toThrow(NotFoundException);
     });
   });
 

@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -122,12 +123,14 @@ export class RegistrationsService {
     return registration;
   }
 
-  async update(id: string, dto: UpdateRegistrationDto) {
+  async update(id: string, userId: string, dto: UpdateRegistrationDto) {
     const registration = await this.prisma.db.registration.findUnique({
       where: { id },
-      include: { user: true },
+      include: { user: true, event: true },
     });
     if (!registration) throw new NotFoundException('Inscrição não encontrada');
+    if (registration.event.createdBy !== userId)
+      throw new ForbiddenException('Sem permissão para editar esta inscrição');
 
     if (dto.name) {
       await this.prisma.db.user.update({
@@ -154,9 +157,14 @@ export class RegistrationsService {
     });
   }
 
-  async cancel(id: string) {
-    const registration = await this.prisma.db.registration.findUnique({ where: { id } });
+  async cancel(id: string, userId: string) {
+    const registration = await this.prisma.db.registration.findUnique({
+      where: { id },
+      include: { event: true },
+    });
     if (!registration) throw new NotFoundException('Inscrição não encontrada');
+    if (registration.event.createdBy !== userId)
+      throw new ForbiddenException('Sem permissão para cancelar esta inscrição');
 
     return this.prisma.db.registration.update({
       where: { id },
