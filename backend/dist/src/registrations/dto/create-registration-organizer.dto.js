@@ -8,6 +8,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 import { IsEmail, IsNotEmpty, IsObject, IsOptional, IsString } from 'class-validator';
+import { IsCpf } from '../../common/validators/is-cpf.validator.js';
 export class CreateRegistrationOrganizerDto {
     name;
     email;
@@ -28,6 +29,7 @@ __decorate([
     __metadata("design:type", String)
 ], CreateRegistrationOrganizerDto.prototype, "email", void 0);
 __decorate([
+    IsCpf(),
     IsString(),
     IsNotEmpty(),
     __metadata("design:type", String)

@@ -7,7 +7,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { Injectable, ConflictException, UnauthorizedException, } from '@nestjs/common';
+import { Injectable, ConflictException, UnauthorizedException, NotFoundException, } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -51,10 +51,13 @@ let AuthService = class AuthService {
         return { access_token: token };
     }
     async me(userId) {
-        return this.prisma.db.user.findUnique({
+        const user = await this.prisma.db.user.findUnique({
             where: { id: userId },
             select: { id: true, name: true, email: true, role: true, createdAt: true },
         });
+        if (!user)
+            throw new NotFoundException('Usuário não encontrado');
+        return user;
     }
 };
 AuthService = __decorate([

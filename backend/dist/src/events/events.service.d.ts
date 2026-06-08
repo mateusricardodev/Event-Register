@@ -176,7 +176,7 @@ export declare class EventsService {
     uploadBanner(id: string, userId: string, filename: string): Promise<{
         bannerUrl: string;
     }>;
-    getPaymentMethods(eventId: string): Promise<{
+    getPaymentMethods(eventId: string, userId: string): Promise<{
         id: string;
         createdAt: Date;
         endDate: Date | null;

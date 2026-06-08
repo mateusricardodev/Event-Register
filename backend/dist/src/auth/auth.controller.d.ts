@@ -22,5 +22,5 @@ export declare class AuthController {
         name: string;
         role: import("../../generated/prisma/enums.js").Role;
         createdAt: Date;
-    } | null>;
+    }>;
 }

@@ -168,7 +168,9 @@ export declare class EventsController {
     }): Promise<{
         message: string;
     }>;
-    getPaymentMethods(id: string): Promise<{
+    getPaymentMethods(id: string, user: {
+        id: string;
+    }): Promise<{
         id: string;
         createdAt: Date;
         endDate: Date | null;

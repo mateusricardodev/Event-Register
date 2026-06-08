@@ -7,7 +7,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MinLength, Matches } from 'class-validator';
 export class RegisterDto {
     name;
     email;
@@ -24,7 +24,10 @@ __decorate([
 ], RegisterDto.prototype, "email", void 0);
 __decorate([
     IsString(),
-    MinLength(6),
+    MinLength(8, { message: 'Senha deve ter no mínimo 8 caracteres' }),
+    Matches(/^(?=.*[A-Z])(?=.*\d).{8,}$/, {
+        message: 'Senha deve conter ao menos uma letra maiúscula e um número',
+    }),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "password", void 0);
 //# sourceMappingURL=register.dto.js.map

@@ -32,82 +32,98 @@ export declare class RegistrationsController {
     }>;
     myRegistrations(user: {
         id: string;
+    }, page: number, limit: number): Promise<{
+        data: ({
+            event: {
+                id: string;
+                title: string;
+                location: string | null;
+                date: Date;
+            };
+            ticket: {
+                id: string;
+                name: string;
+                price: import("@prisma/client-runtime-utils").Decimal;
+            } | null;
+            payment: {
+                id: string;
+                status: import("../../generated/prisma/enums.js").PaymentStatus;
+                amount: import("@prisma/client-runtime-utils").Decimal;
+            } | null;
+        } & {
+            id: string;
+            createdAt: Date;
+            eventId: string;
+            userId: string;
+            ticketId: string | null;
+            status: import("../../generated/prisma/enums.js").RegistrationStatus;
+            cpf: string | null;
+            phone: string | null;
+            birthDate: Date | null;
+            extraFields: string | null;
+        })[];
+        total: number;
+        page: number;
+        limit: number;
+    }>;
+    findByEvent(eventId: string, user: {
+        id: string;
+    }, page: number, limit: number): Promise<{
+        data: ({
+            user: {
+                id: string;
+                email: string;
+                name: string;
+            };
+            ticket: {
+                id: string;
+                name: string;
+                price: import("@prisma/client-runtime-utils").Decimal;
+            } | null;
+            payment: {
+                id: string;
+                status: import("../../generated/prisma/enums.js").PaymentStatus;
+                amount: import("@prisma/client-runtime-utils").Decimal;
+            } | null;
+        } & {
+            id: string;
+            createdAt: Date;
+            eventId: string;
+            userId: string;
+            ticketId: string | null;
+            status: import("../../generated/prisma/enums.js").RegistrationStatus;
+            cpf: string | null;
+            phone: string | null;
+            birthDate: Date | null;
+            extraFields: string | null;
+        })[];
+        total: number;
+        page: number;
+        limit: number;
+    }>;
+    createByOrganizer(eventId: string, user: {
+        id: string;
+    }, dto: CreateRegistrationOrganizerDto): Promise<{
+        user: {
+            id: string;
+            email: string;
+            name: string;
+        };
+    } & {
+        id: string;
+        createdAt: Date;
+        eventId: string;
+        userId: string;
+        ticketId: string | null;
+        status: import("../../generated/prisma/enums.js").RegistrationStatus;
+        cpf: string | null;
+        phone: string | null;
+        birthDate: Date | null;
+        extraFields: string | null;
+    }>;
+    search(q: string, user: {
+        id: string;
     }): Promise<({
-        event: {
-            id: string;
-            title: string;
-            location: string | null;
-            date: Date;
-        };
-        ticket: {
-            id: string;
-            name: string;
-            price: import("@prisma/client-runtime-utils").Decimal;
-        } | null;
-        payment: {
-            id: string;
-            status: import("../../generated/prisma/enums.js").PaymentStatus;
-            amount: import("@prisma/client-runtime-utils").Decimal;
-        } | null;
-    } & {
-        id: string;
-        createdAt: Date;
-        eventId: string;
-        userId: string;
-        ticketId: string | null;
-        status: import("../../generated/prisma/enums.js").RegistrationStatus;
-        cpf: string | null;
-        phone: string | null;
-        birthDate: Date | null;
-        extraFields: string | null;
-    })[]>;
-    findByEvent(eventId: string): Promise<({
-        user: {
-            id: string;
-            email: string;
-            name: string;
-        };
-        ticket: {
-            id: string;
-            name: string;
-            price: import("@prisma/client-runtime-utils").Decimal;
-        } | null;
-        payment: {
-            id: string;
-            status: import("../../generated/prisma/enums.js").PaymentStatus;
-            amount: import("@prisma/client-runtime-utils").Decimal;
-        } | null;
-    } & {
-        id: string;
-        createdAt: Date;
-        eventId: string;
-        userId: string;
-        ticketId: string | null;
-        status: import("../../generated/prisma/enums.js").RegistrationStatus;
-        cpf: string | null;
-        phone: string | null;
-        birthDate: Date | null;
-        extraFields: string | null;
-    })[]>;
-    createByOrganizer(eventId: string, dto: CreateRegistrationOrganizerDto): Promise<{
-        user: {
-            id: string;
-            email: string;
-            name: string;
-        };
-    } & {
-        id: string;
-        createdAt: Date;
-        eventId: string;
-        userId: string;
-        ticketId: string | null;
-        status: import("../../generated/prisma/enums.js").RegistrationStatus;
-        cpf: string | null;
-        phone: string | null;
-        birthDate: Date | null;
-        extraFields: string | null;
-    }>;
-    search(q: string): Promise<({
         user: {
             id: string;
             email: string;
@@ -139,7 +155,9 @@ export declare class RegistrationsController {
         birthDate: Date | null;
         extraFields: string | null;
     })[]>;
-    update(id: string, dto: UpdateRegistrationDto): Promise<{
+    update(id: string, user: {
+        id: string;
+    }, dto: UpdateRegistrationDto): Promise<{
         user: {
             id: string;
             email: string;
@@ -167,7 +185,9 @@ export declare class RegistrationsController {
         birthDate: Date | null;
         extraFields: string | null;
     }>;
-    cancel(id: string): Promise<{
+    cancel(id: string, user: {
+        id: string;
+    }): Promise<{
         id: string;
         createdAt: Date;
         eventId: string;

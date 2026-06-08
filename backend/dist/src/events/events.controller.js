@@ -14,12 +14,15 @@ import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Put, U
 import { FileInterceptor } from '@nestjs/platform-express';
 import multer from 'multer';
 import { extname, join } from 'path';
+import { readFileSync, unlinkSync } from 'fs';
+import { fileTypeFromBuffer } from 'file-type';
 import { EventsService } from './events.service.js';
 import { CreateEventDto } from './dto/create-event.dto.js';
 import { UpdateEventDto } from './dto/update-event.dto.js';
 import { CreatePaymentMethodDto } from './dto/create-payment-method.dto.js';
 import { JwtGuard } from '../auth/guards/jwt.guard.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
 let EventsController = class EventsController {
     eventsService;
     constructor(eventsService) {
@@ -43,8 +46,8 @@ let EventsController = class EventsController {
     remove(id, user) {
         return this.eventsService.remove(id, user.id);
     }
-    getPaymentMethods(id) {
-        return this.eventsService.getPaymentMethods(id);
+    getPaymentMethods(id, user) {
+        return this.eventsService.getPaymentMethods(id, user.id);
     }
     addPaymentMethod(id, user, dto) {
         return this.eventsService.addPaymentMethod(id, user.id, dto);
@@ -52,6 +55,12 @@ let EventsController = class EventsController {
     async uploadBanner(id, user, file) {
         if (!file)
             throw new BadRequestException('Nenhum arquivo enviado');
+        const buffer = readFileSync(file.path);
+        const detected = await fileTypeFromBuffer(buffer);
+        if (!detected || !ALLOWED_IMAGE_TYPES.has(detected.mime)) {
+            unlinkSync(file.path);
+            throw new BadRequestException('Arquivo não é uma imagem válida');
+        }
         return this.eventsService.uploadBanner(id, user.id, file.filename);
     }
     removePaymentMethod(id, methodId, user) {
@@ -74,6 +83,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], EventsController.prototype, "findBySlug", null);
 __decorate([
+    UseGuards(JwtGuard),
     Get(':id'),
     __param(0, Param('id')),
     __metadata("design:type", Function),
@@ -112,8 +122,9 @@ __decorate([
     UseGuards(JwtGuard),
     Get(':id/payment-methods'),
     __param(0, Param('id')),
+    __param(1, CurrentUser()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], EventsController.prototype, "getPaymentMethods", null);
 __decorate([

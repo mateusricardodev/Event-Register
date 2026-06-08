@@ -30,64 +30,74 @@ export declare class RegistrationsService {
         birthDate: Date | null;
         extraFields: string | null;
     }>;
-    findMyRegistrations(userId: string): Promise<({
-        event: {
+    findMyRegistrations(userId: string, page?: number, limit?: number): Promise<{
+        data: ({
+            event: {
+                id: string;
+                title: string;
+                location: string | null;
+                date: Date;
+            };
+            ticket: {
+                id: string;
+                name: string;
+                price: import("@prisma/client-runtime-utils").Decimal;
+            } | null;
+            payment: {
+                id: string;
+                status: import("../../generated/prisma/enums.js").PaymentStatus;
+                amount: import("@prisma/client-runtime-utils").Decimal;
+            } | null;
+        } & {
             id: string;
-            title: string;
-            location: string | null;
-            date: Date;
-        };
-        ticket: {
+            createdAt: Date;
+            eventId: string;
+            userId: string;
+            ticketId: string | null;
+            status: import("../../generated/prisma/enums.js").RegistrationStatus;
+            cpf: string | null;
+            phone: string | null;
+            birthDate: Date | null;
+            extraFields: string | null;
+        })[];
+        total: number;
+        page: number;
+        limit: number;
+    }>;
+    findByEvent(eventId: string, userId: string, page?: number, limit?: number): Promise<{
+        data: ({
+            user: {
+                id: string;
+                email: string;
+                name: string;
+            };
+            ticket: {
+                id: string;
+                name: string;
+                price: import("@prisma/client-runtime-utils").Decimal;
+            } | null;
+            payment: {
+                id: string;
+                status: import("../../generated/prisma/enums.js").PaymentStatus;
+                amount: import("@prisma/client-runtime-utils").Decimal;
+            } | null;
+        } & {
             id: string;
-            name: string;
-            price: import("@prisma/client-runtime-utils").Decimal;
-        } | null;
-        payment: {
-            id: string;
-            status: import("../../generated/prisma/enums.js").PaymentStatus;
-            amount: import("@prisma/client-runtime-utils").Decimal;
-        } | null;
-    } & {
-        id: string;
-        createdAt: Date;
-        eventId: string;
-        userId: string;
-        ticketId: string | null;
-        status: import("../../generated/prisma/enums.js").RegistrationStatus;
-        cpf: string | null;
-        phone: string | null;
-        birthDate: Date | null;
-        extraFields: string | null;
-    })[]>;
-    findByEvent(eventId: string): Promise<({
-        user: {
-            id: string;
-            email: string;
-            name: string;
-        };
-        ticket: {
-            id: string;
-            name: string;
-            price: import("@prisma/client-runtime-utils").Decimal;
-        } | null;
-        payment: {
-            id: string;
-            status: import("../../generated/prisma/enums.js").PaymentStatus;
-            amount: import("@prisma/client-runtime-utils").Decimal;
-        } | null;
-    } & {
-        id: string;
-        createdAt: Date;
-        eventId: string;
-        userId: string;
-        ticketId: string | null;
-        status: import("../../generated/prisma/enums.js").RegistrationStatus;
-        cpf: string | null;
-        phone: string | null;
-        birthDate: Date | null;
-        extraFields: string | null;
-    })[]>;
-    createByOrganizer(eventId: string, dto: CreateRegistrationOrganizerDto): Promise<{
+            createdAt: Date;
+            eventId: string;
+            userId: string;
+            ticketId: string | null;
+            status: import("../../generated/prisma/enums.js").RegistrationStatus;
+            cpf: string | null;
+            phone: string | null;
+            birthDate: Date | null;
+            extraFields: string | null;
+        })[];
+        total: number;
+        page: number;
+        limit: number;
+    }>;
+    createByOrganizer(eventId: string, userId: string, dto: CreateRegistrationOrganizerDto): Promise<{
         user: {
             id: string;
             email: string;
@@ -105,7 +115,7 @@ export declare class RegistrationsService {
         birthDate: Date | null;
         extraFields: string | null;
     }>;
-    update(id: string, dto: UpdateRegistrationDto): Promise<{
+    update(id: string, userId: string, dto: UpdateRegistrationDto): Promise<{
         user: {
             id: string;
             email: string;
@@ -133,7 +143,7 @@ export declare class RegistrationsService {
         birthDate: Date | null;
         extraFields: string | null;
     }>;
-    cancel(id: string): Promise<{
+    cancel(id: string, userId: string): Promise<{
         id: string;
         createdAt: Date;
         eventId: string;
@@ -163,7 +173,7 @@ export declare class RegistrationsService {
         birthDate: Date | null;
         extraFields: string | null;
     }>;
-    search(q: string): Promise<({
+    search(q: string, userId: string): Promise<({
         user: {
             id: string;
             email: string;

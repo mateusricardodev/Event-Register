@@ -106,16 +106,18 @@ let EventsService = class EventsService {
     }
     async remove(id, userId) {
         await this.checkOwnership(id, userId);
-        const registrations = await this.prisma.db.registration.findMany({
-            where: { eventId: id },
-            select: { id: true },
+        await this.prisma.db.$transaction(async (tx) => {
+            const registrations = await tx.registration.findMany({
+                where: { eventId: id },
+                select: { id: true },
+            });
+            const regIds = registrations.map((r) => r.id);
+            await tx.payment.deleteMany({ where: { registrationId: { in: regIds } } });
+            await tx.registration.deleteMany({ where: { eventId: id } });
+            await tx.eventPaymentMethod.deleteMany({ where: { eventId: id } });
+            await tx.ticket.deleteMany({ where: { eventId: id } });
+            await tx.event.delete({ where: { id } });
         });
-        const regIds = registrations.map((r) => r.id);
-        await this.prisma.db.payment.deleteMany({ where: { registrationId: { in: regIds } } });
-        await this.prisma.db.registration.deleteMany({ where: { eventId: id } });
-        await this.prisma.db.eventPaymentMethod.deleteMany({ where: { eventId: id } });
-        await this.prisma.db.ticket.deleteMany({ where: { eventId: id } });
-        await this.prisma.db.event.delete({ where: { id } });
         return { message: 'Evento removido com sucesso' };
     }
     async addPaymentMethod(eventId, userId, dto) {
@@ -147,7 +149,8 @@ let EventsService = class EventsService {
         await this.prisma.db.event.update({ where: { id }, data: { bannerUrl } });
         return { bannerUrl };
     }
-    async getPaymentMethods(eventId) {
+    async getPaymentMethods(eventId, userId) {
+        await this.checkOwnership(eventId, userId);
         return this.prisma.db.eventPaymentMethod.findMany({
             where: { eventId },
             orderBy: { createdAt: 'asc' },

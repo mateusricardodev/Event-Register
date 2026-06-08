@@ -10,7 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-import { Body, Controller, Get, Param, Patch, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, ParseIntPipe, Post, Put, Query, UseGuards, DefaultValuePipe } from '@nestjs/common';
 import { RegistrationsService } from './registrations.service.js';
 import { CreateRegistrationDto } from './dto/create-registration.dto.js';
 import { CreateRegistrationOrganizerDto } from './dto/create-registration-organizer.dto.js';
@@ -25,23 +25,23 @@ let RegistrationsController = class RegistrationsController {
     create(user, dto) {
         return this.registrationsService.create(user.id, dto);
     }
-    myRegistrations(user) {
-        return this.registrationsService.findMyRegistrations(user.id);
+    myRegistrations(user, page, limit) {
+        return this.registrationsService.findMyRegistrations(user.id, page, limit);
     }
-    findByEvent(eventId) {
-        return this.registrationsService.findByEvent(eventId);
+    findByEvent(eventId, user, page, limit) {
+        return this.registrationsService.findByEvent(eventId, user.id, page, limit);
     }
-    createByOrganizer(eventId, dto) {
-        return this.registrationsService.createByOrganizer(eventId, dto);
+    createByOrganizer(eventId, user, dto) {
+        return this.registrationsService.createByOrganizer(eventId, user.id, dto);
     }
-    search(q) {
-        return this.registrationsService.search(q ?? '');
+    search(q, user) {
+        return this.registrationsService.search(q ?? '', user.id);
     }
-    update(id, dto) {
-        return this.registrationsService.update(id, dto);
+    update(id, user, dto) {
+        return this.registrationsService.update(id, user.id, dto);
     }
-    cancel(id) {
-        return this.registrationsService.cancel(id);
+    cancel(id, user) {
+        return this.registrationsService.cancel(id, user.id);
     }
     createPublic(slug, dto) {
         return this.registrationsService.createPublic(slug, dto);
@@ -60,50 +60,59 @@ __decorate([
     UseGuards(JwtGuard),
     Get('my-registrations'),
     __param(0, CurrentUser()),
+    __param(1, Query('page', new DefaultValuePipe(1), ParseIntPipe)),
+    __param(2, Query('limit', new DefaultValuePipe(20), ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, Number, Number]),
     __metadata("design:returntype", void 0)
 ], RegistrationsController.prototype, "myRegistrations", null);
 __decorate([
     UseGuards(JwtGuard),
     Get('events/:eventId/registrations'),
     __param(0, Param('eventId')),
+    __param(1, CurrentUser()),
+    __param(2, Query('page', new DefaultValuePipe(1), ParseIntPipe)),
+    __param(3, Query('limit', new DefaultValuePipe(50), ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object, Number, Number]),
     __metadata("design:returntype", void 0)
 ], RegistrationsController.prototype, "findByEvent", null);
 __decorate([
     UseGuards(JwtGuard),
     Post('events/:eventId/registrations'),
     __param(0, Param('eventId')),
-    __param(1, Body()),
+    __param(1, CurrentUser()),
+    __param(2, Body()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, CreateRegistrationOrganizerDto]),
+    __metadata("design:paramtypes", [String, Object, CreateRegistrationOrganizerDto]),
     __metadata("design:returntype", void 0)
 ], RegistrationsController.prototype, "createByOrganizer", null);
 __decorate([
     UseGuards(JwtGuard),
     Get('registrations/search'),
     __param(0, Query('q')),
+    __param(1, CurrentUser()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], RegistrationsController.prototype, "search", null);
 __decorate([
     UseGuards(JwtGuard),
     Put('registrations/:id'),
     __param(0, Param('id')),
-    __param(1, Body()),
+    __param(1, CurrentUser()),
+    __param(2, Body()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, UpdateRegistrationDto]),
+    __metadata("design:paramtypes", [String, Object, UpdateRegistrationDto]),
     __metadata("design:returntype", void 0)
 ], RegistrationsController.prototype, "update", null);
 __decorate([
     UseGuards(JwtGuard),
     Patch('registrations/:id/cancel'),
     __param(0, Param('id')),
+    __param(1, CurrentUser()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], RegistrationsController.prototype, "cancel", null);
 __decorate([

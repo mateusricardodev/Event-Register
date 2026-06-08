@@ -7,7 +7,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { IsBoolean, IsDateString, IsInt, IsNotEmpty, IsOptional, IsString, Min, } from 'class-validator';
+import { IsBoolean, IsDateString, IsInt, IsNotEmpty, IsOptional, IsString, Matches, Min, } from 'class-validator';
 export class CreateEventDto {
     title;
     description;
@@ -55,6 +55,9 @@ __decorate([
 __decorate([
     IsString(),
     IsOptional(),
+    Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
+        message: 'Slug deve conter apenas letras minúsculas, números e hífens',
+    }),
     __metadata("design:type", String)
 ], CreateEventDto.prototype, "slug", void 0);
 __decorate([
