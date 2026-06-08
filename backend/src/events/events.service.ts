@@ -4,6 +4,8 @@ import {
   ForbiddenException,
   ConflictException,
 } from '@nestjs/common';
+import { unlink } from 'fs/promises';
+import { join } from 'path';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateEventDto } from './dto/create-event.dto.js';
 import { UpdateEventDto } from './dto/update-event.dto.js';
@@ -160,6 +162,14 @@ export class EventsService {
 
   async uploadBanner(id: string, userId: string, filename: string) {
     await this.checkOwnership(id, userId);
+
+    const current = await this.prisma.db.event.findUnique({ where: { id }, select: { bannerUrl: true } });
+    if (current?.bannerUrl) {
+      try {
+        await unlink(join(process.cwd(), current.bannerUrl));
+      } catch { /* arquivo já não existe, sem problema */ }
+    }
+
     const bannerUrl = `/uploads/${filename}`;
     await this.prisma.db.event.update({ where: { id }, data: { bannerUrl } });
     return { bannerUrl };
