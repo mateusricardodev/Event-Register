@@ -51,7 +51,7 @@ export function EventDetail() {
   function loadRegistrations() {
     if (!id) return
     api.get(`/events/${id}/registrations`)
-      .then(({ data }) => setRegistrations(data))
+      .then(({ data }) => setRegistrations(data.data))
       .catch(() => {})
   }
 
@@ -63,7 +63,7 @@ export function EventDetail() {
     ])
       .then(([evtRes, regRes]) => {
         setEvent(evtRes.data)
-        setRegistrations(regRes.data)
+        setRegistrations(regRes.data.data)
       })
       .catch(() => {})
       .finally(() => setLoading(false))

@@ -1,219 +1,198 @@
-# 🧠 Prompt para Claude Code — Backend + Database (incrições.app)
+# inscrições.app
 
-Você é um engenheiro backend sênior especializado em:
-
-* Node.js / TypeScript
-* Arquitetura escalável
-* Modelagem de banco de dados
-* APIs REST bem estruturadas
-
-Sua tarefa é construir o backend completo do sistema **incrições.app**, com base nas regras abaixo.
+Plataforma de gerenciamento de eventos religiosos — criação de eventos, formulários personalizados, inscrições públicas e painel do organizador.
 
 ---
 
-# 🎯 Objetivo do Sistema
+## Stack
 
-Criar uma plataforma para:
-
-* Criar eventos religiosos
-* Gerenciar inscrições
-* Vender ingressos
-* Controlar participantes
-
----
-
-# 🧱 Stack Obrigatória
-
-* Node.js + TypeScript
-* Framework: NestJS (preferido) ou Express estruturado
-* Banco de dados: PostgreSQL
-* ORM: Prisma (preferido)
+| Camada | Tecnologia |
+|--------|-----------|
+| Backend | NestJS · TypeScript · Prisma ORM · PostgreSQL |
+| Frontend | React 19 · Vite · TypeScript · Tailwind CSS 4 · Zustand · React Router DOM 7 |
+| Autenticação | JWT (passport-jwt) |
+| E-mail | Brevo SMTP (nodemailer) |
+| Upload | Multer · disk storage local |
 
 ---
 
-# 🗄️ Modelagem do Banco (ESSENCIAL)
+## Funcionalidades
 
-Crie um schema completo com as seguintes entidades:
-
-## 👤 User
-
-* id
-* name
-* email (único)
-* password (hash)
-* role (admin | organizer | user)
-* createdAt
-
----
-
-## 📅 Event
-
-* id
-* title
-* description
-* location
-* date
-* bannerUrl
-* createdBy (userId)
-* createdAt
+- Cadastro e login com JWT
+- Criação de eventos via wizard de 4 etapas (info → pagamento → formulário → página pública)
+- Upload de banner (JPG/PNG/GIF/WebP, máx. 5 MB) com validação de magic bytes
+- Formulário público de inscrição sem autenticação (`/evento/:slug/inscricao`)
+- Campos de formulário configuráveis por evento (CPF, celular, endereço, etc.)
+- Envio automático de e-mail de confirmação ao inscrito
+- Painel do organizador: listagem, busca global, edição e cancelamento de inscrições
+- Inscrição manual pelo organizador
+- Controle de capacidade por `maxParticipants`
+- Rate limiting e headers de segurança (Helmet)
+- Métodos de pagamento configuráveis (fluxo mock — sem gateway real)
 
 ---
 
-## 🎟️ Ticket
+## Estrutura do projeto
 
-* id
-* eventId
-* name (ex: "Ingresso geral")
-* price
-* quantity
-* createdAt
+```
+projeto/
+├── backend/      # API NestJS (porta 3000)
+└── frontend/     # App React/Vite (porta 5173)
+```
 
----
+### Módulos do backend
 
-## 🧾 Registration (Inscrição)
-
-* id
-* userId
-* eventId
-* ticketId
-* status (pending | confirmed | canceled)
-* createdAt
-
----
-
-## 💳 Payment (estrutura inicial)
-
-* id
-* registrationId
-* amount
-* status (pending | paid | failed)
-* provider (mock)
-* createdAt
+```
+src/
+├── auth/           # JWT, login, register, /me
+├── events/         # CRUD de eventos + upload de banner + métodos de pagamento
+├── registrations/  # Inscrições públicas e do organizador
+├── payments/       # Pagamentos (mock)
+├── tickets/        # Ingressos
+├── mail/           # Envio de e-mail via Brevo
+└── prisma/         # PrismaService compartilhado
+```
 
 ---
 
-# 🔗 Relacionamentos
+## Pré-requisitos
 
-* User cria Events
-* Event tem vários Tickets
-* User se inscreve via Registration
-* Registration pertence a Ticket
-* Payment vinculado à Registration
+- Node.js 20+
+- PostgreSQL 15+
+- Conta Brevo (para e-mail) — opcional em desenvolvimento
 
 ---
 
-# 🔐 Autenticação
+## Configuração
 
-Implementar:
+### Backend (`backend/.env`)
 
-* JWT authentication
-* Login / Register
-* Middleware de proteção de rotas
+```env
+DATABASE_URL="postgresql://usuario:senha@localhost:5432/inscricoes"
 
----
+JWT_SECRET="troque-por-valor-seguro"
 
-# 📡 API Endpoints
+FRONTEND_URL="http://localhost:5173"
 
-## Auth
+# Brevo SMTP
+MAIL_HOST="smtp-relay.brevo.com"
+MAIL_PORT=587
+MAIL_SECURE=false
+MAIL_USER="seu@email.com"
+MAIL_PASS="sua-chave-brevo"
+MAIL_FROM="noreply@inscricoes.app"
+```
 
-* POST /auth/register
-* POST /auth/login
-* GET /auth/me
+### Frontend (`frontend/.env`)
 
----
-
-## Eventos
-
-* POST /events
-* GET /events
-* GET /events/:id
-* PUT /events/:id
-* DELETE /events/:id
+```env
+VITE_API_URL="http://localhost:3000"
+```
 
 ---
 
-## Tickets
+## Como rodar
 
-* POST /events/:id/tickets
-* GET /events/:id/tickets
+### Backend
 
----
+```bash
+cd backend
+npm install
+npx prisma migrate dev
+npm run seed          # cria usuário admin + 2 eventos de exemplo
+npm run start:dev
+```
 
-## Inscrições
+### Frontend
 
-* POST /registrations
-* GET /my-registrations
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
----
-
-## Pagamento (mock)
-
-* POST /payments
-* Simular confirmação
-
----
-
-# ⚙️ Regras de Negócio
-
-* Não permitir inscrição sem ticket
-* Validar limite de ingressos
-* Um usuário pode se inscrever várias vezes (se permitido)
-* Apenas criador pode editar evento
+Acesse em `http://localhost:5173`.
 
 ---
 
-# 📁 Estrutura de Pastas
+## Endpoints da API
 
-Organizar por módulos:
+### Auth
 
-* auth/
-* users/
-* events/
-* tickets/
-* registrations/
-* payments/
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| POST | `/auth/register` | Criar conta |
+| POST | `/auth/login` | Login (retorna JWT) |
+| GET | `/auth/me` | Dados do usuário autenticado |
 
----
+### Eventos
 
-# 🧠 Boas Práticas
+| Método | Rota | Acesso |
+|--------|------|--------|
+| GET | `/events` | Autenticado — lista do organizador |
+| POST | `/events` | Autenticado — criar evento |
+| GET | `/events/:id` | Autenticado |
+| PUT | `/events/:id` | Autenticado — somente criador |
+| DELETE | `/events/:id` | Autenticado — somente criador |
+| POST | `/events/:id/banner` | Autenticado — upload multipart `file` |
+| GET/POST/DELETE | `/events/:id/payment-methods` | Autenticado |
+| GET | `/events/public/:slug` | Público — info do evento |
 
-* DTOs bem definidos
-* Validação com class-validator
-* Uso de services separados
-* Código limpo e escalável
+### Inscrições
 
----
+| Método | Rota | Acesso |
+|--------|------|--------|
+| POST | `/events/public/:slug/register` | Público — inscrição sem login |
+| GET | `/events/:eventId/registrations` | Autenticado — lista paginada |
+| POST | `/events/:eventId/registrations` | Autenticado — inscrição manual |
+| GET | `/registrations/search?q=` | Autenticado — busca global |
+| PUT | `/registrations/:id` | Autenticado — editar |
+| PATCH | `/registrations/:id/cancel` | Autenticado — cancelar |
+| GET | `/my-registrations` | Autenticado — inscrições do usuário |
 
-# 🚀 Extras (IMPORTANTE)
+### Pagamentos
 
-* Seeds iniciais (1 usuário + 2 eventos)
-* Logs básicos
-* Tratamento de erros global
-* CORS habilitado
-
----
-
-# 🔌 Integração com Front
-
-Preparar API para:
-
-* consumo por React
-* respostas JSON padronizadas
-
----
-
-# 🎯 Resultado Esperado
-
-* Backend funcional
-* Banco modelado corretamente
-* API pronta para produção inicial
-* Fácil integração com frontend
+| Método | Rota |
+|--------|------|
+| POST | `/payments` |
 
 ---
 
-Gere:
+## Modelo de dados (resumo)
 
-1. Estrutura completa do projeto
-2. Código dos principais arquivos
-3. Schema Prisma
-4. Instruções de como rodar
+```
+User          — id, name, email, password, role (admin|organizer|user)
+Event         — id, title, slug, category, date(s), location, bannerUrl,
+                maxParticipants, formFields (JSON), isPublished, paymentMethods
+Registration  — id, eventId, name, email, cpf, phone?, birthDate?,
+                extraFields (JSON), status (pending|confirmed|canceled)
+Payment       — id, registrationId, amount, status, provider
+Ticket        — id, eventId, name, price, quantity
+```
+
+---
+
+## Rotas do frontend
+
+| Rota | Descrição |
+|------|-----------|
+| `/` | Landing page pública |
+| `/login` · `/register` | Autenticação |
+| `/evento/:slug` | Página pública do evento |
+| `/evento/:slug/inscricao` | Formulário de inscrição público |
+| `/dashboard` | Lista de eventos do organizador |
+| `/events/new` | Criar evento (wizard step 1) |
+| `/events/:id/setup/payment` | Wizard step 2 — formas de pagamento |
+| `/events/:id/setup/form` | Wizard step 3 — campos do formulário |
+| `/events/:id/setup/page` | Wizard step 4 — publicar + banner |
+| `/events/:id` | Painel de inscrições |
+| `/events/:id/registrations/new` | Inscrição manual |
+| `/events/:id/registrations/:regId/edit` | Editar inscrição |
+| `/buscar-inscricoes` | Busca global de inscritos |
+
+---
+
+## O que ainda não está implementado
+
+- Processamento real de pagamento (fluxo de UI existe, sem gateway)
+- Exportação em lote / relatórios de inscrições
