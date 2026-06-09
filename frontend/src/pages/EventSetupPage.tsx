@@ -19,6 +19,7 @@ export function EventSetupPage() {
   const [publishing, setPublishing] = useState(false)
   const [saved, setSaved] = useState(false)
   const [done, setDone] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -229,12 +230,26 @@ export function EventSetupPage() {
               )}
 
               {slug && (
-                <button
-                  onClick={() => navigator.clipboard.writeText(publicUrl)}
-                  className="border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm font-semibold px-6 py-2 rounded-full transition-colors"
-                >
-                  COPIAR LINK
-                </button>
+                <div className="relative">
+                  {copied && (
+                    <div className="absolute -top-9 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs font-medium px-3 py-1.5 rounded-lg whitespace-nowrap flex items-center gap-1.5">
+                      <svg className="w-3 h-3 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Link copiado com sucesso!
+                    </div>
+                  )}
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(publicUrl)
+                      setCopied(true)
+                      setTimeout(() => setCopied(false), 1000)
+                    }}
+                    className="border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm font-semibold px-6 py-2 rounded-full transition-colors"
+                  >
+                    COPIAR LINK
+                  </button>
+                </div>
               )}
             </div>
 
