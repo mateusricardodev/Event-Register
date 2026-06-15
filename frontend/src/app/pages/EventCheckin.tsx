@@ -5,7 +5,7 @@ import { AppHeader } from '../components/AppHeader'
 import { Fab } from '../components/Fab'
 import { ParticipantCard } from '../components/ParticipantCard'
 import { useCheckinActions } from '../useCheckinActions'
-import { groupLetter } from '../format'
+import { groupByLetter } from '../grouping'
 import {
   fetchCheckinList,
   fetchCheckinStats,
@@ -195,15 +195,4 @@ function Centered({ children }: { children: React.ReactNode }) {
       {children}
     </div>
   )
-}
-
-function groupByLetter(items: CheckinParticipant[]) {
-  const map = new Map<string, CheckinParticipant[]>()
-  for (const p of items) {
-    const letter = groupLetter(p.name)
-    const arr = map.get(letter)
-    if (arr) arr.push(p)
-    else map.set(letter, [p])
-  }
-  return Array.from(map, ([letter, list]) => ({ letter, items: list }))
 }

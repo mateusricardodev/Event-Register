@@ -16,6 +16,7 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import { LandingPage } from './pages/LandingPage'
 import { EventsList } from './app/pages/EventsList'
 import { EventCheckin } from './app/pages/EventCheckin'
+import { SearchCheckin } from './app/pages/SearchCheckin'
 
 export default function App() {
   return (
@@ -114,6 +115,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <EventCheckin />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/app/evento/:id/pesquisar"
+          element={
+            <ProtectedRoute>
+              <SearchCheckin />
             </ProtectedRoute>
           }
         />

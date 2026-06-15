@@ -18,7 +18,7 @@ type SetStats = React.Dispatch<React.SetStateAction<CheckinStats | null>>
 export function useCheckinActions(
   eventId: string,
   setParticipants: SetParticipants,
-  setStats: SetStats,
+  setStats?: SetStats,
 ) {
   const [busyIds, setBusyIds] = useState<Set<string>>(new Set())
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -39,7 +39,7 @@ export function useCheckinActions(
   }
 
   function patchStats(deltaDone: number) {
-    setStats((s) =>
+    setStats?.((s) =>
       s
         ? { ...s, done: s.done + deltaDone, pending: s.pending - deltaDone }
         : s,
