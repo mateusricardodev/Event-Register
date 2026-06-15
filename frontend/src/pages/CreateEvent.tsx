@@ -5,6 +5,20 @@ import { EventWizardHeader } from '../components/EventWizardHeader'
 import { useAuthStore } from '../store/auth.store'
 import api from '../api/axios'
 
+function maskDate(v: string): string {
+  const d = v.replace(/\D/g, '').slice(0, 8)
+  if (d.length <= 2) return d
+  if (d.length <= 4) return `${d.slice(0, 2)}/${d.slice(2)}`
+  return `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}`
+}
+
+function toEventISO(date: string, time: string): string {
+  const parts = date.split('/')
+  if (parts.length !== 3 || parts[2].length !== 4) return ''
+  const iso = `${parts[2]}-${parts[1]}-${parts[0]}`
+  return new Date(`${iso}T${time || '00:00'}`).toISOString()
+}
+
 const CATEGORIES = [
   'Acampamentos', 'Ação Social', 'Conferências', 'Congressos', 'Cultos',
   'Encontros', 'Eventos esportivos', 'Feiras e exposições', 'Humor',
@@ -23,7 +37,9 @@ export function CreateEvent() {
     category: '',
     maxParticipants: '',
     date: '',
+    dateTime: '',
     endDate: '',
+    endDateTime: '',
     location: '',
   })
 
@@ -46,8 +62,8 @@ export function CreateEvent() {
         slug: form.slug || undefined,
         category: form.category || undefined,
         maxParticipants: form.maxParticipants ? Number(form.maxParticipants) : undefined,
-        date: new Date(form.date).toISOString(),
-        endDate: form.endDate ? new Date(form.endDate).toISOString() : undefined,
+        date: toEventISO(form.date, form.dateTime),
+        endDate: form.endDate ? toEventISO(form.endDate, form.endDateTime) : undefined,
         location: form.location || undefined,
       })
       navigate(`/events/${data.id}/setup/payment`)
@@ -162,26 +178,44 @@ export function CreateEvent() {
               <label className="block text-sm font-semibold text-gray-700 mb-1">
                 * Data de início
               </label>
-              <input
-                name="date"
-                type="datetime-local"
-                value={form.date}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
-              />
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="text"
+                  value={form.date}
+                  onChange={e => setForm(f => ({ ...f, date: maskDate(e.target.value) }))}
+                  placeholder="DD/MM/AAAA"
+                  maxLength={10}
+                  required
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+                />
+                <input
+                  type="time"
+                  value={form.dateTime}
+                  onChange={e => setForm(f => ({ ...f, dateTime: e.target.value }))}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+                />
+              </div>
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">
-                * Data do fim
+                Data do fim
               </label>
-              <input
-                name="endDate"
-                type="datetime-local"
-                value={form.endDate}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
-              />
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="text"
+                  value={form.endDate}
+                  onChange={e => setForm(f => ({ ...f, endDate: maskDate(e.target.value) }))}
+                  placeholder="DD/MM/AAAA"
+                  maxLength={10}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+                />
+                <input
+                  type="time"
+                  value={form.endDateTime}
+                  onChange={e => setForm(f => ({ ...f, endDateTime: e.target.value }))}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+                />
+              </div>
             </div>
           </div>
 
