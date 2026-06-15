@@ -39,6 +39,7 @@
     "dotenv": "^17.4.2",
     "file-type": "^22.0.1",
     "helmet": "^8.2.0",
+    "mercadopago": "^3.1.0",
     "nodemailer": "^8.0.7",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",

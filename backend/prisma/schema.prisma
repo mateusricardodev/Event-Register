@@ -128,11 +128,16 @@ model CheckinLog {
 }
 
 model Payment {
-  id             String        @id @default(uuid())
-  registrationId String        @unique
-  amount         Decimal
-  status         PaymentStatus @default(pending)
-  provider       String        @default("mock")
-  createdAt      DateTime      @default(now())
-  registration   Registration  @relation(fields: [registrationId], references: [id])
+  id                String        @id @default(uuid())
+  registrationId    String        @unique
+  amount            Decimal
+  status            PaymentStatus @default(pending)
+  provider          String        @default("mock")
+  providerPaymentId String?
+  qrCodeBase64      String?
+  qrCodeCopiaECola  String?
+  expiresAt         DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  registration      Registration  @relation(fields: [registrationId], references: [id])
 }
