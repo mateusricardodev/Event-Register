@@ -3,9 +3,10 @@ import { PublicController } from './public.controller.js';
 import { PublicService } from './public.service.js';
 import { PrismaModule } from '../prisma/prisma.module.js';
 import { PaymentsModule } from '../payments/payments.module.js';
+import { MailModule } from '../mail/mail.module.js';
 
 @Module({
-  imports: [PrismaModule, PaymentsModule],
+  imports: [PrismaModule, PaymentsModule, MailModule],
   controllers: [PublicController],
   providers: [PublicService],
 })

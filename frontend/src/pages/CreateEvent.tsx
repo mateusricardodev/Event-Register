@@ -107,22 +107,6 @@ export function CreateEvent() {
             />
           </div>
 
-          {/* Tipo do evento */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              * Tipo do evento
-            </label>
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input type="radio" checked readOnly className="mt-0.5 accent-teal-500" />
-              <div>
-                <span className="text-sm font-medium text-gray-800">Presencial</span>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Use o E-Inscrição para fazer a gestão completa do seu evento presencial
-                </p>
-              </div>
-            </label>
-          </div>
-
           {/* Categoria */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">

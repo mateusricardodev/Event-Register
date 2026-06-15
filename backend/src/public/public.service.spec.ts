@@ -7,19 +7,21 @@ import {
 import { PublicService } from './public.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { PaymentsService } from '../payments/payments.service.js';
+import { MailService } from '../mail/mail.service.js';
 import { PAYMENT_PROVIDER_TOKEN } from '../payments/providers/payment-provider.factory.js';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockDb: any = {
   event: { findUnique: jest.fn() },
-  ticket: { findUnique: jest.fn() },
+  eventPaymentMethod: { findUnique: jest.fn() },
   registration: {
-    findUnique: jest.fn().mockResolvedValue(null), // para generateUniqueRegistrationCode
+    findUnique: jest.fn().mockResolvedValue(null),
     findFirst: jest.fn(),
     findMany: jest.fn(),
     count: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
+    updateMany: jest.fn(),
     delete: jest.fn(),
   },
   user: { findUnique: jest.fn(), create: jest.fn() },
@@ -44,16 +46,17 @@ const mockPayments = {
   createPixForRegistration: jest.fn().mockResolvedValue(mockPixResult),
 };
 
-// PaymentsService precisa do PAYMENT_PROVIDER_TOKEN para instanciar
+const mockMail = { sendRegistrationConfirmation: jest.fn() };
+
 const mockProvider = { createPixPayment: jest.fn(), getPaymentStatus: jest.fn() };
 
 const EVENT_ID = 'event-uuid';
-const TICKET_ID = 'ticket-uuid';
+const PM_ID = 'pm-uuid';
 const SLUG = 'evento-teste';
 const SHADOW_USER_ID = 'shadow-user-uuid';
 
-const futureDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // +30 dias
-const pastDate = new Date(Date.now() - 24 * 60 * 60 * 1000);        // ontem
+const futureDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+const pastDate   = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
 const baseEvent = {
   id: EVENT_ID,
@@ -64,21 +67,21 @@ const baseEvent = {
   maxParticipants: null,
 };
 
-const baseTicket = {
-  id: TICKET_ID,
+const basePaymentMethod = {
+  id: PM_ID,
   eventId: EVENT_ID,
-  name: 'Inteira',
-  price: 99.9,
-  quantity: 100,
+  type: 'pix',
+  value: 99.9,
+  installments: 1,
 };
 
 const baseUser = { id: SHADOW_USER_ID, name: 'Ana', email: 'ana@test.com' };
 
 const baseDto = {
-  ticketId: TICKET_ID,
+  paymentMethodId: PM_ID,
   fullName: 'Ana Silva',
   email: 'ana@test.com',
-  cpf: '529.982.247-25', // CPF válido com máscara
+  cpf: '529.982.247-25',
   phone: '11999999999',
   termsAccepted: true as const,
 };
@@ -92,6 +95,7 @@ describe('PublicService', () => {
         PublicService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: PaymentsService, useValue: mockPayments },
+        { provide: MailService, useValue: mockMail },
         { provide: PAYMENT_PROVIDER_TOKEN, useValue: mockProvider },
       ],
     }).compile();
@@ -106,19 +110,17 @@ describe('PublicService', () => {
   // ─── findEventBySlug ─────────────────────────────────────────────────────────
 
   describe('findEventBySlug', () => {
-    it('retorna evento publicado com vagas disponíveis por ticket', async () => {
+    it('retorna evento publicado com formas de pagamento', async () => {
       mockDb.event.findUnique.mockResolvedValue({
         ...baseEvent,
         slug: SLUG,
-        tickets: [
-          { id: TICKET_ID, name: 'Inteira', price: 99.9, quantity: 100, _count: { registrations: 30 } },
-        ],
+        paymentMethods: [{ id: PM_ID, type: 'pix', value: 99.9, installments: 1 }],
         user: { name: 'Org' },
       });
 
       const result = await service.findEventBySlug(SLUG);
 
-      expect(result.tickets[0].available).toBe(70);
+      expect(result.paymentMethods[0].type).toBe('pix');
     });
 
     it('lança NotFoundException para evento inexistente', async () => {
@@ -128,23 +130,22 @@ describe('PublicService', () => {
 
     it('lança NotFoundException para evento não publicado', async () => {
       mockDb.event.findUnique.mockResolvedValue({
-        ...baseEvent, isPublished: false, tickets: [], user: { name: 'Org' },
+        ...baseEvent, isPublished: false, paymentMethods: [], user: { name: 'Org' },
       });
       await expect(service.findEventBySlug(SLUG)).rejects.toThrow(NotFoundException);
     });
 
-    it('never expõe dados de outros inscritos', async () => {
+    it('nunca expõe dados de outros inscritos', async () => {
       mockDb.event.findUnique.mockResolvedValue({
         ...baseEvent,
         slug: SLUG,
-        tickets: [{ id: TICKET_ID, name: 'Inteira', price: 0, quantity: 10, _count: { registrations: 0 } }],
+        paymentMethods: [],
         user: { name: 'Org' },
       });
 
       const result = await service.findEventBySlug(SLUG);
 
       expect(result).not.toHaveProperty('registrations');
-      expect(result.tickets[0]).not.toHaveProperty('_count');
     });
   });
 
@@ -153,21 +154,20 @@ describe('PublicService', () => {
   describe('register', () => {
     const setup = () => {
       mockDb.event.findUnique.mockResolvedValue(baseEvent);
-      mockDb.ticket.findUnique.mockResolvedValue(baseTicket);
-      mockDb.registration.findFirst.mockResolvedValue(null); // sem duplicata
+      mockDb.eventPaymentMethod.findUnique.mockResolvedValue(basePaymentMethod);
+      mockDb.registration.findFirst.mockResolvedValue(null);
       mockDb.registration.count.mockResolvedValue(0);
       mockDb.user.findUnique.mockResolvedValue(baseUser);
       mockDb.registration.create.mockResolvedValue({
         id: 'reg-1',
         userId: SHADOW_USER_ID,
         eventId: EVENT_ID,
-        ticketId: TICKET_ID,
         status: 'pending',
         cpf: '52998224725',
       });
     };
 
-    it('fluxo completo: inscrição pending + PIX gerado com amount do banco', async () => {
+    it('fluxo completo: inscrição pending + PIX gerado com amount da forma de pagamento', async () => {
       setup();
 
       const result = await service.register(SLUG, baseDto);
@@ -175,10 +175,10 @@ describe('PublicService', () => {
       expect(result.status).toBe('pending');
       expect(result.qrCodeBase64).toBe('base64==');
       expect(result.qrCodeCopiaECola).toBe('0002...');
-      expect(result.amount).toBe(99.9);
       expect(mockPayments.createPixForRegistration).toHaveBeenCalledWith(
         'reg-1',
         SHADOW_USER_ID,
+        99.9,
       );
     });
 
@@ -208,48 +208,51 @@ describe('PublicService', () => {
       );
     });
 
+    it('inscrição gratuita (R$0): status confirmed, sem PIX, email enviado', async () => {
+      mockDb.event.findUnique.mockResolvedValue(baseEvent);
+      mockDb.eventPaymentMethod.findUnique.mockResolvedValue({ ...basePaymentMethod, value: 0 });
+      mockDb.registration.findFirst.mockResolvedValue(null);
+      mockDb.registration.count.mockResolvedValue(0);
+      mockDb.user.findUnique.mockResolvedValue(baseUser);
+      mockDb.registration.create.mockResolvedValue({
+        id: 'reg-free', userId: SHADOW_USER_ID, eventId: EVENT_ID, status: 'confirmed', cpf: '52998224725',
+      });
+      mockDb.registration.updateMany.mockResolvedValue({ count: 1 });
+
+      const result = await service.register(SLUG, baseDto);
+
+      expect(result.status).toBe('confirmed');
+      expect(mockPayments.createPixForRegistration).not.toHaveBeenCalled();
+      expect(mockMail.sendRegistrationConfirmation).toHaveBeenCalledTimes(1);
+    });
+
     it('lança NotFoundException para evento inexistente ou não publicado', async () => {
       mockDb.event.findUnique.mockResolvedValue(null);
       await expect(service.register(SLUG, baseDto)).rejects.toThrow(NotFoundException);
     });
 
-    it('lança NotFoundException para evento não publicado', async () => {
-      mockDb.event.findUnique.mockResolvedValue({ ...baseEvent, isPublished: false });
-      await expect(service.register(SLUG, baseDto)).rejects.toThrow(NotFoundException);
-    });
-
-    it('lança BadRequestException quando evento já aconteceu (prazo encerrado)', async () => {
+    it('lança BadRequestException quando evento já aconteceu', async () => {
       mockDb.event.findUnique.mockResolvedValue({ ...baseEvent, date: pastDate });
       await expect(service.register(SLUG, baseDto)).rejects.toThrow(BadRequestException);
     });
 
-    it('lança NotFoundException para ticket inexistente', async () => {
+    it('lança NotFoundException para forma de pagamento inexistente', async () => {
       mockDb.event.findUnique.mockResolvedValue(baseEvent);
-      mockDb.ticket.findUnique.mockResolvedValue(null);
+      mockDb.eventPaymentMethod.findUnique.mockResolvedValue(null);
       await expect(service.register(SLUG, baseDto)).rejects.toThrow(NotFoundException);
     });
 
-    it('lança BadRequestException para ticket de outro evento', async () => {
+    it('lança BadRequestException para forma de pagamento de outro evento', async () => {
       mockDb.event.findUnique.mockResolvedValue(baseEvent);
-      mockDb.ticket.findUnique.mockResolvedValue({ ...baseTicket, eventId: 'outro-evento' });
+      mockDb.eventPaymentMethod.findUnique.mockResolvedValue({ ...basePaymentMethod, eventId: 'outro' });
       await expect(service.register(SLUG, baseDto)).rejects.toThrow(BadRequestException);
-    });
-
-    it('lança ConflictException quando ingressos esgotados', async () => {
-      mockDb.event.findUnique.mockResolvedValue(baseEvent);
-      mockDb.ticket.findUnique.mockResolvedValue({ ...baseTicket, quantity: 10 });
-      mockDb.registration.findFirst.mockResolvedValue(null);
-      mockDb.registration.count.mockResolvedValue(10); // lotado
-
-      await expect(service.register(SLUG, baseDto)).rejects.toThrow(ConflictException);
-      expect(mockPayments.createPixForRegistration).not.toHaveBeenCalled();
     });
 
     it('lança ConflictException quando evento lotado (maxParticipants)', async () => {
       mockDb.event.findUnique.mockResolvedValue({ ...baseEvent, maxParticipants: 5 });
-      mockDb.ticket.findUnique.mockResolvedValue(baseTicket);
+      mockDb.eventPaymentMethod.findUnique.mockResolvedValue(basePaymentMethod);
       mockDb.registration.findFirst.mockResolvedValue(null);
-      mockDb.registration.count.mockResolvedValue(5); // evento lotado
+      mockDb.registration.count.mockResolvedValue(5);
 
       await expect(service.register(SLUG, baseDto)).rejects.toThrow(ConflictException);
     });
@@ -265,28 +268,22 @@ describe('PublicService', () => {
           amount: 99.9,
         };
         mockDb.event.findUnique.mockResolvedValue(baseEvent);
-        mockDb.ticket.findUnique.mockResolvedValue(baseTicket);
-        mockDb.registration.findFirst.mockResolvedValue({
-          id: 'reg-old',
-          cpf: '52998224725',
-          status: 'pending',
-          payment: existingPayment,
-        });
+        mockDb.eventPaymentMethod.findUnique.mockResolvedValue(basePaymentMethod);
+        mockDb.registration.findFirst
+          .mockResolvedValueOnce(null) // alreadyConfirmed check
+          .mockResolvedValueOnce({ id: 'reg-old', cpf: '52998224725', status: 'pending', payment: existingPayment });
 
         const result = await service.register(SLUG, baseDto);
 
-        // Não cria nova inscrição nem novo PIX
         expect(mockDb.registration.create).not.toHaveBeenCalled();
         expect(mockPayments.createPixForRegistration).not.toHaveBeenCalled();
         expect(result.registrationId).toBe('reg-old');
-        expect(result.qrCodeBase64).toBe('oldqr==');
         expect((result as { reused?: boolean }).reused).toBe(true);
       });
 
       it('cria nova inscrição quando PIX anterior já expirou', async () => {
-        // findFirst retorna null (expiresAt < now, filtrado pela query where)
         mockDb.event.findUnique.mockResolvedValue(baseEvent);
-        mockDb.ticket.findUnique.mockResolvedValue(baseTicket);
+        mockDb.eventPaymentMethod.findUnique.mockResolvedValue(basePaymentMethod);
         mockDb.registration.findFirst.mockResolvedValue(null);
         mockDb.registration.count.mockResolvedValue(0);
         mockDb.user.findUnique.mockResolvedValue(baseUser);

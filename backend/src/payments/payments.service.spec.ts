@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import {
-  BadRequestException,
   ConflictException,
   ForbiddenException,
   NotFoundException,
@@ -101,7 +100,7 @@ describe('PaymentsService', () => {
   // ─── createPixForRegistration ────────────────────────────────────────────────
 
   describe('createPixForRegistration', () => {
-    it('calcula o amount a partir do ticket no banco — nunca do cliente', async () => {
+    it('usa o amount passado como parâmetro', async () => {
       mockDb.registration.findUnique.mockResolvedValue(baseRegistration);
       mockDb.payment.create.mockResolvedValue({
         id: 'pay-1',
@@ -110,7 +109,7 @@ describe('PaymentsService', () => {
         expiresAt: mockPixResult.expiresAt,
       });
 
-      const result = await service.createPixForRegistration(REG_ID, USER_ID);
+      const result = await service.createPixForRegistration(REG_ID, USER_ID, 50);
 
       expect(result.amount).toBe(50);
       expect(mockProvider.createPixPayment).toHaveBeenCalledWith(
@@ -122,7 +121,7 @@ describe('PaymentsService', () => {
       mockDb.registration.findUnique.mockResolvedValue(baseRegistration);
       mockDb.payment.create.mockResolvedValue({ id: 'pay-1', amount: 50, expiresAt: mockPixResult.expiresAt });
 
-      const result = await service.createPixForRegistration(REG_ID, USER_ID);
+      const result = await service.createPixForRegistration(REG_ID, USER_ID, 50);
 
       expect(result.qrCodeBase64).toBe('base64img==');
       expect(result.qrCodeCopiaECola).toBe('0002...copia');
@@ -132,7 +131,7 @@ describe('PaymentsService', () => {
     it('lança NotFoundException para inscrição inexistente', async () => {
       mockDb.registration.findUnique.mockResolvedValue(null);
 
-      await expect(service.createPixForRegistration(REG_ID, USER_ID))
+      await expect(service.createPixForRegistration(REG_ID, USER_ID, 50))
         .rejects.toThrow(NotFoundException);
       expect(mockProvider.createPixPayment).not.toHaveBeenCalled();
     });
@@ -140,7 +139,7 @@ describe('PaymentsService', () => {
     it('lança ForbiddenException quando inscrição pertence a outro usuário', async () => {
       mockDb.registration.findUnique.mockResolvedValue({ ...baseRegistration, userId: 'outro' });
 
-      await expect(service.createPixForRegistration(REG_ID, USER_ID))
+      await expect(service.createPixForRegistration(REG_ID, USER_ID, 50))
         .rejects.toThrow(ForbiddenException);
     });
 
@@ -150,22 +149,29 @@ describe('PaymentsService', () => {
         payment: { id: 'pay-old', status: 'paid' },
       });
 
-      await expect(service.createPixForRegistration(REG_ID, USER_ID))
+      await expect(service.createPixForRegistration(REG_ID, USER_ID, 50))
         .rejects.toThrow(ConflictException);
     });
 
-    it('lança BadRequestException quando o ingresso é gratuito (price=0)', async () => {
+    it('usa amount do pagamento anterior quando não fornecido (retry)', async () => {
+      const existingPending = { id: 'pay-old', status: 'pending', amount: 75 };
       mockDb.registration.findUnique.mockResolvedValue({
         ...baseRegistration,
-        ticket: { id: TICKET_ID, name: 'Free', price: 0 },
+        payment: existingPending,
       });
+      mockDb.payment.delete.mockResolvedValue({});
+      mockDb.payment.create.mockResolvedValue({ id: 'pay-new', amount: 75, expiresAt: mockPixResult.expiresAt });
 
-      await expect(service.createPixForRegistration(REG_ID, USER_ID))
-        .rejects.toThrow(BadRequestException);
+      await service.createPixForRegistration(REG_ID, USER_ID);
+
+      expect(mockDb.payment.delete).toHaveBeenCalledWith({ where: { id: 'pay-old' } });
+      expect(mockProvider.createPixPayment).toHaveBeenCalledWith(
+        expect.objectContaining({ amount: 75 }),
+      );
     });
 
-    it('apaga pagamento pendente anterior e cria novo (retry)', async () => {
-      const existingPending = { id: 'pay-old', status: 'pending' };
+    it('apaga pagamento pendente anterior e cria novo (retry com amount explícito)', async () => {
+      const existingPending = { id: 'pay-old', status: 'pending', amount: 50 };
       mockDb.registration.findUnique.mockResolvedValue({
         ...baseRegistration,
         payment: existingPending,
@@ -173,7 +179,7 @@ describe('PaymentsService', () => {
       mockDb.payment.delete.mockResolvedValue({});
       mockDb.payment.create.mockResolvedValue({ id: 'pay-new', amount: 50, expiresAt: mockPixResult.expiresAt });
 
-      await service.createPixForRegistration(REG_ID, USER_ID);
+      await service.createPixForRegistration(REG_ID, USER_ID, 50);
 
       expect(mockDb.payment.delete).toHaveBeenCalledWith({ where: { id: 'pay-old' } });
       expect(mockDb.payment.create).toHaveBeenCalledTimes(1);

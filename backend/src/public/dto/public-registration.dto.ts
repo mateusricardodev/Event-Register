@@ -13,7 +13,7 @@ import { IsCpf } from '../../common/validators/is-cpf.validator.js';
 export class PublicRegistrationDto {
   @IsUUID()
   @IsNotEmpty()
-  ticketId: string;
+  paymentMethodId: string;
 
   @IsString()
   @IsNotEmpty()

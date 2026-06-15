@@ -2,26 +2,32 @@ import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom'
 import api from '../api/axios'
 
-interface Ticket {
+interface PaymentMethod {
   id: string
-  name: string
-  price: number
-  quantity: number
-  available: number
+  type: string
+  value: string
+  installments: number
 }
 
 interface EventInfo {
   title: string
   date: string
   location: string | null
-  tickets: Ticket[]
+  paymentMethods: PaymentMethod[]
   formFields: string | null
 }
 
 interface LocationState {
-  ticketId?: string
-  ticketName?: string
-  ticketPrice?: number
+  paymentMethodId?: string
+  paymentMethodType?: string
+  amount?: number
+}
+
+const TYPE_LABELS: Record<string, string> = {
+  pix: 'PIX',
+  credit_card: 'Cartão de crédito',
+  debit_card: 'Cartão de débito',
+  cash: 'Dinheiro',
 }
 
 function formatCpf(v: string) {
@@ -74,7 +80,7 @@ export function PublicRegistration() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
-  const [ticketId, setTicketId] = useState(locationState.ticketId ?? '')
+  const [paymentMethodId, setPaymentMethodId] = useState(locationState.paymentMethodId ?? '')
   const [form, setForm] = useState({
     fullName: '',
     email: '',
@@ -108,8 +114,8 @@ export function PublicRegistration() {
       setError('Você deve aceitar os termos para continuar.')
       return
     }
-    if (!ticketId) {
-      setError('Selecione um ingresso para continuar.')
+    if (!paymentMethodId) {
+      setError('Selecione uma forma de pagamento para continuar.')
       return
     }
     setError('')
@@ -123,7 +129,7 @@ export function PublicRegistration() {
       }
 
       const { data } = await api.post(`/public/events/${slug}/register`, {
-        ticketId,
+        paymentMethodId,
         fullName: form.fullName,
         email: form.email,
         cpf: form.cpf.replace(/\D/g, ''),
@@ -132,7 +138,21 @@ export function PublicRegistration() {
         termsAccepted: true,
       })
 
-      const selectedTicket = event?.tickets.find(t => t.id === ticketId)
+      // Inscrição gratuita: navega direto para tela de confirmação
+      if (data.status === 'confirmed') {
+        navigate(`/evento/${slug}/pagamento-pix`, {
+          state: {
+            registrationId: data.registrationId,
+            amount: 0,
+            eventTitle: event?.title,
+            email: form.email,
+            free: true,
+          },
+        })
+        return
+      }
+
+      // Inscrição paga: navega para tela de PIX
       navigate(`/evento/${slug}/pagamento-pix`, {
         state: {
           registrationId: data.registrationId,
@@ -142,7 +162,6 @@ export function PublicRegistration() {
           expiresAt: data.expiresAt,
           amount: data.amount,
           eventTitle: event?.title,
-          ticketName: locationState.ticketName ?? selectedTicket?.name,
           email: form.email,
           reused: data.reused,
         },
@@ -224,55 +243,57 @@ export function PublicRegistration() {
 
           <form onSubmit={handleSubmit} className="divide-y divide-gray-100">
 
-            {/* Ticket selection (shown only when not passed via state) */}
-            {!locationState.ticketId && event.tickets.length > 0 && (
-              <div className="px-6 py-5 flex flex-col gap-3">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Ingresso</p>
-                {event.tickets.map(ticket => {
-                  const sold = ticket.available === 0
-                  const selected = ticket.id === ticketId
-                  return (
-                    <button
-                      key={ticket.id}
-                      type="button"
-                      disabled={sold}
-                      onClick={() => !sold && setTicketId(ticket.id)}
-                      className={[
-                        'w-full text-left rounded-lg border px-4 py-3 transition-all text-sm',
-                        sold
-                          ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
-                          : selected
-                          ? 'border-teal-500 bg-teal-50 ring-2 ring-teal-400'
-                          : 'border-gray-200 hover:border-teal-400 cursor-pointer',
-                      ].join(' ')}
-                    >
-                      <div className="flex justify-between items-center">
-                        <span className="font-semibold text-gray-800">{ticket.name}</span>
-                        {sold ? (
-                          <span className="text-xs text-gray-400">Esgotado</span>
-                        ) : (
-                          <span className="font-bold text-gray-700">
-                            {Number(ticket.price) === 0 ? 'Grátis' : `R$ ${Number(ticket.price).toFixed(2).replace('.', ',')}`}
-                          </span>
-                        )}
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
-            )}
-
-            {/* Ticket summary (when passed via state) */}
-            {locationState.ticketId && locationState.ticketName && (
+            {/* Forma de pagamento — resumo se veio do estado, seletor se não veio */}
+            {locationState.paymentMethodId ? (
               <div className="px-6 py-4 bg-teal-50 border-b border-teal-100 flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-teal-600 font-semibold uppercase tracking-wide">Ingresso selecionado</p>
-                  <p className="text-sm font-bold text-teal-800">{locationState.ticketName}</p>
-                </div>
-                {locationState.ticketPrice !== undefined && (
-                  <p className="text-lg font-bold text-teal-700">
-                    R$ {Number(locationState.ticketPrice).toFixed(2).replace('.', ',')}
+                  <p className="text-xs text-teal-600 font-semibold uppercase tracking-wide">Forma de pagamento</p>
+                  <p className="text-sm font-bold text-teal-800">
+                    {TYPE_LABELS[locationState.paymentMethodType ?? ''] ?? locationState.paymentMethodType}
                   </p>
+                </div>
+                {locationState.amount !== undefined && (
+                  <p className="text-lg font-bold text-teal-700">
+                    {locationState.amount === 0
+                      ? 'Gratuito'
+                      : `R$ ${Number(locationState.amount).toFixed(2).replace('.', ',')}`}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="px-6 py-5 flex flex-col gap-3">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Forma de pagamento</p>
+                {event.paymentMethods.length === 0 ? (
+                  <p className="text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+                    Nenhuma forma de pagamento disponível para este evento.
+                  </p>
+                ) : (
+                  event.paymentMethods.map(method => {
+                    const selected = method.id === paymentMethodId
+                    const value = Number(method.value)
+                    return (
+                      <button
+                        key={method.id}
+                        type="button"
+                        onClick={() => setPaymentMethodId(method.id)}
+                        className={[
+                          'w-full text-left rounded-lg border px-4 py-3 transition-all text-sm',
+                          selected
+                            ? 'border-teal-500 bg-teal-50 ring-2 ring-teal-400'
+                            : 'border-gray-200 hover:border-teal-400 cursor-pointer',
+                        ].join(' ')}
+                      >
+                        <div className="flex justify-between items-center">
+                          <span className={`font-semibold ${selected ? 'text-teal-700' : 'text-gray-800'}`}>
+                            {TYPE_LABELS[method.type] ?? method.type}
+                          </span>
+                          <span className={`font-bold ${selected ? 'text-teal-600' : 'text-gray-700'}`}>
+                            {value === 0 ? 'Grátis' : `R$ ${value.toFixed(2).replace('.', ',')}`}
+                          </span>
+                        </div>
+                      </button>
+                    )
+                  })
                 )}
               </div>
             )}

@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ConflictException,
   ForbiddenException,
   Inject,
@@ -22,10 +21,10 @@ export class PaymentsService {
     @Inject(PAYMENT_PROVIDER_TOKEN) private readonly provider: IPaymentProvider,
   ) {}
 
-  async createPixForRegistration(registrationId: string, userId: string) {
+  async createPixForRegistration(registrationId: string, userId: string, amount?: number) {
     const registration = await this.prisma.db.registration.findUnique({
       where: { id: registrationId },
-      include: { ticket: true, event: true, user: true, payment: true },
+      include: { event: true, user: true, payment: true },
     });
 
     if (!registration) throw new NotFoundException('Inscrição não encontrada');
@@ -34,10 +33,10 @@ export class PaymentsService {
     if (registration.payment?.status === 'paid')
       throw new ConflictException('Pagamento já confirmado');
 
-    // Amount is always sourced from the ticket in the DB — never from the client
-    const amount = Number(registration.ticket?.price ?? 0);
-    if (amount === 0)
-      throw new BadRequestException('Este ingresso é gratuito — nenhum pagamento necessário');
+    // Amount: explicit (public flow) ou do pagamento anterior (retry autenticado)
+    const effectiveAmount = amount ?? Number(registration.payment?.amount ?? 0);
+    if (effectiveAmount <= 0)
+      throw new ConflictException('Não foi possível determinar o valor do pagamento');
 
     // Discard any previous pending attempt so the user can retry
     if (registration.payment) {
@@ -46,17 +45,17 @@ export class PaymentsService {
 
     const result = await this.provider.createPixPayment({
       registrationId,
-      amount,
+      amount: effectiveAmount,
       payerName: registration.user.name,
       payerEmail: registration.user.email,
       payerCpf: registration.cpf ?? '',
-      description: `${registration.event.title} — ${registration.ticket?.name ?? 'Inscrição'}`,
+      description: `${registration.event.title} — Inscrição`,
     });
 
     const payment = await this.prisma.db.payment.create({
       data: {
         registrationId,
-        amount,
+        amount: effectiveAmount,
         status: 'pending',
         provider: process.env.PAYMENT_PROVIDER ?? 'mock',
         providerPaymentId: result.providerPaymentId,
@@ -72,7 +71,7 @@ export class PaymentsService {
       qrCodeBase64: result.qrCodeBase64,
       qrCodeCopiaECola: result.qrCodeCopiaECola,
       expiresAt: result.expiresAt,
-      amount,
+      amount: effectiveAmount,
     };
   }
 

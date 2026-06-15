@@ -8,6 +8,7 @@ import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { PaymentsService } from '../payments/payments.service.js';
+import { MailService } from '../mail/mail.service.js';
 import { generateUniqueRegistrationCode } from '../common/registration-code.js';
 import { PublicRegistrationDto } from './dto/public-registration.dto.js';
 
@@ -16,6 +17,7 @@ export class PublicService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly payments: PaymentsService,
+    private readonly mail: MailService,
   ) {}
 
   async findEventBySlug(slug: string) {
@@ -36,16 +38,8 @@ export class PublicService {
         organizerPhone: true,
         isPublished: true,
         formFields: true,
-        tickets: {
-          select: {
-            id: true,
-            name: true,
-            price: true,
-            quantity: true,
-            _count: {
-              select: { registrations: { where: { status: { not: 'canceled' } } } },
-            },
-          },
+        paymentMethods: {
+          select: { id: true, type: true, value: true, installments: true },
           orderBy: { createdAt: 'asc' },
         },
         user: { select: { name: true } },
@@ -54,13 +48,7 @@ export class PublicService {
 
     if (!event || !event.isPublished) throw new NotFoundException('Evento não encontrado');
 
-    const tickets = event.tickets.map(({ _count, quantity, ...t }) => ({
-      ...t,
-      quantity,
-      available: Math.max(0, quantity - _count.registrations),
-    }));
-
-    return { ...event, tickets };
+    return event;
   }
 
   async getPaymentStatus(registrationId: string) {
@@ -87,55 +75,62 @@ export class PublicService {
     if (new Date() > event.date)
       throw new BadRequestException('As inscrições para este evento estão encerradas');
 
-    const ticket = await this.prisma.db.ticket.findUnique({ where: { id: dto.ticketId } });
-    if (!ticket) throw new NotFoundException('Ingresso não encontrado');
-    if (ticket.eventId !== event.id)
-      throw new BadRequestException('Ingresso não pertence a este evento');
+    const paymentMethod = await this.prisma.db.eventPaymentMethod.findUnique({
+      where: { id: dto.paymentMethodId },
+    });
+    if (!paymentMethod) throw new NotFoundException('Forma de pagamento não encontrada');
+    if (paymentMethod.eventId !== event.id)
+      throw new BadRequestException('Forma de pagamento não pertence a este evento');
 
-    // Anti-duplicidade: mesmo CPF com cobrança pendente ainda válida → reutiliza
-    const existing = await this.prisma.db.registration.findFirst({
-      where: {
-        eventId: event.id,
-        cpf: normalizedCpf,
-        status: 'pending',
-        payment: { status: 'pending', expiresAt: { gt: new Date() } },
-      },
-      include: {
-        payment: {
-          select: {
-            id: true,
-            providerPaymentId: true,
-            qrCodeBase64: true,
-            qrCodeCopiaECola: true,
-            expiresAt: true,
-            amount: true,
+    const amount = Number(paymentMethod.value);
+
+    // CPF já tem inscrição confirmada neste evento
+    const alreadyConfirmed = await this.prisma.db.registration.findFirst({
+      where: { eventId: event.id, cpf: normalizedCpf, status: 'confirmed' },
+    });
+    if (alreadyConfirmed)
+      throw new ConflictException('Este CPF já possui inscrição confirmada neste evento');
+
+    // Anti-duplicidade para PIX pendente: reutiliza o mesmo QR Code se ainda válido
+    if (amount > 0) {
+      const existing = await this.prisma.db.registration.findFirst({
+        where: {
+          eventId: event.id,
+          cpf: normalizedCpf,
+          status: 'pending',
+          payment: { status: 'pending', expiresAt: { gt: new Date() } },
+        },
+        include: {
+          payment: {
+            select: {
+              id: true,
+              providerPaymentId: true,
+              qrCodeBase64: true,
+              qrCodeCopiaECola: true,
+              expiresAt: true,
+              amount: true,
+            },
           },
         },
-      },
-    });
+      });
 
-    if (existing?.payment) {
-      return {
-        registrationId: existing.id,
-        paymentId: existing.payment.id,
-        providerPaymentId: existing.payment.providerPaymentId,
-        qrCodeBase64: existing.payment.qrCodeBase64,
-        qrCodeCopiaECola: existing.payment.qrCodeCopiaECola,
-        expiresAt: existing.payment.expiresAt,
-        amount: existing.payment.amount,
-        status: 'pending' as const,
-        reused: true,
-      };
+      if (existing?.payment) {
+        return {
+          registrationId: existing.id,
+          paymentId: existing.payment.id,
+          providerPaymentId: existing.payment.providerPaymentId,
+          qrCodeBase64: existing.payment.qrCodeBase64,
+          qrCodeCopiaECola: existing.payment.qrCodeCopiaECola,
+          expiresAt: existing.payment.expiresAt,
+          amount: existing.payment.amount,
+          status: 'pending' as const,
+          reused: true,
+        };
+      }
     }
 
-    // Cria inscrição dentro de transação serializável para garantir consistência de estoque
+    // Cria inscrição dentro de transação serializável
     const registration = await this.prisma.db.$transaction(async (tx) => {
-      const used = await tx.registration.count({
-        where: { ticketId: ticket.id, status: { not: 'canceled' } },
-      });
-      if (used >= ticket.quantity)
-        throw new ConflictException('Ingressos esgotados para este tipo');
-
       if (event.maxParticipants !== null) {
         const total = await tx.registration.count({
           where: { eventId: event.id, status: { not: 'canceled' } },
@@ -144,7 +139,6 @@ export class PublicService {
           throw new ConflictException('Evento lotado');
       }
 
-      // Usuário "sombra" — participante sem conta, vinculado por email
       let user = await tx.user.findUnique({ where: { email: dto.email } });
       if (!user) {
         const randomPassword = await bcrypt.hash(randomBytes(32).toString('hex'), 10);
@@ -159,8 +153,7 @@ export class PublicService {
         data: {
           userId: user.id,
           eventId: event.id,
-          ticketId: ticket.id,
-          status: 'pending',
+          status: amount === 0 ? 'confirmed' : 'pending',
           cpf: normalizedCpf,
           phone: dto.phone ?? null,
           extraFields: dto.extraFields ? JSON.stringify(dto.extraFields) : null,
@@ -169,10 +162,36 @@ export class PublicService {
       });
     }, { isolationLevel: 'Serializable' as never });
 
-    // Gera PIX usando o userId do shadow user (passa no ownership check)
+    // Inscrição gratuita: confirma direto e envia e-mail
+    if (amount === 0) {
+      const marked = await this.prisma.db.registration.updateMany({
+        where: { id: registration.id, confirmationEmailSentAt: null },
+        data: { confirmationEmailSentAt: new Date() },
+      });
+      if (marked.count > 0) {
+        void this.mail.sendRegistrationConfirmation({
+          participantName: dto.fullName,
+          participantEmail: dto.email,
+          eventTitle: event.title,
+          eventDate: event.date,
+          eventLocation: event.location,
+          registrationId: registration.id,
+          amountPaid: 0,
+        });
+      }
+
+      return {
+        registrationId: registration.id,
+        amount: 0,
+        status: 'confirmed' as const,
+      };
+    }
+
+    // Inscrição paga: gera PIX
     const pix = await this.payments.createPixForRegistration(
       registration.id,
       registration.userId,
+      amount,
     );
 
     return {

@@ -19,9 +19,9 @@ interface PixState {
   expiresAt?: string
   amount?: number
   eventTitle?: string
-  ticketName?: string
   email?: string
   reused?: boolean
+  free?: boolean
 }
 
 type Stage = 'pending' | 'confirmed' | 'failed' | 'overbooked'
@@ -42,7 +42,7 @@ export function PixPayment() {
   const location = useLocation()
   const state = location.state as PixState | null
 
-  const [stage, setStage] = useState<Stage>('pending')
+  const [stage, setStage] = useState<Stage>(state?.free ? 'confirmed' : 'pending')
   const [copied, setCopied] = useState(false)
   const [secondsLeft, setSecondsLeft] = useState(0)
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -130,12 +130,6 @@ export function PixPayment() {
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">Evento</span>
                 <span className="font-semibold text-gray-800 text-right max-w-[60%]">{state.eventTitle}</span>
-              </div>
-            )}
-            {state.ticketName && (
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Ingresso</span>
-                <span className="font-semibold text-gray-800">{state.ticketName}</span>
               </div>
             )}
             <div className="flex justify-between text-sm">

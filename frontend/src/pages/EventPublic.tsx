@@ -2,12 +2,11 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../api/axios'
 
-interface Ticket {
+interface PaymentMethod {
   id: string
-  name: string
-  price: number
-  quantity: number
-  available: number
+  type: string
+  value: string
+  installments: number
 }
 
 interface EventData {
@@ -21,7 +20,14 @@ interface EventData {
   isPublished: boolean
   category: string | null
   bannerUrl: string | null
-  tickets: Ticket[]
+  paymentMethods: PaymentMethod[]
+}
+
+const TYPE_LABELS: Record<string, string> = {
+  pix: 'PIX',
+  credit_card: 'Cartão de crédito',
+  debit_card: 'Cartão de débito',
+  cash: 'Dinheiro',
 }
 
 export function EventPublic() {
@@ -30,15 +36,15 @@ export function EventPublic() {
   const [event, setEvent] = useState<EventData | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
-  const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null)
+  const [selectedMethodId, setSelectedMethodId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!slug) return
     api.get(`/public/events/${slug}`)
       .then(({ data }) => {
         setEvent(data)
-        const available = (data.tickets as Ticket[])?.filter(t => t.available > 0)
-        if (available?.length === 1) setSelectedTicketId(available[0].id)
+        const methods: PaymentMethod[] = data.paymentMethods ?? []
+        if (methods.length === 1) setSelectedMethodId(methods[0].id)
       })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false))
@@ -70,17 +76,16 @@ export function EventPublic() {
   const formatTime = (d: Date) =>
     d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
 
-  const selectedTicket = event.tickets.find(t => t.id === selectedTicketId) ?? null
-  const hasTickets = event.tickets.length > 0
-  const minPrice = hasTickets ? Math.min(...event.tickets.map(t => Number(t.price))) : null
+  const selectedMethod = event.paymentMethods.find(m => m.id === selectedMethodId) ?? null
+  const hasPaymentMethods = event.paymentMethods.length > 0
 
   function handleRegister() {
-    if (!selectedTicket) return
+    if (!selectedMethod) return
     navigate(`/evento/${slug}/inscricao`, {
       state: {
-        ticketId: selectedTicket.id,
-        ticketName: selectedTicket.name,
-        ticketPrice: Number(selectedTicket.price),
+        paymentMethodId: selectedMethod.id,
+        paymentMethodType: selectedMethod.type,
+        amount: Number(selectedMethod.value),
       },
     })
   }
@@ -152,14 +157,13 @@ export function EventPublic() {
             </div>
           )}
 
-          {/* Tickets (mobile — shown below details) */}
-          {hasTickets && (
+          {/* Payment selector (mobile) */}
+          {hasPaymentMethods && (
             <div className="md:hidden">
-              <TicketSelector
-                tickets={event.tickets}
-                selectedId={selectedTicketId}
-                onSelect={setSelectedTicketId}
-                minPrice={minPrice}
+              <PaymentMethodSelector
+                methods={event.paymentMethods}
+                selectedId={selectedMethodId}
+                onSelect={setSelectedMethodId}
                 onRegister={handleRegister}
               />
             </div>
@@ -169,13 +173,18 @@ export function EventPublic() {
         {/* Right — registration card (desktop) */}
         <div className="hidden md:flex flex-col gap-4">
           <div className="sticky top-6">
-            <TicketSelector
-              tickets={event.tickets}
-              selectedId={selectedTicketId}
-              onSelect={setSelectedTicketId}
-              minPrice={minPrice}
-              onRegister={handleRegister}
-            />
+            {hasPaymentMethods ? (
+              <PaymentMethodSelector
+                methods={event.paymentMethods}
+                selectedId={selectedMethodId}
+                onSelect={setSelectedMethodId}
+                onRegister={handleRegister}
+              />
+            ) : (
+              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5 text-center">
+                <p className="text-sm text-gray-400">Inscrições em breve</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -183,79 +192,73 @@ export function EventPublic() {
   )
 }
 
-interface TicketSelectorProps {
-  tickets: Ticket[]
+interface PaymentMethodSelectorProps {
+  methods: PaymentMethod[]
   selectedId: string | null
   onSelect: (id: string) => void
-  minPrice: number | null
   onRegister: () => void
 }
 
-function TicketSelector({ tickets, selectedId, onSelect, minPrice, onRegister }: TicketSelectorProps) {
-  const hasAvailable = tickets.some(t => t.available > 0)
+function PaymentMethodSelector({ methods, selectedId, onSelect, onRegister }: PaymentMethodSelectorProps) {
+  const single = methods.length === 1
+  const selectedMethod = methods.find(m => m.id === selectedId)
+  const amount = selectedMethod ? Number(selectedMethod.value) : null
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5 flex flex-col gap-4">
-      {minPrice !== null && (
+      {/* Preço em destaque */}
+      {amount !== null && (
         <div>
-          <p className="text-xs text-gray-400 uppercase tracking-wide">A partir de</p>
+          <p className="text-xs text-gray-400 uppercase tracking-wide">Valor</p>
           <p className="text-2xl font-bold text-gray-800">
-            {minPrice === 0 ? 'Gratuito' : `R$ ${minPrice.toFixed(2).replace('.', ',')}`}
+            {amount === 0 ? 'Gratuito' : `R$ ${amount.toFixed(2).replace('.', ',')}`}
           </p>
         </div>
       )}
 
-      {tickets.length > 0 && (
+      {/* Seletor só aparece quando tem mais de uma opção */}
+      {!single && (
         <div className="flex flex-col gap-2">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Selecione um ingresso</p>
-          {tickets.map(ticket => {
-            const sold = ticket.available === 0
-            const selected = ticket.id === selectedId
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Forma de pagamento</p>
+          {methods.map(method => {
+            const selected = method.id === selectedId
+            const value = Number(method.value)
             return (
               <button
-                key={ticket.id}
+                key={method.id}
                 type="button"
-                disabled={sold}
-                onClick={() => !sold && onSelect(ticket.id)}
+                onClick={() => onSelect(method.id)}
                 className={[
                   'w-full text-left rounded-lg border px-4 py-3 transition-all text-sm',
-                  sold
-                    ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
-                    : selected
+                  selected
                     ? 'border-teal-500 bg-teal-50 ring-2 ring-teal-400'
                     : 'border-gray-200 hover:border-teal-400 hover:bg-teal-50 cursor-pointer',
                 ].join(' ')}
               >
                 <div className="flex items-center justify-between">
                   <span className={`font-semibold ${selected ? 'text-teal-700' : 'text-gray-800'}`}>
-                    {ticket.name}
+                    {TYPE_LABELS[method.type] ?? method.type}
                   </span>
-                  {sold ? (
-                    <span className="text-xs font-bold text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full">
-                      Esgotado
-                    </span>
-                  ) : (
-                    <span className={`font-bold ${selected ? 'text-teal-600' : 'text-gray-700'}`}>
-                      {Number(ticket.price) === 0
-                        ? 'Grátis'
-                        : `R$ ${Number(ticket.price).toFixed(2).replace('.', ',')}`}
-                    </span>
-                  )}
+                  <span className={`font-bold ${selected ? 'text-teal-600' : 'text-gray-700'}`}>
+                    {value === 0 ? 'Grátis' : `R$ ${value.toFixed(2).replace('.', ',')}`}
+                  </span>
                 </div>
-                {!sold && (
-                  <p className="text-xs text-gray-400 mt-1">
-                    {ticket.available} {ticket.available === 1 ? 'vaga' : 'vagas'} disponíveis
-                  </p>
-                )}
               </button>
             )
           })}
         </div>
       )}
 
+      {/* Quando é única, mostra o tipo selecionado */}
+      {single && (
+        <p className="text-sm text-gray-500">
+          Pagamento via <span className="font-semibold text-gray-700">{TYPE_LABELS[methods[0].type] ?? methods[0].type}</span>
+        </p>
+      )}
+
       <button
         onClick={onRegister}
-        disabled={!selectedId || !hasAvailable}
+        disabled={!selectedId}
         className="w-full bg-teal-500 hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-full text-sm transition-colors"
       >
         INSCREVA-SE JÁ!
