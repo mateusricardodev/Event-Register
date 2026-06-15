@@ -9,6 +9,7 @@ import { TicketsModule } from './tickets/tickets.module.js';
 import { RegistrationsModule } from './registrations/registrations.module.js';
 import { PaymentsModule } from './payments/payments.module.js';
 import { CheckinModule } from './checkin/checkin.module.js';
+import { PublicModule } from './public/public.module.js';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { CheckinModule } from './checkin/checkin.module.js';
     RegistrationsModule,
     PaymentsModule,
     CheckinModule,
+    PublicModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
