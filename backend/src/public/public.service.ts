@@ -63,6 +63,18 @@ export class PublicService {
     return { ...event, tickets };
   }
 
+  async getPaymentStatus(registrationId: string) {
+    const registration = await this.prisma.db.registration.findUnique({
+      where: { id: registrationId },
+      select: { status: true, payment: { select: { status: true } } },
+    });
+    if (!registration) throw new NotFoundException('Inscrição não encontrada');
+    return {
+      status: registration.status,
+      paymentStatus: registration.payment?.status ?? null,
+    };
+  }
+
   async register(slug: string, dto: PublicRegistrationDto) {
     const normalizedCpf = dto.cpf.replace(/\D/g, '');
 

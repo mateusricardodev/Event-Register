@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom'
 import api from '../api/axios'
 
 interface Ticket {
   id: string
   name: string
-  price: string
+  price: number
+  quantity: number
+  available: number
 }
 
 interface EventInfo {
@@ -14,6 +16,12 @@ interface EventInfo {
   location: string | null
   tickets: Ticket[]
   formFields: string | null
+}
+
+interface LocationState {
+  ticketId?: string
+  ticketName?: string
+  ticketPrice?: number
 }
 
 function formatCpf(v: string) {
@@ -37,7 +45,6 @@ type FieldInput = { label: string; placeholder?: string; type?: 'text' | 'date';
 
 const FIELD_CONFIG: Record<string, FieldInput> = {
   'CEP':                    { label: 'CEP',                  placeholder: '00000-000', format: formatCep },
-  'Celular':                { label: 'Celular',              placeholder: '(00) 00000-0000', format: formatPhone },
   'Cidade':                 { label: 'Cidade',               placeholder: 'Ex: São Paulo' },
   'Data de Nascimento':     { label: 'Data de nascimento',   type: 'date' },
   'Endereço: bairro':       { label: 'Bairro',               placeholder: 'Ex: Centro' },
@@ -51,28 +58,36 @@ const FIELD_CONFIG: Record<string, FieldInput> = {
   'País':                   { label: 'País',                 placeholder: 'Ex: Brasil' },
 }
 
-const CONTACT_FIELDS = ['Celular', 'Telefone Fixo']
 const PERSONAL_FIELDS = ['Data de Nascimento', 'Sexo', 'Estado Civil']
 const ADDRESS_FIELDS  = ['CEP', 'Endereço: logradouro', 'Endereço: número', 'Endereço: bairro', 'Endereço: complemento', 'Cidade', 'Estado', 'País']
+// Celular e Telefone Fixo são capturados no campo phone fixo abaixo — não renderizamos via formFields
+const EXTRA_SKIP = new Set(['Celular', 'Telefone Fixo'])
 
 export function PublicRegistration() {
   const { slug } = useParams<{ slug: string }>()
+  const navigate = useNavigate()
+  const locationState = (useLocation().state ?? {}) as LocationState
+
   const [event, setEvent] = useState<EventInfo | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
 
+  const [ticketId, setTicketId] = useState(locationState.ticketId ?? '')
   const [form, setForm] = useState({
-    name: '', email: '', cpf: '',
-    phone: '', birthDate: '',
+    fullName: '',
+    email: '',
+    cpf: '',
+    phone: '',
+    birthDate: '',
+    termsAccepted: false,
     extra: {} as Record<string, string>,
   })
 
   useEffect(() => {
     if (!slug) return
-    api.get(`/events/public/${slug}`)
+    api.get(`/public/events/${slug}`)
       .then(({ data }) => setEvent(data))
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false))
@@ -89,26 +104,53 @@ export function PublicRegistration() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!form.termsAccepted) {
+      setError('Você deve aceitar os termos para continuar.')
+      return
+    }
+    if (!ticketId) {
+      setError('Selecione um ingresso para continuar.')
+      return
+    }
     setError('')
     setSubmitting(true)
     try {
       const extraFields: Record<string, string> = {}
       for (const key of enabled) {
-        if (!CONTACT_FIELDS.includes(key) && key !== 'Data de Nascimento' && form.extra[key]) {
+        if (!EXTRA_SKIP.has(key) && key !== 'Data de Nascimento' && form.extra[key]) {
           extraFields[key] = form.extra[key]
         }
       }
-      await api.post(`/events/public/${slug}/register`, {
-        name: form.name,
+
+      const { data } = await api.post(`/public/events/${slug}/register`, {
+        ticketId,
+        fullName: form.fullName,
         email: form.email,
         cpf: form.cpf.replace(/\D/g, ''),
         phone: form.phone.replace(/\D/g, '') || undefined,
-        birthDate: form.birthDate || undefined,
         ...(Object.keys(extraFields).length > 0 && { extraFields }),
+        termsAccepted: true,
       })
-      setSuccess(true)
-    } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Erro ao realizar inscrição.')
+
+      const selectedTicket = event?.tickets.find(t => t.id === ticketId)
+      navigate(`/evento/${slug}/pagamento-pix`, {
+        state: {
+          registrationId: data.registrationId,
+          providerPaymentId: data.providerPaymentId,
+          qrCodeBase64: data.qrCodeBase64,
+          qrCodeCopiaECola: data.qrCodeCopiaECola,
+          expiresAt: data.expiresAt,
+          amount: data.amount,
+          eventTitle: event?.title,
+          ticketName: locationState.ticketName ?? selectedTicket?.name,
+          email: form.email,
+          reused: data.reused,
+        },
+      })
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string | string[] } } }
+      const msg = e?.response?.data?.message
+      setError(Array.isArray(msg) ? msg.join(', ') : (msg ?? 'Erro ao realizar inscrição.'))
     } finally {
       setSubmitting(false)
     }
@@ -127,45 +169,16 @@ export function PublicRegistration() {
     </div>
   )
 
-
-  if (success) return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
-      <div className="bg-white border border-green-200 rounded-xl shadow p-10 text-center max-w-md w-full">
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-        </div>
-        <h2 className="text-xl font-bold text-green-700 mb-2">Inscrição realizada!</h2>
-        <p className="text-gray-500 text-sm mb-6">Sua inscrição foi registrada com sucesso.</p>
-        <Link to={`/evento/${slug}`} className="text-sm text-teal-600 hover:underline">← Voltar para o evento</Link>
-      </div>
-    </div>
-  )
-
   const startDate = new Date(event.date)
   const formatDate = (d: Date) => d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
 
+  const hasPersonal = PERSONAL_FIELDS.some(f => enabled.has(f))
+  const hasAddress  = ADDRESS_FIELDS.some(f => enabled.has(f))
+
   function renderField(fieldName: string) {
     const config = FIELD_CONFIG[fieldName]
-    if (!config || !enabled.has(fieldName)) return null
-
-    const isPhone = fieldName === 'Celular'
+    if (!config || !enabled.has(fieldName) || EXTRA_SKIP.has(fieldName)) return null
     const isBirthDate = fieldName === 'Data de Nascimento'
-
-    if (isPhone) {
-      return (
-        <div key={fieldName}>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{config.label}</label>
-          <input
-            type="text" value={form.phone}
-            onChange={e => setForm(f => ({ ...f, phone: formatPhone(e.target.value) }))}
-            placeholder={config.placeholder}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
-          />
-        </div>
-      )
-    }
     if (isBirthDate) {
       return (
         <div key={fieldName}>
@@ -192,10 +205,6 @@ export function PublicRegistration() {
     )
   }
 
-  const hasContact  = CONTACT_FIELDS.some(f => enabled.has(f))
-  const hasPersonal = PERSONAL_FIELDS.some(f => enabled.has(f))
-  const hasAddress  = ADDRESS_FIELDS.some(f => enabled.has(f))
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-teal-600 text-white py-8">
@@ -215,14 +224,67 @@ export function PublicRegistration() {
 
           <form onSubmit={handleSubmit} className="divide-y divide-gray-100">
 
-            {/* Dados básicos — sempre visíveis */}
+            {/* Ticket selection (shown only when not passed via state) */}
+            {!locationState.ticketId && event.tickets.length > 0 && (
+              <div className="px-6 py-5 flex flex-col gap-3">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Ingresso</p>
+                {event.tickets.map(ticket => {
+                  const sold = ticket.available === 0
+                  const selected = ticket.id === ticketId
+                  return (
+                    <button
+                      key={ticket.id}
+                      type="button"
+                      disabled={sold}
+                      onClick={() => !sold && setTicketId(ticket.id)}
+                      className={[
+                        'w-full text-left rounded-lg border px-4 py-3 transition-all text-sm',
+                        sold
+                          ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
+                          : selected
+                          ? 'border-teal-500 bg-teal-50 ring-2 ring-teal-400'
+                          : 'border-gray-200 hover:border-teal-400 cursor-pointer',
+                      ].join(' ')}
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className="font-semibold text-gray-800">{ticket.name}</span>
+                        {sold ? (
+                          <span className="text-xs text-gray-400">Esgotado</span>
+                        ) : (
+                          <span className="font-bold text-gray-700">
+                            {Number(ticket.price) === 0 ? 'Grátis' : `R$ ${Number(ticket.price).toFixed(2).replace('.', ',')}`}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* Ticket summary (when passed via state) */}
+            {locationState.ticketId && locationState.ticketName && (
+              <div className="px-6 py-4 bg-teal-50 border-b border-teal-100 flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-teal-600 font-semibold uppercase tracking-wide">Ingresso selecionado</p>
+                  <p className="text-sm font-bold text-teal-800">{locationState.ticketName}</p>
+                </div>
+                {locationState.ticketPrice !== undefined && (
+                  <p className="text-lg font-bold text-teal-700">
+                    R$ {Number(locationState.ticketPrice).toFixed(2).replace('.', ',')}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Dados básicos */}
             <div className="px-6 py-5 flex flex-col gap-4">
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Dados básicos</p>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nome completo *</label>
                 <input
-                  type="text" value={form.name} required
-                  onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                  type="text" value={form.fullName} required
+                  onChange={e => setForm(f => ({ ...f, fullName: e.target.value }))}
                   placeholder="Ex: João Pedro Silva"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
                 />
@@ -247,17 +309,16 @@ export function PublicRegistration() {
                   />
                 </div>
               </div>
-            </div>
-
-            {/* Contato */}
-            {hasContact && (
-              <div className="px-6 py-5 flex flex-col gap-4">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Contato</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {CONTACT_FIELDS.map(renderField)}
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Telefone / WhatsApp</label>
+                <input
+                  type="text" value={form.phone}
+                  onChange={e => setForm(f => ({ ...f, phone: formatPhone(e.target.value) }))}
+                  placeholder="(00) 00000-0000"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+                />
               </div>
-            )}
+            </div>
 
             {/* Dados pessoais */}
             {hasPersonal && (
@@ -279,16 +340,38 @@ export function PublicRegistration() {
               </div>
             )}
 
-            <div className="px-6 py-5 flex flex-col gap-3">
+            {/* Termos + Submit */}
+            <div className="px-6 py-5 flex flex-col gap-4">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.termsAccepted}
+                  onChange={e => setForm(f => ({ ...f, termsAccepted: e.target.checked }))}
+                  className="mt-0.5 w-4 h-4 accent-teal-500 shrink-0"
+                />
+                <span className="text-sm text-gray-600">
+                  Concordo com os termos de participação e autorizo o uso dos meus dados para fins de organização do evento.
+                </span>
+              </label>
+
               {error && (
                 <p className="text-red-500 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
               )}
+
               <button
-                type="submit" disabled={submitting}
-                className="w-full bg-teal-500 hover:bg-teal-600 disabled:opacity-60 text-white font-bold py-3 rounded-full text-sm transition-colors"
+                type="submit"
+                disabled={submitting || !form.termsAccepted}
+                className="w-full bg-teal-500 hover:bg-teal-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-3 rounded-full text-sm transition-colors flex items-center justify-center gap-2"
               >
-                {submitting ? 'ENVIANDO...' : 'CONFIRMAR INSCRIÇÃO'}
+                {submitting && (
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 000 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z" />
+                  </svg>
+                )}
+                {submitting ? 'PROCESSANDO...' : 'CONFIRMAR INSCRIÇÃO'}
               </button>
+
               <Link to={`/evento/${slug}`} className="text-center text-sm text-gray-400 hover:text-gray-600 transition-colors">
                 ← Voltar para o evento
               </Link>

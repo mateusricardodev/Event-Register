@@ -12,6 +12,7 @@ import { EventSetupForm } from './pages/EventSetupForm'
 import { EventSetupPage } from './pages/EventSetupPage'
 import { EventPublic } from './pages/EventPublic'
 import { PublicRegistration } from './pages/PublicRegistration'
+import { PixPayment } from './pages/PixPayment'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { LandingPage } from './pages/LandingPage'
 import { EventsList } from './app/pages/EventsList'
@@ -28,6 +29,7 @@ export default function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/evento/:slug" element={<EventPublic />} />
         <Route path="/evento/:slug/inscricao" element={<PublicRegistration />} />
+        <Route path="/evento/:slug/pagamento-pix" element={<PixPayment />} />
         <Route
           path="/dashboard"
           element={

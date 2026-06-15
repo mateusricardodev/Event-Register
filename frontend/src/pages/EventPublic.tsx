@@ -2,6 +2,14 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../api/axios'
 
+interface Ticket {
+  id: string
+  name: string
+  price: number
+  quantity: number
+  available: number
+}
+
 interface EventData {
   id: string
   title: string
@@ -13,14 +21,7 @@ interface EventData {
   isPublished: boolean
   category: string | null
   bannerUrl: string | null
-  paymentMethods: { id: string; type: string; value: number; installments: number }[]
-}
-
-const TYPE_LABELS: Record<string, string> = {
-  pix: 'Pix',
-  credit_card: 'Cartão de crédito',
-  debit_card: 'Cartão de débito',
-  cash: 'Dinheiro',
+  tickets: Ticket[]
 }
 
 export function EventPublic() {
@@ -29,11 +30,16 @@ export function EventPublic() {
   const [event, setEvent] = useState<EventData | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
+  const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!slug) return
-    api.get(`/events/public/${slug}`)
-      .then(({ data }) => setEvent(data))
+    api.get(`/public/events/${slug}`)
+      .then(({ data }) => {
+        setEvent(data)
+        const available = (data.tickets as Ticket[])?.filter(t => t.available > 0)
+        if (available?.length === 1) setSelectedTicketId(available[0].id)
+      })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false))
   }, [slug])
@@ -64,16 +70,26 @@ export function EventPublic() {
   const formatTime = (d: Date) =>
     d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
 
-  const minPrice = event.paymentMethods.length > 0
-    ? Math.min(...event.paymentMethods.map((m) => Number(m.value)))
-    : null
+  const selectedTicket = event.tickets.find(t => t.id === selectedTicketId) ?? null
+  const hasTickets = event.tickets.length > 0
+  const minPrice = hasTickets ? Math.min(...event.tickets.map(t => Number(t.price))) : null
+
+  function handleRegister() {
+    if (!selectedTicket) return
+    navigate(`/evento/${slug}/inscricao`, {
+      state: {
+        ticketId: selectedTicket.id,
+        ticketName: selectedTicket.name,
+        ticketPrice: Number(selectedTicket.price),
+      },
+    })
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero */}
       <div className="bg-teal-600 text-white">
         <div className="max-w-4xl mx-auto px-4 py-16 flex flex-col items-center text-center gap-4">
-          {/* Cover image */}
           <div className="w-full max-w-2xl h-56 bg-teal-500 rounded-xl overflow-hidden flex items-center justify-center mb-4">
             {event.bannerUrl ? (
               <img
@@ -97,7 +113,7 @@ export function EventPublic() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-10 grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Left - details */}
+        {/* Left — details */}
         <div className="md:col-span-2 flex flex-col gap-6">
           {/* Date & location */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5 flex flex-col gap-3">
@@ -109,8 +125,8 @@ export function EventPublic() {
               </svg>
               <div>
                 <p className="text-sm font-semibold text-gray-800 capitalize">{formatDate(startDate)}</p>
-                <p className="text-sm text-gray-500">{formatTime(startDate)}
-                  {endDate && ` até ${formatTime(endDate)}`}
+                <p className="text-sm text-gray-500">
+                  {formatTime(startDate)}{endDate && ` até ${formatTime(endDate)}`}
                 </p>
               </div>
             </div>
@@ -135,40 +151,115 @@ export function EventPublic() {
               <p className="text-sm text-gray-600 whitespace-pre-line">{event.about}</p>
             </div>
           )}
+
+          {/* Tickets (mobile — shown below details) */}
+          {hasTickets && (
+            <div className="md:hidden">
+              <TicketSelector
+                tickets={event.tickets}
+                selectedId={selectedTicketId}
+                onSelect={setSelectedTicketId}
+                minPrice={minPrice}
+                onRegister={handleRegister}
+              />
+            </div>
+          )}
         </div>
 
-        {/* Right - registration card */}
-        <div className="flex flex-col gap-4">
-          <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5 flex flex-col gap-4 sticky top-6">
-            {minPrice !== null && (
-              <div>
-                <p className="text-xs text-gray-400 uppercase tracking-wide">A partir de</p>
-                <p className="text-2xl font-bold text-gray-800">
-                  {minPrice === 0 ? 'Gratuito' : `R$ ${minPrice.toFixed(2)}`}
-                </p>
-              </div>
-            )}
-
-            {event.paymentMethods.length > 0 && (
-              <div className="flex flex-col gap-1">
-                {event.paymentMethods.map((m) => (
-                  <div key={m.id} className="flex items-center justify-between text-xs text-gray-500">
-                    <span>{TYPE_LABELS[m.type] ?? m.type}</span>
-                    <span>R$ {Number(m.value).toFixed(2)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <button
-              onClick={() => navigate(`/evento/${slug}/inscricao`)}
-              className="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 rounded-full text-sm transition-colors"
-            >
-              INSCREVA-SE JÁ!
-            </button>
+        {/* Right — registration card (desktop) */}
+        <div className="hidden md:flex flex-col gap-4">
+          <div className="sticky top-6">
+            <TicketSelector
+              tickets={event.tickets}
+              selectedId={selectedTicketId}
+              onSelect={setSelectedTicketId}
+              minPrice={minPrice}
+              onRegister={handleRegister}
+            />
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+interface TicketSelectorProps {
+  tickets: Ticket[]
+  selectedId: string | null
+  onSelect: (id: string) => void
+  minPrice: number | null
+  onRegister: () => void
+}
+
+function TicketSelector({ tickets, selectedId, onSelect, minPrice, onRegister }: TicketSelectorProps) {
+  const hasAvailable = tickets.some(t => t.available > 0)
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5 flex flex-col gap-4">
+      {minPrice !== null && (
+        <div>
+          <p className="text-xs text-gray-400 uppercase tracking-wide">A partir de</p>
+          <p className="text-2xl font-bold text-gray-800">
+            {minPrice === 0 ? 'Gratuito' : `R$ ${minPrice.toFixed(2).replace('.', ',')}`}
+          </p>
+        </div>
+      )}
+
+      {tickets.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Selecione um ingresso</p>
+          {tickets.map(ticket => {
+            const sold = ticket.available === 0
+            const selected = ticket.id === selectedId
+            return (
+              <button
+                key={ticket.id}
+                type="button"
+                disabled={sold}
+                onClick={() => !sold && onSelect(ticket.id)}
+                className={[
+                  'w-full text-left rounded-lg border px-4 py-3 transition-all text-sm',
+                  sold
+                    ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
+                    : selected
+                    ? 'border-teal-500 bg-teal-50 ring-2 ring-teal-400'
+                    : 'border-gray-200 hover:border-teal-400 hover:bg-teal-50 cursor-pointer',
+                ].join(' ')}
+              >
+                <div className="flex items-center justify-between">
+                  <span className={`font-semibold ${selected ? 'text-teal-700' : 'text-gray-800'}`}>
+                    {ticket.name}
+                  </span>
+                  {sold ? (
+                    <span className="text-xs font-bold text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full">
+                      Esgotado
+                    </span>
+                  ) : (
+                    <span className={`font-bold ${selected ? 'text-teal-600' : 'text-gray-700'}`}>
+                      {Number(ticket.price) === 0
+                        ? 'Grátis'
+                        : `R$ ${Number(ticket.price).toFixed(2).replace('.', ',')}`}
+                    </span>
+                  )}
+                </div>
+                {!sold && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    {ticket.available} {ticket.available === 1 ? 'vaga' : 'vagas'} disponíveis
+                  </p>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      <button
+        onClick={onRegister}
+        disabled={!selectedId || !hasAvailable}
+        className="w-full bg-teal-500 hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-full text-sm transition-colors"
+      >
+        INSCREVA-SE JÁ!
+      </button>
     </div>
   )
 }
