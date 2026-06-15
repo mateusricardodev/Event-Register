@@ -11,6 +11,7 @@ import { MailService } from '../mail/mail.service.js';
 import { CreateRegistrationDto } from './dto/create-registration.dto.js';
 import { CreateRegistrationOrganizerDto } from './dto/create-registration-organizer.dto.js';
 import { UpdateRegistrationDto } from './dto/update-registration.dto.js';
+import { generateUniqueRegistrationCode } from '../common/registration-code.js';
 
 @Injectable()
 export class RegistrationsService {
@@ -35,8 +36,9 @@ export class RegistrationsService {
       if (used >= ticket.quantity)
         throw new BadRequestException('Ingressos esgotados para este ticket');
 
+      const code = await generateUniqueRegistrationCode(tx);
       return tx.registration.create({
-        data: { userId, eventId: dto.eventId, ticketId: dto.ticketId },
+        data: { userId, eventId: dto.eventId, ticketId: dto.ticketId, code },
         include: {
           event: { select: { id: true, title: true, date: true } },
           ticket: { select: { id: true, name: true, price: true } },
@@ -117,6 +119,7 @@ export class RegistrationsService {
         });
       }
 
+      const code = await generateUniqueRegistrationCode(tx);
       return tx.registration.create({
         data: {
           userId: user.id,
@@ -125,6 +128,7 @@ export class RegistrationsService {
           cpf: dto.cpf,
           phone: dto.phone,
           birthDate: dto.birthDate ? new Date(dto.birthDate) : null,
+          code,
         },
         include: { user: { select: { id: true, name: true, email: true } } },
       });
@@ -220,6 +224,7 @@ export class RegistrationsService {
         });
       }
 
+      const code = await generateUniqueRegistrationCode(tx);
       return tx.registration.create({
         data: {
           userId: user.id,
@@ -229,6 +234,7 @@ export class RegistrationsService {
           phone: dto.phone,
           birthDate: dto.birthDate ? new Date(dto.birthDate) : null,
           extraFields: dto.extraFields ? JSON.stringify(dto.extraFields) : null,
+          code,
         },
         include: { event: { select: { id: true, title: true, date: true } } },
       });

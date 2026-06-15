@@ -26,14 +26,15 @@ enum PaymentStatus {
 }
 
 model User {
-  id            String         @id @default(uuid())
-  name          String
-  email         String         @unique
-  password      String
-  role          Role           @default(user)
-  createdAt     DateTime       @default(now())
-  events        Event[]
-  registrations Registration[]
+  id              String           @id @default(uuid())
+  name            String
+  email           String           @unique
+  password        String
+  role            Role             @default(user)
+  createdAt       DateTime         @default(now())
+  events          Event[]
+  registrations   Registration[]
+  volunteerEvents EventVolunteer[]
 }
 
 model Event {
@@ -57,6 +58,18 @@ model Event {
   tickets         Ticket[]
   registrations   Registration[]
   paymentMethods  EventPaymentMethod[]
+  volunteers      EventVolunteer[]
+}
+
+model EventVolunteer {
+  id        String   @id @default(uuid())
+  eventId   String
+  userId    String
+  createdAt DateTime @default(now())
+  event     Event    @relation(fields: [eventId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([eventId, userId])
 }
 
 model EventPaymentMethod {
@@ -83,20 +96,35 @@ model Ticket {
 }
 
 model Registration {
-  id        String             @id @default(uuid())
-  userId    String
-  eventId   String
+  id          String             @id @default(uuid())
+  userId      String
+  eventId     String
   ticketId    String?
   status      RegistrationStatus @default(pending)
   cpf         String?
   phone       String?
   birthDate   DateTime?
   extraFields String?
+  code        String?            @unique
+  checkedIn   Boolean            @default(false)
+  checkedInAt DateTime?
+  checkedInBy String?
   createdAt   DateTime           @default(now())
   user        User               @relation(fields: [userId], references: [id])
   event       Event              @relation(fields: [eventId], references: [id])
   ticket      Ticket?            @relation(fields: [ticketId], references: [id])
   payment     Payment?
+  checkinLogs CheckinLog[]
+}
+
+model CheckinLog {
+  id             String       @id @default(uuid())
+  registrationId String
+  eventId        String
+  action         String // 'check_in' | 'undo'
+  performedBy    String
+  createdAt      DateTime     @default(now())
+  registration   Registration @relation(fields: [registrationId], references: [id])
 }
 
 model Payment {

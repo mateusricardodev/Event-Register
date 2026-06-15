@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Login } from './pages/Login'
 import { Register } from './pages/Register'
 import { Dashboard } from './pages/Dashboard'
@@ -14,6 +14,7 @@ import { EventPublic } from './pages/EventPublic'
 import { PublicRegistration } from './pages/PublicRegistration'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { LandingPage } from './pages/LandingPage'
+import { EventsList } from './app/pages/EventsList'
 
 export default function App() {
   return (
@@ -93,6 +94,17 @@ export default function App() {
           element={
             <ProtectedRoute>
               <SearchRegistrations />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* App mobile de credenciamento (voluntários) */}
+        <Route path="/app" element={<Navigate to="/app/eventos" replace />} />
+        <Route
+          path="/app/eventos"
+          element={
+            <ProtectedRoute>
+              <EventsList />
             </ProtectedRoute>
           }
         />

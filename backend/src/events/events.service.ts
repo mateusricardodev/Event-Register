@@ -124,8 +124,10 @@ export class EventsService {
       const regIds = registrations.map((r) => r.id);
 
       await tx.payment.deleteMany({ where: { registrationId: { in: regIds } } });
+      await tx.checkinLog.deleteMany({ where: { registrationId: { in: regIds } } });
       await tx.registration.deleteMany({ where: { eventId: id } });
       await tx.eventPaymentMethod.deleteMany({ where: { eventId: id } });
+      await tx.eventVolunteer.deleteMany({ where: { eventId: id } });
       await tx.ticket.deleteMany({ where: { eventId: id } });
       await tx.event.delete({ where: { id } });
     });

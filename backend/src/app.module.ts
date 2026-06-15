@@ -8,6 +8,7 @@ import { EventsModule } from './events/events.module.js';
 import { TicketsModule } from './tickets/tickets.module.js';
 import { RegistrationsModule } from './registrations/registrations.module.js';
 import { PaymentsModule } from './payments/payments.module.js';
+import { CheckinModule } from './checkin/checkin.module.js';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { PaymentsModule } from './payments/payments.module.js';
     TicketsModule,
     RegistrationsModule,
     PaymentsModule,
+    CheckinModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

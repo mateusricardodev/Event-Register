@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../generated/prisma/client.js';
 import bcrypt from 'bcrypt';
+import { generateUniqueRegistrationCode } from '../src/common/registration-code.js';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
@@ -84,6 +85,24 @@ async function main() {
   });
   console.log('✅ Ticket criado:', ticket.name);
 
+  // Criar voluntário (login do app mobile de credenciamento) e vinculá-lo ao evento
+  const volunteer = await prisma.user.upsert({
+    where: { email: 'voluntario@congresso.com' },
+    update: {},
+    create: {
+      name: 'Voluntário Portaria',
+      email: 'voluntario@congresso.com',
+      password: hashedPassword,
+      role: 'user',
+    },
+  });
+  await prisma.eventVolunteer.upsert({
+    where: { eventId_userId: { eventId: event.id, userId: volunteer.id } },
+    update: {},
+    create: { eventId: event.id, userId: volunteer.id },
+  });
+  console.log('✅ Voluntário vinculado:', volunteer.email);
+
   // Criar usuários falsos e inscrições
   for (let i = 0; i < fakeUsers.length; i++) {
     const userData = fakeUsers[i];
@@ -109,6 +128,10 @@ async function main() {
       const createdAt = new Date();
       createdAt.setDate(createdAt.getDate() - daysAgo);
 
+      const code = await generateUniqueRegistrationCode(prisma);
+      // Marca ~2/3 dos confirmados como já credenciados, para demonstrar a tela.
+      const alreadyCheckedIn = status === 'confirmed' && i % 3 !== 0;
+
       const registration = await prisma.registration.create({
         data: {
           userId: user.id,
@@ -116,6 +139,10 @@ async function main() {
           ticketId: ticket.id,
           status,
           createdAt,
+          code,
+          checkedIn: alreadyCheckedIn,
+          checkedInAt: alreadyCheckedIn ? new Date() : null,
+          checkedInBy: alreadyCheckedIn ? volunteer.id : null,
         },
       });
 
@@ -130,7 +157,7 @@ async function main() {
         });
       }
 
-      console.log(`✅ Inscrito: ${user.name} [${status}]`);
+      console.log(`✅ Inscrito: ${user.name} [${status}] ${code}`);
     } else {
       console.log(`⚠️  Já inscrito: ${user.name}`);
     }
@@ -138,6 +165,7 @@ async function main() {
 
   console.log('\n🎉 Seed concluído!');
   console.log('📧 Login do organizador: organizador@congresso.com');
+  console.log('🙋 Login do voluntário: voluntario@congresso.com');
   console.log('🔑 Senha: Senha@123');
 }
 

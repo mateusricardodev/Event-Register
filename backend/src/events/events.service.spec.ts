@@ -17,6 +17,8 @@ const mockDb: any = {
     deleteMany: jest.fn(),
   },
   payment: { deleteMany: jest.fn() },
+  checkinLog: { deleteMany: jest.fn() },
+  eventVolunteer: { deleteMany: jest.fn() },
   ticket: { deleteMany: jest.fn() },
   eventPaymentMethod: {
     findFirst: jest.fn(),
@@ -137,8 +139,10 @@ describe('EventsService', () => {
       mockDb.event.findUnique.mockResolvedValue(baseEvent);
       mockDb.registration.findMany.mockResolvedValue([{ id: 'r1' }]);
       mockDb.payment.deleteMany.mockResolvedValue({});
+      mockDb.checkinLog.deleteMany.mockResolvedValue({});
       mockDb.registration.deleteMany.mockResolvedValue({});
       mockDb.eventPaymentMethod.deleteMany.mockResolvedValue({});
+      mockDb.eventVolunteer.deleteMany.mockResolvedValue({});
       mockDb.ticket.deleteMany.mockResolvedValue({});
       mockDb.event.delete.mockResolvedValue({});
 
