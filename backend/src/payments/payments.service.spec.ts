@@ -7,15 +7,23 @@ import {
 } from '@nestjs/common';
 import { PaymentsService } from './payments.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { MailService } from '../mail/mail.service.js';
 import { IPaymentProvider, PixPaymentResult } from './providers/payment-provider.interface.js';
 import { PAYMENT_PROVIDER_TOKEN } from './providers/payment-provider.factory.js';
 
 const mockDb = {
-  registration: { findUnique: jest.fn() },
+  registration: {
+    findUnique: jest.fn(),
+    update: jest.fn(),
+    updateMany: jest.fn(),
+  },
   payment: { create: jest.fn(), delete: jest.fn(), findFirst: jest.fn(), update: jest.fn() },
   $transaction: jest.fn(),
+  $executeRaw: jest.fn(),
 };
 const mockPrisma = { db: mockDb };
+
+const mockMail = { sendRegistrationConfirmation: jest.fn() };
 
 const mockPixResult: PixPaymentResult = {
   providerPaymentId: 'mock_abc-123',
@@ -47,6 +55,32 @@ const baseRegistration = {
   payment: null,
 };
 
+// Helper: mounts a full payment object as returned by findFirst with includes
+const makePaymentWithIncludes = (overrides: Record<string, unknown> = {}) => ({
+  id: 'pay-1',
+  registrationId: REG_ID,
+  amount: 50,
+  registration: {
+    id: REG_ID,
+    ticketId: TICKET_ID,
+    ticket: { id: TICKET_ID, name: 'Inteira' },
+    event: { title: 'Congresso 2026', date: new Date('2026-09-01'), location: 'São Paulo' },
+    user: { name: 'João', email: 'joao@email.com' },
+  },
+  ...overrides,
+});
+
+// Helper: wires a $transaction mock that executes the callback with mockDb as tx
+const mockTx = (paymentFixture: unknown, executeRawResult = 1) => {
+  mockDb.$transaction.mockImplementation(async (fn: (tx: typeof mockDb) => Promise<unknown>) => {
+    mockDb.payment.findFirst.mockResolvedValue(paymentFixture);
+    mockDb.$executeRaw.mockResolvedValue(executeRawResult);
+    mockDb.payment.update.mockResolvedValue({});
+    mockDb.registration.update.mockResolvedValue({});
+    return fn(mockDb);
+  });
+};
+
 describe('PaymentsService', () => {
   let service: PaymentsService;
 
@@ -55,6 +89,7 @@ describe('PaymentsService', () => {
       providers: [
         PaymentsService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: MailService, useValue: mockMail },
         { provide: PAYMENT_PROVIDER_TOKEN, useValue: mockProvider },
       ],
     }).compile();
@@ -62,6 +97,8 @@ describe('PaymentsService', () => {
     service = module.get<PaymentsService>(PaymentsService);
     jest.clearAllMocks();
   });
+
+  // ─── createPixForRegistration ────────────────────────────────────────────────
 
   describe('createPixForRegistration', () => {
     it('calcula o amount a partir do ticket no banco — nunca do cliente', async () => {
@@ -76,7 +113,6 @@ describe('PaymentsService', () => {
       const result = await service.createPixForRegistration(REG_ID, USER_ID);
 
       expect(result.amount).toBe(50);
-      // O provider recebe o preço do banco, não um valor externo
       expect(mockProvider.createPixPayment).toHaveBeenCalledWith(
         expect.objectContaining({ amount: 50 }),
       );
@@ -144,40 +180,107 @@ describe('PaymentsService', () => {
     });
   });
 
-  describe('confirmPayment — idempotência', () => {
-    it('fluxo completo: confirma pagamento e muda status da inscrição', async () => {
-      const payment = { id: 'pay-1', registrationId: REG_ID };
-      mockDb.$transaction.mockImplementation(async (fn: (tx: typeof mockDb) => Promise<void>) => {
-        mockDb.payment.findFirst.mockResolvedValue(payment);
-        mockDb.payment.update.mockResolvedValue({});
-        mockDb.registration.update = jest.fn().mockResolvedValue({});
-        await fn(mockDb);
-      });
+  // ─── confirmPayment ──────────────────────────────────────────────────────────
+
+  describe('confirmPayment', () => {
+    it('confirma pagamento: Payment=paid, Registration=confirmed, decrementa estoque', async () => {
+      mockTx(makePaymentWithIncludes(), 1 /* 1 row affected = estoque OK */);
+      mockDb.registration.updateMany.mockResolvedValue({ count: 1 });
 
       await expect(service.confirmPayment('mock_abc-123')).resolves.toBeUndefined();
-      expect(mockDb.$transaction).toHaveBeenCalledTimes(1);
+
+      expect(mockDb.payment.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { status: 'paid' } }),
+      );
+      expect(mockDb.registration.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { status: 'confirmed' } }),
+      );
+      expect(mockDb.$executeRaw).toHaveBeenCalledTimes(1);
     });
 
-    it('é idempotente: segunda chamada não altera o pagamento já confirmado', async () => {
-      mockDb.$transaction.mockImplementation(async (fn: (tx: typeof mockDb) => Promise<void>) => {
-        // findFirst retorna null = pagamento já está paid (not in { not: 'paid' })
-        mockDb.payment.findFirst.mockResolvedValue(null);
-        mockDb.payment.update.mockResolvedValue({});
-        mockDb.registration.update = jest.fn().mockResolvedValue({});
-        await fn(mockDb);
-      });
+    it('dispara e-mail de confirmação após commit da transação', async () => {
+      mockTx(makePaymentWithIncludes(), 1);
+      mockDb.registration.updateMany.mockResolvedValue({ count: 1 });
 
       await service.confirmPayment('mock_abc-123');
-      await service.confirmPayment('mock_abc-123'); // segunda vez
+
+      expect(mockMail.sendRegistrationConfirmation).toHaveBeenCalledTimes(1);
+      expect(mockMail.sendRegistrationConfirmation).toHaveBeenCalledWith(
+        expect.objectContaining({
+          participantEmail: 'joao@email.com',
+          eventTitle: 'Congresso 2026',
+          ticketName: 'Inteira',
+          amountPaid: 50,
+        }),
+      );
+    });
+
+    it('é idempotente: segunda chamada (payment já paid) não altera nada', async () => {
+      // findFirst retorna null porque status 'paid' não satisfaz { not: 'paid' }
+      mockTx(null);
+      mockDb.registration.updateMany.mockResolvedValue({ count: 0 });
+
+      await service.confirmPayment('mock_abc-123');
+      await service.confirmPayment('mock_abc-123');
 
       expect(mockDb.$transaction).toHaveBeenCalledTimes(2);
-      // update do payment não é chamado porque findFirst retornou null
       expect(mockDb.payment.update).not.toHaveBeenCalled();
+      expect(mockMail.sendRegistrationConfirmation).not.toHaveBeenCalled();
+    });
+
+    it('idempotência de email: updateMany count=0 impede reenvio mesmo com transação nova', async () => {
+      mockTx(makePaymentWithIncludes(), 1);
+      // Simula que o email já foi enviado (confirmationEmailSentAt já preenchido)
+      mockDb.registration.updateMany.mockResolvedValue({ count: 0 });
+
+      await service.confirmPayment('mock_abc-123');
+
+      expect(mockMail.sendRegistrationConfirmation).not.toHaveBeenCalled();
+    });
+
+    it('path overbooked: estoque esgotado → Registration=overbooked, sem email', async () => {
+      mockTx(makePaymentWithIncludes(), 0 /* 0 rows affected = sem estoque */);
+      mockDb.registration.updateMany.mockResolvedValue({ count: 0 });
+
+      await service.confirmPayment('mock_abc-123');
+
+      expect(mockDb.registration.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { status: 'overbooked' } }),
+      );
+      expect(mockDb.payment.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { status: 'paid' } }),
+      );
+      // Pagamento é marcado como paid mesmo com overbooked (prova de pagamento)
+      expect(mockMail.sendRegistrationConfirmation).not.toHaveBeenCalled();
+    });
+
+    it('sem ticketId: pula decremento de estoque e confirma normalmente', async () => {
+      const paymentWithoutTicket = makePaymentWithIncludes({
+        registration: {
+          id: REG_ID,
+          ticketId: null,
+          ticket: null,
+          event: { title: 'Congresso 2026', date: new Date('2026-09-01'), location: null },
+          user: { name: 'João', email: 'joao@email.com' },
+        },
+      });
+      mockTx(paymentWithoutTicket);
+      mockDb.registration.updateMany.mockResolvedValue({ count: 1 });
+
+      await service.confirmPayment('mock_abc-123');
+
+      expect(mockDb.$executeRaw).not.toHaveBeenCalled();
+      expect(mockDb.registration.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { status: 'confirmed' } }),
+      );
+      expect(mockMail.sendRegistrationConfirmation).toHaveBeenCalledTimes(1);
     });
   });
 
+  // ─── fluxo mock ponta-a-ponta ────────────────────────────────────────────────
+
   describe('fluxo mock ponta-a-ponta', () => {
-    it('cria PIX (pending) → confirma → Payment=paid e Registration=confirmed', async () => {
+    it('cria PIX (pending) → confirma → Payment=paid, Registration=confirmed, email enviado', async () => {
       // 1. Criar PIX
       mockDb.registration.findUnique.mockResolvedValue(baseRegistration);
       mockDb.payment.create.mockResolvedValue({
@@ -192,14 +295,9 @@ describe('PaymentsService', () => {
       expect(pixResult.qrCodeBase64).toBeDefined();
       expect(pixResult.qrCodeCopiaECola).toBeDefined();
 
-      // 2. Simular aprovação via confirmPayment (mesmo fluxo que o webhook/mock-approve dispara)
-      const payment = { id: 'pay-1', registrationId: REG_ID };
-      mockDb.$transaction.mockImplementation(async (fn: (tx: typeof mockDb) => Promise<void>) => {
-        mockDb.payment.findFirst.mockResolvedValue(payment);
-        mockDb.payment.update.mockResolvedValue({ ...payment, status: 'paid' });
-        mockDb.registration.update = jest.fn().mockResolvedValue({ id: REG_ID, status: 'confirmed' });
-        await fn(mockDb);
-      });
+      // 2. Simular aprovação via confirmPayment
+      mockTx(makePaymentWithIncludes({ id: 'pay-1' }), 1);
+      mockDb.registration.updateMany.mockResolvedValue({ count: 1 });
 
       await service.confirmPayment('mock_abc-123');
 
@@ -209,6 +307,7 @@ describe('PaymentsService', () => {
       expect(mockDb.registration.update).toHaveBeenCalledWith(
         expect.objectContaining({ data: { status: 'confirmed' } }),
       );
+      expect(mockMail.sendRegistrationConfirmation).toHaveBeenCalledTimes(1);
     });
   });
 });

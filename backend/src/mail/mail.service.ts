@@ -9,6 +9,8 @@ export interface RegistrationConfirmationData {
   eventDate: Date;
   eventLocation?: string | null;
   registrationId: string;
+  ticketName?: string | null;
+  amountPaid?: number | null;
 }
 
 @Injectable()

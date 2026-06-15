@@ -4,16 +4,21 @@ import {
   ForbiddenException,
   Inject,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { MailService } from '../mail/mail.service.js';
 import type { IPaymentProvider } from './providers/payment-provider.interface.js';
 import { PAYMENT_PROVIDER_TOKEN } from './providers/payment-provider.factory.js';
 
 @Injectable()
 export class PaymentsService {
+  private readonly logger = new Logger(PaymentsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
+    private readonly mail: MailService,
     @Inject(PAYMENT_PROVIDER_TOKEN) private readonly provider: IPaymentProvider,
   ) {}
 
@@ -71,27 +76,73 @@ export class PaymentsService {
     };
   }
 
-  /**
-   * Marks payment as paid and registration as confirmed.
-   * Idempotent: a second call for an already-paid payment is a no-op.
-   * TODO (Etapa 3): add ticket stock decrement inside this transaction.
-   */
   async confirmPayment(providerPaymentId: string): Promise<void> {
-    await this.prisma.db.$transaction(async (tx) => {
+    const emailData = await this.prisma.db.$transaction(async (tx) => {
       const payment = await tx.payment.findFirst({
         where: { providerPaymentId, status: { not: 'paid' } },
+        include: {
+          registration: {
+            include: {
+              ticket: { select: { id: true, name: true } },
+              event: { select: { title: true, date: true, location: true } },
+              user: { select: { name: true, email: true } },
+            },
+          },
+        },
       });
-      if (!payment) return; // already confirmed — idempotent no-op
+      if (!payment) return null; // already confirmed — idempotent no-op
 
-      await tx.payment.update({
-        where: { id: payment.id },
-        data: { status: 'paid' },
-      });
+      const reg = payment.registration;
+      let newStatus: 'confirmed' | 'overbooked' = 'confirmed';
 
-      await tx.registration.update({
-        where: { id: payment.registrationId },
-        data: { status: 'confirmed' },
-      });
+      if (reg.ticketId) {
+        const affected = await tx.$executeRaw`
+          UPDATE "Ticket" SET sold = sold + 1
+          WHERE id = ${reg.ticketId} AND sold < quantity
+        `;
+        if (affected === 0) {
+          newStatus = 'overbooked';
+          this.logger.warn(
+            `[payment:${providerPaymentId}] Estoque esgotado — Registration ${reg.id} → overbooked`,
+          );
+        }
+      }
+
+      await tx.payment.update({ where: { id: payment.id }, data: { status: 'paid' } });
+      await tx.registration.update({ where: { id: reg.id }, data: { status: newStatus } });
+
+      if (newStatus !== 'confirmed') return null;
+
+      return {
+        registrationId: reg.id,
+        participantName: reg.user.name,
+        participantEmail: reg.user.email,
+        eventTitle: reg.event.title,
+        eventDate: reg.event.date,
+        eventLocation: reg.event.location,
+        ticketName: reg.ticket?.name ?? null,
+        amountPaid: Number(payment.amount),
+      };
+    });
+
+    if (!emailData) return;
+
+    // Idempotency gate: only send email once even if webhook fires twice
+    const marked = await this.prisma.db.registration.updateMany({
+      where: { id: emailData.registrationId, confirmationEmailSentAt: null },
+      data: { confirmationEmailSentAt: new Date() },
+    });
+    if (marked.count === 0) return;
+
+    void this.mail.sendRegistrationConfirmation({
+      participantName: emailData.participantName,
+      participantEmail: emailData.participantEmail,
+      eventTitle: emailData.eventTitle,
+      eventDate: emailData.eventDate,
+      eventLocation: emailData.eventLocation,
+      registrationId: emailData.registrationId,
+      ticketName: emailData.ticketName,
+      amountPaid: emailData.amountPaid,
     });
   }
 

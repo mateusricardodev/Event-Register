@@ -17,6 +17,7 @@ enum RegistrationStatus {
   pending
   confirmed
   canceled
+  overbooked // pagou mas o estoque esgotou no momento da confirmação — aguarda reembolso manual
 }
 
 enum PaymentStatus {
@@ -90,6 +91,7 @@ model Ticket {
   name          String
   price         Decimal        @default(0)
   quantity      Int
+  sold          Int            @default(0)
   createdAt     DateTime       @default(now())
   event         Event          @relation(fields: [eventId], references: [id])
   registrations Registration[]
@@ -106,10 +108,11 @@ model Registration {
   birthDate   DateTime?
   extraFields String?
   code        String?            @unique
-  checkedIn   Boolean            @default(false)
-  checkedInAt DateTime?
-  checkedInBy String?
-  createdAt   DateTime           @default(now())
+  checkedIn               Boolean            @default(false)
+  checkedInAt             DateTime?
+  checkedInBy             String?
+  confirmationEmailSentAt DateTime?
+  createdAt               DateTime           @default(now())
   user        User               @relation(fields: [userId], references: [id])
   event       Event              @relation(fields: [eventId], references: [id])
   ticket      Ticket?            @relation(fields: [ticketId], references: [id])
