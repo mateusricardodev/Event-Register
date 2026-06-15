@@ -37,6 +37,12 @@ export interface CheckinStats {
 
 export type CheckinFilter = 'all' | 'done' | 'pending'
 
+export interface CheckinResult {
+  status: 'checked_in' | 'already' | 'undone'
+  registration: CheckinParticipant
+  checkedInByName?: string | null
+}
+
 export async function fetchMyEvents(): Promise<CheckinEvent[]> {
   const { data } = await api.get('/me/checkin/events')
   return data
@@ -58,14 +64,20 @@ export async function fetchCheckinStats(eventId: string): Promise<CheckinStats> 
   return data
 }
 
-export async function doCheckIn(eventId: string, registrationId: string) {
+export async function doCheckIn(
+  eventId: string,
+  registrationId: string,
+): Promise<CheckinResult> {
   const { data } = await api.post(
     `/events/${eventId}/checkin/${registrationId}`,
   )
   return data
 }
 
-export async function undoCheckIn(eventId: string, registrationId: string) {
+export async function undoCheckIn(
+  eventId: string,
+  registrationId: string,
+): Promise<CheckinResult> {
   const { data } = await api.delete(
     `/events/${eventId}/checkin/${registrationId}`,
   )

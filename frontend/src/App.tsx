@@ -17,6 +17,7 @@ import { LandingPage } from './pages/LandingPage'
 import { EventsList } from './app/pages/EventsList'
 import { EventCheckin } from './app/pages/EventCheckin'
 import { SearchCheckin } from './app/pages/SearchCheckin'
+import { QrScanner } from './app/pages/QrScanner'
 
 export default function App() {
   return (
@@ -123,6 +124,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <SearchCheckin />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/app/evento/:id/qrcode"
+          element={
+            <ProtectedRoute>
+              <QrScanner />
             </ProtectedRoute>
           }
         />
