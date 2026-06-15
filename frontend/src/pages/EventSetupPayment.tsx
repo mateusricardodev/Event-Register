@@ -13,19 +13,6 @@ interface PaymentMethod {
   endDate: string | null
 }
 
-function maskDate(v: string): string {
-  const d = v.replace(/\D/g, '').slice(0, 8)
-  if (d.length <= 2) return d
-  if (d.length <= 4) return `${d.slice(0, 2)}/${d.slice(2)}`
-  return `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}`
-}
-
-function toISODate(v: string): string {
-  const parts = v.split('/')
-  if (parts.length !== 3 || parts[2].length !== 4) return ''
-  return `${parts[2]}-${parts[1]}-${parts[0]}`
-}
-
 const TYPE_LABELS: Record<string, string> = {
   pix: 'Pix',
   credit_card: 'Cartão de crédito',
@@ -65,8 +52,8 @@ export function EventSetupPayment() {
         type: form.type,
         value: form.value ? Number(form.value) : 0,
         installments: form.type === 'credit_card' ? Number(form.installments) : 1,
-        startDate: toISODate(form.startDate) || undefined,
-        endDate: toISODate(form.endDate) || undefined,
+        startDate: form.startDate || undefined,
+        endDate: form.endDate || undefined,
       })
       setMethods((m) => [...m, data])
       setForm({ type: 'pix', value: '', installments: '1', startDate: '', endDate: '' })
@@ -176,11 +163,10 @@ export function EventSetupPayment() {
               <label className="block text-sm font-semibold text-gray-700 mb-1">* Início</label>
               <input
                 name="startDate"
-                type="text"
+                type="date"
+                lang="pt-BR"
                 value={form.startDate}
-                onChange={e => setForm(f => ({ ...f, startDate: maskDate(e.target.value) }))}
-                placeholder="DD/MM/AAAA"
-                maxLength={10}
+                onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
               />
             </div>
@@ -188,11 +174,10 @@ export function EventSetupPayment() {
               <label className="block text-sm font-semibold text-gray-700 mb-1">* Término</label>
               <input
                 name="endDate"
-                type="text"
+                type="date"
+                lang="pt-BR"
                 value={form.endDate}
-                onChange={e => setForm(f => ({ ...f, endDate: maskDate(e.target.value) }))}
-                placeholder="DD/MM/AAAA"
-                maxLength={10}
+                onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
               />
             </div>
