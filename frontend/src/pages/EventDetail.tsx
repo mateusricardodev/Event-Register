@@ -48,13 +48,6 @@ export function EventDetail() {
   const [cancelConfirm, setCancelConfirm] = useState<string | null>(null)
   const [canceling, setCanceling] = useState(false)
 
-  function loadRegistrations() {
-    if (!id) return
-    api.get(`/events/${id}/registrations`)
-      .then(({ data }) => setRegistrations(data.data))
-      .catch(() => {})
-  }
-
   useEffect(() => {
     if (!id) return
     Promise.all([

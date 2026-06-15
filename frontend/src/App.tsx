@@ -15,6 +15,7 @@ import { PublicRegistration } from './pages/PublicRegistration'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { LandingPage } from './pages/LandingPage'
 import { EventsList } from './app/pages/EventsList'
+import { EventCheckin } from './app/pages/EventCheckin'
 
 export default function App() {
   return (
@@ -105,6 +106,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <EventsList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/app/evento/:id"
+          element={
+            <ProtectedRoute>
+              <EventCheckin />
             </ProtectedRoute>
           }
         />

@@ -114,7 +114,7 @@ export class CheckinService {
   }
 
   async stats(eventId: string, userId: string) {
-    await this.assertCanCheckin(eventId, userId);
+    const event = await this.assertCanCheckin(eventId, userId);
 
     const [total, done] = await Promise.all([
       this.prisma.db.registration.count({
@@ -125,7 +125,7 @@ export class CheckinService {
       }),
     ]);
 
-    return { total, done, pending: total - done };
+    return { eventId, title: event.title, total, done, pending: total - done };
   }
 
   /** Eventos que o usuário pode credenciar (criador OU voluntário vinculado). */

@@ -28,6 +28,8 @@ export interface CheckinParticipant {
 }
 
 export interface CheckinStats {
+  eventId: string
+  title: string
   total: number
   done: number
   pending: number
