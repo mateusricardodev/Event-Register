@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Navbar } from '../components/Navbar'
 import { EventWizardHeader } from '../components/EventWizardHeader'
-import { useAuthStore } from '../store/auth.store'
 import api from '../api/axios'
 
 const CATEGORIES = [
@@ -19,7 +18,6 @@ function toDateInput(iso: string | null | undefined) {
 export function EditEvent() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { user } = useAuthStore()
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -34,6 +32,7 @@ export function EditEvent() {
     date: '',
     endDate: '',
     location: '',
+    organizerPhone: '',
   })
 
   useEffect(() => {
@@ -48,6 +47,7 @@ export function EditEvent() {
           date: toDateInput(data.date),
           endDate: toDateInput(data.endDate),
           location: data.location ?? '',
+          organizerPhone: data.organizerPhone ?? '',
         })
       })
       .catch(() => setError('Não foi possível carregar os dados do evento.'))
@@ -64,7 +64,8 @@ export function EditEvent() {
   }
 
   async function save(): Promise<boolean> {
-    if (!id || !form.date) { setError('Data de início é obrigatória'); return false }
+    if (!id || !form.title.trim()) { setError('Nome do evento é obrigatório'); return false }
+    if (!form.date) { setError('Data de início é obrigatória'); return false }
     setError('')
     setSaving(true)
     setSaved(false)
@@ -77,6 +78,7 @@ export function EditEvent() {
         date: new Date(form.date + 'T00:00').toISOString(),
         endDate: form.endDate ? new Date(form.endDate + 'T00:00').toISOString() : undefined,
         location: form.location || undefined,
+        organizerPhone: form.organizerPhone || undefined,
       })
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
@@ -123,6 +125,7 @@ export function EditEvent() {
 
         <form
           onSubmit={(e) => { e.preventDefault(); save() }}
+          noValidate
           className="flex flex-col gap-6"
         >
           {/* URL do evento */}
@@ -153,7 +156,6 @@ export function EditEvent() {
               name="title"
               value={form.title}
               onChange={handleChange}
-              required
               placeholder="Nome será destacado na página do evento"
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
             />
@@ -168,7 +170,6 @@ export function EditEvent() {
               name="category"
               value={form.category}
               onChange={handleChange}
-              required
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 bg-white"
             >
               <option value="">Selecione...</option>
@@ -204,7 +205,6 @@ export function EditEvent() {
                 lang="pt-BR"
                 value={form.date}
                 onChange={handleChange}
-                required
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
               />
             </div>
@@ -237,15 +237,17 @@ export function EditEvent() {
             />
           </div>
 
-          {/* Email do organizador (readonly) */}
+          {/* Telefone do organizador */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">
-              Email do organizador
+              Telefone do organizador
             </label>
             <input
-              value={user?.email ?? ''}
-              disabled
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-400 cursor-not-allowed"
+              name="organizerPhone"
+              value={form.organizerPhone}
+              onChange={handleChange}
+              placeholder="(11) 99999-9999"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
             />
           </div>
 
