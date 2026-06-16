@@ -139,6 +139,18 @@ export function SearchRegistrations() {
               ? `${filtered.length} de ${regs.length} inscrição(ões)`
               : `${regs.length} inscrição(ões)`}
           </div>
+
+          {/* Cabeçalho das colunas */}
+          <div className="hidden sm:flex items-center gap-4 px-5 py-2.5 bg-gray-50 border-b border-gray-100 text-[11px] font-semibold text-gray-400 uppercase tracking-wide">
+            <span className="w-10 shrink-0" />
+            <span className="flex-1">Participante</span>
+            <span className="hidden lg:block w-32 shrink-0">CPF</span>
+            <span className="hidden md:block w-40 shrink-0">Evento</span>
+            <span className="w-24 text-center shrink-0">Status</span>
+            <span className="w-24 text-right shrink-0">Valor</span>
+            <span className="w-8 shrink-0" />
+          </div>
+
           <ul className="divide-y divide-gray-100">
             {filtered.map((reg) => {
               const badge = STATUS_BADGE[reg.status]
