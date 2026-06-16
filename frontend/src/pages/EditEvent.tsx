@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Navbar } from '../components/Navbar'
 import { EventWizardHeader } from '../components/EventWizardHeader'
+import { DashboardLayout } from '../components/DashboardLayout'
 import api from '../api/axios'
 
 const CATEGORIES = [
@@ -98,20 +98,20 @@ export function EditEvent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-400 text-sm">Carregando...</p>
-      </div>
+      <DashboardLayout active="eventos">
+        <EventWizardHeader active="info" eventId={id} />
+        <p className="text-center text-gray-400 text-sm py-20">Carregando...</p>
+      </DashboardLayout>
     )
   }
 
   const baseUrl = `${window.location.origin}/evento/`
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+    <DashboardLayout active="eventos">
       <EventWizardHeader active="info" eventId={id} />
 
-      <main className="max-w-2xl mx-auto px-4 py-8">
+      <div className="max-w-2xl mx-auto py-8">
         {error && (
           <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
             {error}
@@ -279,7 +279,7 @@ export function EditEvent() {
             </div>
           </div>
         </form>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   )
 }
