@@ -297,7 +297,7 @@ describe('PaymentsService', () => {
         status: 'pending',
       });
 
-      const pixResult = await service.createPixForRegistration(REG_ID, USER_ID);
+      const pixResult = await service.createPixForRegistration(REG_ID, USER_ID, 50);
       expect(pixResult.qrCodeBase64).toBeDefined();
       expect(pixResult.qrCodeCopiaECola).toBeDefined();
 
