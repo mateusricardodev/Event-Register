@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Login } from './pages/Login'
-import { Register } from './pages/Register'
 import { Dashboard } from './pages/Dashboard'
 import { CreateEvent } from './pages/CreateEvent'
 import { EventDetail } from './pages/EventDetail'
@@ -27,7 +26,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/register" element={<Navigate to="/login" replace />} />
         <Route path="/evento/:slug" element={<EventPublic />} />
         <Route path="/evento/:slug/inscricao" element={<PublicRegistration />} />
         <Route path="/evento/:slug/pagamento-pix" element={<PixPayment />} />
