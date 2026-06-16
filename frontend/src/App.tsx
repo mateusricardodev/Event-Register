@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Login } from './pages/Login'
 import { Dashboard } from './pages/Dashboard'
+import { Events } from './pages/Events'
 import { CreateEvent } from './pages/CreateEvent'
 import { EventDetail } from './pages/EventDetail'
 import { NewRegistration } from './pages/NewRegistration'
@@ -35,6 +36,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/eventos"
+          element={
+            <ProtectedRoute>
+              <Events />
             </ProtectedRoute>
           }
         />
