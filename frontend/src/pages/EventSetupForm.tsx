@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Navbar } from '../components/Navbar'
 import { EventWizardHeader } from '../components/EventWizardHeader'
+import { DashboardLayout } from '../components/DashboardLayout'
 import api from '../api/axios'
 
 const OPTIONAL_FIELDS = [
@@ -51,11 +51,10 @@ export function EventSetupForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+    <DashboardLayout active="eventos">
       <EventWizardHeader active="form" eventId={id} />
 
-      <main className="max-w-2xl mx-auto px-4 py-8">
+      <div className="max-w-2xl mx-auto py-8">
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
           {/* Header da tabela */}
           <div className="grid grid-cols-3 px-6 py-3 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide">
@@ -120,7 +119,7 @@ export function EventSetupForm() {
             {saving ? 'SALVANDO...' : 'PRÓXIMO PASSO'}
           </button>
         </div>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   )
 }
