@@ -1,21 +1,20 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Search, Users, Pencil, Calendar } from 'lucide-react'
 import { DashboardLayout } from '../components/DashboardLayout'
 import api from '../api/axios'
 
-interface Result {
+interface RegItem {
   id: string
   status: 'pending' | 'confirmed' | 'canceled'
   createdAt: string
   cpf: string | null
   user: { name: string; email: string }
-  ticket: { name: string; price: string }
-  event: { id: string; title: string }
   payment: { amount: string } | null
+  event: { id: string; title: string }
 }
 
-const STATUS_BADGE: Record<Result['status'], { label: string; cls: string }> = {
+const STATUS_BADGE: Record<RegItem['status'], { label: string; cls: string }> = {
   confirmed: { label: 'Confirmado', cls: 'bg-green-100 text-green-700' },
   pending: { label: 'Pendente', cls: 'bg-yellow-100 text-yellow-700' },
   canceled: { label: 'Cancelado', cls: 'bg-red-100 text-red-700' },
@@ -39,24 +38,57 @@ function brl(v: number) {
 
 export function SearchRegistrations() {
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<Result[]>([])
-  const [searched, setSearched] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [regs, setRegs] = useState<RegItem[]>([])
+  const [loading, setLoading] = useState(true)
 
-  async function handleSearch(e: React.FormEvent) {
-    e.preventDefault()
-    if (!query.trim()) return
-    setLoading(true)
-    setSearched(true)
-    try {
-      const { data } = await api.get(`/registrations/search?q=${encodeURIComponent(query)}`)
-      setResults(data)
-    } catch {
-      setResults([])
-    } finally {
-      setLoading(false)
+  useEffect(() => {
+    let active = true
+    async function load() {
+      try {
+        const { data: events } = await api.get<{ id: string; title: string }[]>('/events')
+        const lists = await Promise.all(
+          events.map((e) =>
+            api
+              .get(`/events/${e.id}/registrations`)
+              .then((r) =>
+                (r.data.data as Omit<RegItem, 'event'>[]).map((reg) => ({
+                  ...reg,
+                  event: { id: e.id, title: e.title },
+                })),
+              )
+              .catch(() => [] as RegItem[]),
+          ),
+        )
+        if (!active) return
+        const all = lists
+          .flat()
+          .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))
+        setRegs(all)
+      } catch {
+        if (active) setRegs([])
+      } finally {
+        if (active) setLoading(false)
+      }
     }
-  }
+    load()
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) return regs
+    const digits = q.replace(/\D/g, '')
+    return regs.filter(
+      (r) =>
+        r.user.name.toLowerCase().includes(q) ||
+        r.user.email.toLowerCase().includes(q) ||
+        r.event.title.toLowerCase().includes(q) ||
+        r.id.toLowerCase().includes(q) ||
+        (!!digits && (r.cpf ?? '').includes(digits)),
+    )
+  }, [query, regs])
 
   return (
     <DashboardLayout active="inscricoes">
@@ -64,48 +96,38 @@ export function SearchRegistrations() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-800">Inscrições</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Busque por participantes em todos os seus eventos.
+          Todas as inscrições dos seus eventos. Use a busca para filtrar.
         </p>
       </div>
 
       {/* Busca */}
-      <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3 mb-8">
-        <div className="relative flex-1">
-          <Search
-            size={18}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-          />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Nome, e-mail, CPF ou código da inscrição"
-            className="w-full bg-white border border-gray-300 rounded-lg pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={loading}
-          className="shrink-0 inline-flex items-center justify-center gap-2 bg-[#14B8A6] hover:bg-teal-600 disabled:opacity-60 text-white font-bold text-sm px-6 py-2.5 rounded-lg transition-colors"
-        >
-          <Search size={16} />
-          {loading ? 'Buscando...' : 'Buscar'}
-        </button>
-      </form>
+      <div className="relative mb-8 max-w-xl">
+        <Search
+          size={18}
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+        />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Filtrar por nome, e-mail, CPF, evento ou código"
+          className="w-full bg-white border border-gray-300 rounded-lg pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+        />
+      </div>
 
       {/* Resultados */}
       {loading ? (
         <div className="bg-white border border-gray-200 rounded-xl shadow-sm divide-y divide-gray-100">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 5 }).map((_, i) => (
             <RowSkeleton key={i} />
           ))}
         </div>
-      ) : !searched ? (
+      ) : regs.length === 0 ? (
         <EmptyHint
-          title="Comece uma busca"
-          subtitle="Digite ao menos 2 caracteres para encontrar inscrições."
+          title="Nenhuma inscrição ainda"
+          subtitle="Assim que seus eventos receberem inscrições, elas aparecerão aqui."
         />
-      ) : results.length === 0 ? (
+      ) : filtered.length === 0 ? (
         <EmptyHint
           title={`Nenhum resultado para "${query}"`}
           subtitle="Verifique a ortografia ou tente outro termo."
@@ -113,10 +135,12 @@ export function SearchRegistrations() {
       ) : (
         <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
           <div className="px-5 py-3 border-b border-gray-100 text-xs text-gray-400">
-            {results.length} resultado(s) para "{query}"
+            {query.trim()
+              ? `${filtered.length} de ${regs.length} inscrição(ões)`
+              : `${regs.length} inscrição(ões)`}
           </div>
           <ul className="divide-y divide-gray-100">
-            {results.map((reg) => {
+            {filtered.map((reg) => {
               const badge = STATUS_BADGE[reg.status]
               return (
                 <li
