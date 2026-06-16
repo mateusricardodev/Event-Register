@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Navbar } from '../components/Navbar'
 import { EventWizardHeader } from '../components/EventWizardHeader'
+import { DashboardLayout } from '../components/DashboardLayout'
 import api from '../api/axios'
 
 export function EventSetupPage() {
@@ -87,24 +87,25 @@ export function EventSetupPage() {
 
   if (done) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-4">
-        <div className="w-16 h-16 rounded-full bg-teal-500 flex items-center justify-center">
-          <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
+      <DashboardLayout active="eventos">
+        <div className="flex flex-col items-center justify-center gap-4 py-24">
+          <div className="w-16 h-16 rounded-full bg-teal-500 flex items-center justify-center">
+            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-800">Evento publicado com sucesso!</h2>
+          <p className="text-sm text-gray-500">Redirecionando para Meus Eventos...</p>
         </div>
-        <h2 className="text-xl font-semibold text-gray-800">Evento publicado com sucesso!</h2>
-        <p className="text-sm text-gray-500">Redirecionando para Meus Eventos...</p>
-      </div>
+      </DashboardLayout>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+    <DashboardLayout active="eventos">
       <EventWizardHeader active="page" eventId={id} />
 
-      <main className="max-w-4xl mx-auto px-4 py-8 flex gap-6">
+      <div className="max-w-4xl mx-auto py-8 flex gap-6">
         {/* Sidebar - seções */}
         <aside className="w-56 shrink-0">
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
@@ -289,7 +290,7 @@ export function EventSetupPage() {
             </button>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   )
 }
