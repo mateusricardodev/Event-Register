@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Navbar } from '../components/Navbar'
 import { EventWizardHeader } from '../components/EventWizardHeader'
+import { DashboardLayout } from '../components/DashboardLayout'
 import api from '../api/axios'
 
 interface PaymentMethod {
@@ -69,11 +69,10 @@ export function EventSetupPayment() {
   const canProceed = methods.length > 0
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+    <DashboardLayout active="eventos">
       <EventWizardHeader active="payment" eventId={id} />
 
-      <main className="max-w-2xl mx-auto px-4 py-8 flex flex-col gap-6">
+      <div className="max-w-2xl mx-auto py-8 flex flex-col gap-6">
 
         {/* ── FORMAS DE PAGAMENTO ───────────────────────────────────────── */}
         <div>
@@ -223,7 +222,7 @@ export function EventSetupPayment() {
             Adicione ao menos uma forma de pagamento para avançar.
           </p>
         )}
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   )
 }
