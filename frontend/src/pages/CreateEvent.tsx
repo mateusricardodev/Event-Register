@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../components/Navbar'
 import { EventWizardHeader } from '../components/EventWizardHeader'
-import { useAuthStore } from '../store/auth.store'
 import api from '../api/axios'
 
 const CATEGORIES = [
@@ -12,7 +11,6 @@ const CATEGORIES = [
 ]
 
 export function CreateEvent() {
-  const { user } = useAuthStore()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -25,6 +23,8 @@ export function CreateEvent() {
     date: '',
     endDate: '',
     location: '',
+    description: '',
+    organizerPhone: '',
   })
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
@@ -49,6 +49,8 @@ export function CreateEvent() {
         date: new Date(form.date + 'T00:00').toISOString(),
         endDate: form.endDate ? new Date(form.endDate + 'T00:00').toISOString() : undefined,
         location: form.location || undefined,
+        description: form.description || undefined,
+        organizerPhone: form.organizerPhone || undefined,
       })
       navigate(`/events/${data.id}/setup/payment`)
     } catch (err: any) {
@@ -185,15 +187,32 @@ export function CreateEvent() {
             />
           </div>
 
-          {/* Email do organizador */}
+          {/* Descrição */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">
-              Email do organizador
+              Descrição do evento
+            </label>
+            <textarea
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              rows={3}
+              placeholder="Descreva brevemente o evento para os participantes..."
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 resize-none"
+            />
+          </div>
+
+          {/* Telefone do organizador */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Telefone do organizador
             </label>
             <input
-              value={user?.email ?? ''}
-              disabled
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-400 cursor-not-allowed"
+              name="organizerPhone"
+              value={form.organizerPhone}
+              onChange={handleChange}
+              placeholder="(11) 99999-9999"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
             />
           </div>
 
