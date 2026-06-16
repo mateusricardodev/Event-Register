@@ -7,6 +7,7 @@ interface Event {
   id: string
   title: string
   date: string
+  endDate: string | null
   location: string | null
   _count: { registrations: number }
 }
@@ -41,8 +42,8 @@ export function Dashboard() {
   }
 
   const now = new Date()
-  const ongoing = events.filter((e) => new Date(e.date) >= now)
-  const ended = events.filter((e) => new Date(e.date) < now)
+  const ongoing = events.filter((e) => new Date(e.endDate ?? e.date) >= now)
+  const ended = events.filter((e) => new Date(e.endDate ?? e.date) < now)
 
   return (
     <div className="min-h-screen bg-gray-50">
