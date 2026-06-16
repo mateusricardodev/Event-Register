@@ -244,7 +244,7 @@ export function Dashboard() {
         )}
 
         {/* ── CONTEÚDO PRINCIPAL ────────────────────────────────────────── */}
-        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-8 max-w-6xl">
+        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-8 min-w-0">
           {/* Header do conteúdo */}
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
             <div>
@@ -300,7 +300,7 @@ export function Dashboard() {
           {loading ? null : totalEvents === 0 ? (
             <EmptyState onCreate={() => navigate('/events/new')} />
           ) : (
-            <div className="space-y-6">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
               {/* Próximos eventos */}
               <Section
                 title="Próximos eventos"
