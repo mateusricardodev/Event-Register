@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom'
 import { CalendarHeart, Menu, X } from 'lucide-react'
 import { useState } from 'react'
+import { useAuthStore } from '../store/auth.store'
 
 export function LandingNavbar() {
   const [open, setOpen] = useState(false)
+  const token = useAuthStore((s) => s.token)
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100 shadow-sm">
@@ -27,18 +29,29 @@ export function LandingNavbar() {
 
         {/* CTA buttons */}
         <div className="hidden md:flex items-center gap-3">
-          <Link
-            to="/login"
-            className="text-sm font-medium text-slate-600 hover:text-purple-700 transition-colors px-4 py-2 rounded-xl hover:bg-purple-50"
-          >
-            Entrar
-          </Link>
-          <Link
-            to="/register"
-            className="text-sm font-semibold text-white bg-teal-500 hover:bg-teal-400 transition-all px-5 py-2 rounded-xl shadow-md hover:shadow-teal-200 hover:shadow-lg active:scale-95"
-          >
-            Criar Evento
-          </Link>
+          {token ? (
+            <Link
+              to="/dashboard"
+              className="text-sm font-semibold text-white bg-purple-700 hover:bg-purple-600 transition-all px-5 py-2 rounded-xl shadow-md active:scale-95"
+            >
+              Meu painel
+            </Link>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="text-sm font-medium text-slate-600 hover:text-purple-700 transition-colors px-4 py-2 rounded-xl hover:bg-purple-50"
+              >
+                Entrar
+              </Link>
+              <Link
+                to="/register"
+                className="text-sm font-semibold text-white bg-teal-500 hover:bg-teal-400 transition-all px-5 py-2 rounded-xl shadow-md hover:shadow-teal-200 hover:shadow-lg active:scale-95"
+              >
+                Criar Evento
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile toggle */}
@@ -57,13 +70,26 @@ export function LandingNavbar() {
           <a href="#diferenciais" onClick={() => setOpen(false)} className="hover:text-purple-700 transition-colors">Diferenciais</a>
           <a href="#depoimentos" onClick={() => setOpen(false)} className="hover:text-purple-700 transition-colors">Depoimentos</a>
           <hr className="border-slate-100" />
-          <Link to="/login" className="hover:text-purple-700 transition-colors">Entrar</Link>
-          <Link
-            to="/register"
-            className="text-center font-semibold text-white bg-teal-500 hover:bg-teal-400 transition-colors py-2.5 rounded-xl"
-          >
-            Criar Evento
-          </Link>
+          {token ? (
+            <Link
+              to="/dashboard"
+              onClick={() => setOpen(false)}
+              className="text-center font-semibold text-white bg-purple-700 hover:bg-purple-600 transition-colors py-2.5 rounded-xl"
+            >
+              Meu painel
+            </Link>
+          ) : (
+            <>
+              <Link to="/login" onClick={() => setOpen(false)} className="hover:text-purple-700 transition-colors">Entrar</Link>
+              <Link
+                to="/register"
+                onClick={() => setOpen(false)}
+                className="text-center font-semibold text-white bg-teal-500 hover:bg-teal-400 transition-colors py-2.5 rounded-xl"
+              >
+                Criar Evento
+              </Link>
+            </>
+          )}
         </div>
       )}
     </header>
