@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Navbar } from '../components/Navbar'
+import { useAuthStore } from '../store/auth.store'
 import api from '../api/axios'
 
 interface Registration {
@@ -21,6 +22,7 @@ interface Event {
   date: string
   location: string | null
   description: string | null
+  createdBy: string
   _count: { registrations: number }
 }
 
@@ -38,6 +40,7 @@ const statusColor = {
 
 export function EventDetail() {
   const { id } = useParams<{ id: string }>()
+  const { user } = useAuthStore()
   const [event, setEvent] = useState<Event | null>(null)
   const [registrations, setRegistrations] = useState<Registration[]>([])
   const [loading, setLoading] = useState(true)
@@ -147,9 +150,19 @@ export function EventDetail() {
               </p>
             )}
           </div>
-          <Link to="/dashboard" className="text-sm text-teal-600 hover:underline">
-            ← Voltar
-          </Link>
+          <div className="flex items-center gap-3">
+            {event && user?.id === event.createdBy && (
+              <Link
+                to={`/events/${id}/edit`}
+                className="text-sm border border-teal-500 text-teal-600 hover:bg-teal-50 px-4 py-1.5 rounded-full transition-colors font-semibold"
+              >
+                Editar evento
+              </Link>
+            )}
+            <Link to="/dashboard" className="text-sm text-teal-600 hover:underline">
+              ← Voltar
+            </Link>
+          </div>
         </div>
 
         {/* Totalizadores */}

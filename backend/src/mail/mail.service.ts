@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import nodemailer from 'nodemailer';
+type Transporter = ReturnType<typeof nodemailer.createTransport>;
 
 export interface RegistrationConfirmationData {
   participantName: string;
@@ -16,18 +17,46 @@ export interface RegistrationConfirmationData {
 @Injectable()
 export class MailService {
   private readonly logger = new Logger(MailService.name);
-  private transporter: nodemailer.Transporter;
+  private readonly isDev = process.env.NODE_ENV !== 'production';
+
+  // In dev we create the Ethereal transporter lazily (async)
+  private transporter: Transporter | null = null;
+  private transporterPromise: Promise<Transporter> | null = null;
 
   constructor(private readonly config: ConfigService) {
-    this.transporter = nodemailer.createTransport({
-      host: this.config.get<string>('MAIL_HOST'),
-      port: Number(this.config.get('MAIL_PORT', 587)),
-      secure: this.config.get<string>('MAIL_SECURE') === 'true',
-      auth: {
-        user: this.config.get<string>('MAIL_USER'),
-        pass: this.config.get<string>('MAIL_PASS'),
-      },
-    });
+    if (!this.isDev) {
+      this.transporter = nodemailer.createTransport({
+        host: this.config.get<string>('MAIL_HOST'),
+        port: Number(this.config.get('MAIL_PORT', 587)),
+        secure: this.config.get<string>('MAIL_SECURE') === 'true',
+        auth: {
+          user: this.config.get<string>('MAIL_USER'),
+          pass: this.config.get<string>('MAIL_PASS'),
+        },
+      });
+    }
+  }
+
+  private async getTransporter(): Promise<Transporter> {
+    if (this.transporter) return this.transporter;
+
+    // Lazily create Ethereal account once
+    if (!this.transporterPromise) {
+      this.transporterPromise = nodemailer.createTestAccount().then((account) => {
+        this.logger.log(
+          `[DEV] Ethereal Email configurado — usuário: ${account.user}`,
+        );
+        this.transporter = nodemailer.createTransport({
+          host: 'smtp.ethereal.email',
+          port: 587,
+          secure: false,
+          auth: { user: account.user, pass: account.pass },
+        });
+        return this.transporter!;
+      });
+    }
+
+    return this.transporterPromise;
   }
 
   async sendRegistrationConfirmation(data: RegistrationConfirmationData): Promise<void> {
@@ -46,13 +75,22 @@ export class MailService {
     });
 
     try {
-      await this.transporter.sendMail({
+      const transport = await this.getTransporter();
+      const info = await transport.sendMail({
         from,
         to: data.participantEmail,
         subject: `Inscrição confirmada — ${data.eventTitle}`,
         html: this.buildEmailHtml({ ...data, formattedDate, formattedTime }),
       });
-      this.logger.log(`Email de confirmação enviado para ${data.participantEmail}`);
+
+      if (this.isDev) {
+        const previewUrl = nodemailer.getTestMessageUrl(info);
+        this.logger.log(
+          `[DEV] Email enviado para ${data.participantEmail} | Visualizar: ${previewUrl}`,
+        );
+      } else {
+        this.logger.log(`Email de confirmação enviado para ${data.participantEmail}`);
+      }
     } catch (err) {
       this.logger.error(`Falha ao enviar email para ${data.participantEmail}: ${err}`);
     }

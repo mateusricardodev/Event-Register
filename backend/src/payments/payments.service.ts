@@ -76,6 +76,7 @@ export class PaymentsService {
   }
 
   async confirmPayment(providerPaymentId: string): Promise<void> {
+    this.logger.log(`[webhook] Confirmando pagamento providerPaymentId=${providerPaymentId}`);
     const emailData = await this.prisma.db.$transaction(async (tx) => {
       const payment = await tx.payment.findFirst({
         where: { providerPaymentId, status: { not: 'paid' } },
@@ -124,15 +125,22 @@ export class PaymentsService {
       };
     });
 
-    if (!emailData) return;
+    if (!emailData) {
+      this.logger.log(`[webhook] Pagamento ${providerPaymentId} já confirmado ou overbooked — sem email`);
+      return;
+    }
 
     // Idempotency gate: only send email once even if webhook fires twice
     const marked = await this.prisma.db.registration.updateMany({
       where: { id: emailData.registrationId, confirmationEmailSentAt: null },
       data: { confirmationEmailSentAt: new Date() },
     });
-    if (marked.count === 0) return;
+    if (marked.count === 0) {
+      this.logger.log(`[webhook] Email já enviado para inscrição ${emailData.registrationId} — ignorado`);
+      return;
+    }
 
+    this.logger.log(`[webhook] Disparando email de confirmação para ${emailData.participantEmail}`);
     void this.mail.sendRegistrationConfirmation({
       participantName: emailData.participantName,
       participantEmail: emailData.participantEmail,

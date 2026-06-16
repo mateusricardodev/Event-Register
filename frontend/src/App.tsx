@@ -7,6 +7,7 @@ import { EventDetail } from './pages/EventDetail'
 import { NewRegistration } from './pages/NewRegistration'
 import { EditRegistration } from './pages/EditRegistration'
 import { SearchRegistrations } from './pages/SearchRegistrations'
+import { EditEvent } from './pages/EditEvent'
 import { EventSetupPayment } from './pages/EventSetupPayment'
 import { EventSetupForm } from './pages/EventSetupForm'
 import { EventSetupPage } from './pages/EventSetupPage'
@@ -43,6 +44,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <CreateEvent />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/events/:id/edit"
+          element={
+            <ProtectedRoute>
+              <EditEvent />
             </ProtectedRoute>
           }
         />

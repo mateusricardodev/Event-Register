@@ -44,9 +44,12 @@ export function PixPayment() {
 
   const [stage, setStage] = useState<Stage>(state?.free ? 'confirmed' : 'pending')
   const [copied, setCopied] = useState(false)
-  const [secondsLeft, setSecondsLeft] = useState(0)
+  const [secondsLeft, setSecondsLeft] = useState<number>(() => {
+    if (!state?.expiresAt) return 900
+    const diff = Math.floor((new Date(state.expiresAt).getTime() - Date.now()) / 1000)
+    return Math.min(900, Math.max(0, diff))
+  })
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // Redirect if arrived without state (e.g. direct URL access)
   useEffect(() => {
@@ -55,17 +58,24 @@ export function PixPayment() {
     }
   }, [state, slug, navigate])
 
-  // Countdown timer
+  // Countdown timer — decrement by 1/s; set 'failed' when reaches 0
   useEffect(() => {
-    if (!state?.expiresAt) return
-    const calc = () => {
-      const diff = Math.max(0, Math.floor((new Date(state.expiresAt!).getTime() - Date.now()) / 1000))
-      setSecondsLeft(diff)
-    }
-    calc()
-    timerRef.current = setInterval(calc, 1000)
-    return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [state?.expiresAt])
+    if (stage !== 'pending') return
+    const timer = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [stage])
+
+  useEffect(() => {
+    if (stage === 'pending' && secondsLeft === 0) setStage('failed')
+  }, [secondsLeft, stage])
 
   // Polling for payment confirmation
   useEffect(() => {
@@ -96,9 +106,8 @@ export function PixPayment() {
   if (!state?.registrationId) return null
 
   const amount = state.amount ?? 0
-  const isExpired = secondsLeft === 0 && !!state.expiresAt
-  const minutesLeft = Math.floor(secondsLeft / 60)
-  const secs = secondsLeft % 60
+  const mm = String(Math.floor(secondsLeft / 60)).padStart(2, '0')
+  const ss = String(secondsLeft % 60).padStart(2, '0')
 
   async function handleCopy() {
     if (!state?.qrCodeCopiaECola) return
@@ -222,9 +231,6 @@ export function PixPayment() {
           <p className="text-4xl font-bold text-gray-800">
             R$ {Number(amount).toFixed(2).replace('.', ',')}
           </p>
-          {state.ticketName && (
-            <p className="text-sm text-gray-400 mt-1">{state.ticketName}</p>
-          )}
         </div>
 
         {/* QR Code + Copia e Cola */}
@@ -275,34 +281,15 @@ export function PixPayment() {
 
         {/* Expiry + Polling status */}
         <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5 flex flex-col gap-3 text-center">
-          {state.expiresAt && (
-            <div>
-              {isExpired ? (
-                <p className="text-sm font-semibold text-red-500">Este PIX expirou.</p>
-              ) : (
-                <p className="text-sm text-gray-500">
-                  Este PIX expira em{' '}
-                  <span className="font-bold text-gray-800 tabular-nums">
-                    {String(minutesLeft).padStart(2, '0')}:{String(secs).padStart(2, '0')}
-                  </span>
-                </p>
-              )}
-            </div>
-          )}
+          <p className="text-sm text-gray-500">
+            Este PIX expira em{' '}
+            <span className="font-bold text-gray-800 tabular-nums">{mm}:{ss}</span>
+          </p>
 
           <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
             <Spinner className="w-4 h-4 text-teal-500" />
             <span>Aguardando confirmação do pagamento...</span>
           </div>
-
-          {isExpired && (
-            <button
-              onClick={() => navigate(`/evento/${slug}/inscricao`)}
-              className="mt-1 w-full border border-gray-300 hover:border-teal-400 text-gray-600 hover:text-teal-600 font-semibold py-2.5 rounded-full text-sm transition-colors"
-            >
-              Gerar novo PIX
-            </button>
-          )}
         </div>
 
         {/* Dev/mock helper */}
