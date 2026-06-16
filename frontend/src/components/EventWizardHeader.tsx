@@ -17,7 +17,7 @@ export function EventWizardHeader({ active, eventId }: Props) {
 
   function linkFor(key: string) {
     if (!eventId) return '#'
-    if (key === 'info') return `/events/new`
+    if (key === 'info') return `/events/${eventId}/edit`
     if (key === 'payment') return `/events/${eventId}/setup/payment`
     if (key === 'form') return `/events/${eventId}/setup/form`
     if (key === 'page') return `/events/${eventId}/setup/page`

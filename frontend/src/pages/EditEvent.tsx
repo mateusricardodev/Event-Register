@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Navbar } from '../components/Navbar'
+import { EventWizardHeader } from '../components/EventWizardHeader'
+import { useAuthStore } from '../store/auth.store'
 import api from '../api/axios'
 
 const CATEGORIES = [
@@ -17,10 +19,12 @@ function toDateInput(iso: string | null | undefined) {
 export function EditEvent() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { user } = useAuthStore()
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [saved, setSaved] = useState(false)
 
   const [form, setForm] = useState({
     title: '',
@@ -59,10 +63,11 @@ export function EditEvent() {
     }
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  async function save(): Promise<boolean> {
+    if (!id || !form.date) { setError('Data de início é obrigatória'); return false }
     setError('')
     setSaving(true)
+    setSaved(false)
     try {
       await api.put(`/events/${id}`, {
         title: form.title,
@@ -73,12 +78,20 @@ export function EditEvent() {
         endDate: form.endDate ? new Date(form.endDate + 'T00:00').toISOString() : undefined,
         location: form.location || undefined,
       })
-      navigate(`/events/${id}`)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 3000)
+      return true
     } catch (err: any) {
       setError(err.response?.data?.message || 'Erro ao salvar evento')
+      return false
     } finally {
       setSaving(false)
     }
+  }
+
+  async function handleSaveAndNext() {
+    const ok = await save()
+    if (ok) navigate(`/events/${id}/setup/payment`)
   }
 
   if (loading) {
@@ -94,26 +107,24 @@ export function EditEvent() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
+      <EventWizardHeader active="info" eventId={id} />
 
       <main className="max-w-2xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-xl font-bold text-gray-800">Editar evento</h1>
-          <button
-            type="button"
-            onClick={() => navigate(`/events/${id}`)}
-            className="text-sm text-gray-500 hover:text-gray-700"
-          >
-            ← Voltar
-          </button>
-        </div>
-
         {error && (
           <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
             {error}
           </div>
         )}
+        {saved && (
+          <div className="mb-4 text-sm text-teal-700 bg-teal-50 border border-teal-200 rounded px-3 py-2">
+            Alterações salvas com sucesso!
+          </div>
+        )}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <form
+          onSubmit={(e) => { e.preventDefault(); save() }}
+          className="flex flex-col gap-6"
+        >
           {/* URL do evento */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">
@@ -226,14 +237,44 @@ export function EditEvent() {
             />
           </div>
 
-          <div className="flex justify-end pt-2">
+          {/* Email do organizador (readonly) */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Email do organizador
+            </label>
+            <input
+              value={user?.email ?? ''}
+              disabled
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-400 cursor-not-allowed"
+            />
+          </div>
+
+          {/* Navegação */}
+          <div className="flex justify-between pt-2">
             <button
-              type="submit"
-              disabled={saving}
-              className="bg-teal-500 hover:bg-teal-600 disabled:opacity-60 text-white font-semibold px-8 py-2 rounded-full text-sm transition-colors"
+              type="button"
+              onClick={() => navigate(`/events/${id}`)}
+              className="text-sm text-gray-500 hover:text-gray-700"
             >
-              {saving ? 'SALVANDO...' : 'SALVAR ALTERAÇÕES'}
+              ← Voltar ao evento
             </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="submit"
+                disabled={saving}
+                className="border border-teal-500 text-teal-600 hover:bg-teal-50 disabled:opacity-60 font-semibold px-6 py-2 rounded-full text-sm transition-colors"
+              >
+                {saving ? 'SALVANDO...' : 'SALVAR'}
+              </button>
+              <button
+                type="button"
+                disabled={saving}
+                onClick={handleSaveAndNext}
+                className="bg-teal-500 hover:bg-teal-600 disabled:opacity-60 text-white font-semibold px-8 py-2 rounded-full text-sm transition-colors"
+              >
+                PRÓXIMO PASSO
+              </button>
+            </div>
           </div>
         </form>
       </main>

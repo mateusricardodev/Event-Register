@@ -97,6 +97,12 @@ export function Dashboard() {
                   >
                     ver
                   </Link>
+                  <Link
+                    to={`/events/${event.id}/edit`}
+                    className="text-gray-500 text-sm hover:underline"
+                  >
+                    editar
+                  </Link>
                   <button
                     onClick={() => setConfirmId(event.id)}
                     className="text-red-400 hover:text-red-600 text-sm transition-colors"
@@ -130,6 +136,12 @@ export function Dashboard() {
                     <span className="text-sm text-gray-400">
                       {event._count.registrations} inscritos
                     </span>
+                    <Link
+                      to={`/events/${event.id}/edit`}
+                      className="text-gray-400 text-sm hover:underline"
+                    >
+                      editar
+                    </Link>
                     <button
                       onClick={() => setConfirmId(event.id)}
                       className="text-red-300 hover:text-red-500 text-sm transition-colors"
