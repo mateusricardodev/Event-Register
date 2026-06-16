@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Navbar } from '../components/Navbar'
 import { EventWizardHeader } from '../components/EventWizardHeader'
+import { DashboardLayout } from '../components/DashboardLayout'
 import api from '../api/axios'
 
 const CATEGORIES = [
@@ -63,11 +63,10 @@ export function CreateEvent() {
   const baseUrl = `${window.location.origin}/evento/`
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+    <DashboardLayout active="eventos">
       <EventWizardHeader active="info" />
 
-      <main className="max-w-2xl mx-auto px-4 py-8">
+      <div className="max-w-2xl mx-auto py-8">
         {error && (
           <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
             {error}
@@ -226,7 +225,7 @@ export function CreateEvent() {
             </button>
           </div>
         </form>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   )
 }
