@@ -93,28 +93,26 @@ export function EventPublic() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero */}
-      <div className="bg-teal-600 text-white">
-        <div className="max-w-4xl mx-auto px-4 py-16 flex flex-col items-center text-center gap-4">
-          <div className="w-full max-w-2xl h-56 bg-teal-500 rounded-xl overflow-hidden flex items-center justify-center mb-4">
-            {event.bannerUrl ? (
-              <img
-                src={`http://localhost:3000${event.bannerUrl}`}
-                alt={event.title}
-                className="w-full h-full object-cover"
+      <div className="relative bg-teal-600 text-white overflow-hidden min-h-[480px] md:min-h-[520px]">
+        {event.bannerUrl ? (
+          <img
+            src={`http://localhost:3000${event.bannerUrl}`}
+            alt={event.title}
+            className="absolute inset-0 w-full h-full object-cover object-center"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <svg className="w-20 h-20 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1}
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
               />
-            ) : (
-              <svg className="w-16 h-16 text-teal-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1}
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-            )}
+            </svg>
           </div>
-          <h1 className="text-3xl font-bold">{event.title}</h1>
-          {event.category && (
-            <span className="text-sm bg-teal-500 px-3 py-1 rounded-full">{event.category}</span>
-          )}
-        </div>
+        )}
+      </div>
+
+      <div className="bg-teal-600 text-white text-center py-6 px-4">
+        <h1 className="text-2xl md:text-3xl font-bold">{event.title}</h1>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-10 grid grid-cols-1 md:grid-cols-3 gap-8">
