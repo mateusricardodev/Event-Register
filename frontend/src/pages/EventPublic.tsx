@@ -111,7 +111,7 @@ export function EventPublic() {
         )}
       </div>
 
-      <div className="bg-teal-600 text-white text-center py-6 px-4">
+      <div className="bg-gray-50 text-gray-900 text-center py-6 px-4">
         <h1 className="text-2xl md:text-3xl font-bold">{event.title}</h1>
       </div>
 
