@@ -68,11 +68,12 @@ export class PublicService {
 
     const event = await this.prisma.db.event.findUnique({
       where: { slug },
-      select: { id: true, title: true, isPublished: true, date: true, location: true, maxParticipants: true },
+      select: { id: true, title: true, isPublished: true, date: true, endDate: true, location: true, maxParticipants: true },
     });
 
     if (!event || !event.isPublished) throw new NotFoundException('Evento não encontrado');
-    if (new Date() > event.date)
+    // Inscrições abertas até o fim do evento (data de término, ou a de início se não houver término)
+    if (new Date() > (event.endDate ?? event.date))
       throw new BadRequestException('As inscrições para este evento estão encerradas');
 
     const paymentMethod = await this.prisma.db.eventPaymentMethod.findUnique({
