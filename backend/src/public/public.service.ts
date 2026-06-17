@@ -54,9 +54,25 @@ export class PublicService {
   async getPaymentStatus(registrationId: string) {
     const registration = await this.prisma.db.registration.findUnique({
       where: { id: registrationId },
-      select: { status: true, payment: { select: { status: true } } },
+      select: { status: true, payment: { select: { status: true, providerPaymentId: true } } },
     });
     if (!registration) throw new NotFoundException('Inscrição não encontrada');
+
+    // Fallback do webhook: se ainda pendente, pergunta ao provider e reconcilia
+    if (registration.payment?.status === 'pending' && registration.payment.providerPaymentId) {
+      await this.payments.reconcileByProvider(registration.payment.providerPaymentId);
+      const refreshed = await this.prisma.db.registration.findUnique({
+        where: { id: registrationId },
+        select: { status: true, payment: { select: { status: true } } },
+      });
+      if (refreshed) {
+        return {
+          status: refreshed.status,
+          paymentStatus: refreshed.payment?.status ?? null,
+        };
+      }
+    }
+
     return {
       status: registration.status,
       paymentStatus: registration.payment?.status ?? null,

@@ -153,15 +153,58 @@ export class PaymentsService {
     });
   }
 
+  /**
+   * Consulta o provider diretamente e reconcilia o estado local quando o
+   * pagamento ainda está `pending`. Usado como fallback do webhook, para que o
+   * polling da tela funcione mesmo se a notificação do provider não chegar.
+   * Idempotente e resiliente: erros do provider não propagam.
+   */
+  async reconcileByProvider(providerPaymentId: string): Promise<void> {
+    let status;
+    try {
+      status = await this.provider.getPaymentStatus(providerPaymentId);
+    } catch (err) {
+      this.logger.warn(`[reconcile] Falha ao consultar provider ${providerPaymentId}: ${String(err)}`);
+      return;
+    }
+
+    if (status === 'approved') {
+      await this.confirmPayment(providerPaymentId);
+    } else if (status === 'rejected' || status === 'expired') {
+      await this.prisma.db.payment.updateMany({
+        where: { providerPaymentId, status: 'pending' },
+        data: { status: 'failed' },
+      });
+    }
+    // 'pending' → nada a fazer
+  }
+
   async getStatus(registrationId: string, userId: string) {
     const registration = await this.prisma.db.registration.findUnique({
       where: { id: registrationId },
-      include: { payment: { select: { status: true, amount: true, expiresAt: true } } },
+      include: { payment: { select: { status: true, amount: true, expiresAt: true, providerPaymentId: true } } },
     });
 
     if (!registration) throw new NotFoundException('Inscrição não encontrada');
     if (registration.userId !== userId)
       throw new ForbiddenException('Sem permissão');
+
+    // Fallback: reconcilia com o provider se ainda estiver pendente
+    if (registration.payment?.status === 'pending' && registration.payment.providerPaymentId) {
+      await this.reconcileByProvider(registration.payment.providerPaymentId);
+      const refreshed = await this.prisma.db.registration.findUnique({
+        where: { id: registrationId },
+        include: { payment: { select: { status: true, amount: true, expiresAt: true } } },
+      });
+      if (refreshed) {
+        return {
+          registrationStatus: refreshed.status,
+          paymentStatus: refreshed.payment?.status ?? null,
+          amount: refreshed.payment?.amount ?? null,
+          expiresAt: refreshed.payment?.expiresAt ?? null,
+        };
+      }
+    }
 
     return {
       registrationStatus: registration.status,
