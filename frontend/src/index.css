@@ -5,4 +5,15 @@
   --color-brand-purple-light: #a855f7;
   --color-brand-teal: #2dd4bf;
   --color-brand-teal-dark: #0f766e;
+
+  /* Fontes */
+  --font-cormorant: 'Cormorant Garamond', Georgia, serif;
+  --font-unifraktur: 'UnifrakturCook', cursive;
+  --font-bebas: 'Bebas Neue', sans-serif;
+  --font-cinzel: 'Cinzel', Georgia, serif;
+  --font-inter: 'Inter', system-ui, sans-serif;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
 }

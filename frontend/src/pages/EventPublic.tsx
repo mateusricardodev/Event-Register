@@ -116,7 +116,7 @@ export function EventPublic() {
 
         {/* Cabeçalho */}
         <div className="flex flex-col items-center gap-3 text-center">
-          <h2 className="text-2xl font-bold tracking-[0.3em] text-[#1B2B5E] uppercase">
+          <h2 className="font-cinzel text-2xl font-bold tracking-[0.3em] text-[#1B2B5E] uppercase">
             Inscrição
           </h2>
           <div className="flex items-center gap-3">
@@ -124,7 +124,7 @@ export function EventPublic() {
             <span className="text-[#C9A84C] text-base leading-none">✝</span>
             <div className="h-px w-14 bg-[#C9A84C]" />
           </div>
-          <p className="text-sm text-gray-500 max-w-xs leading-relaxed">
+          <p className="font-inter text-sm text-gray-500 max-w-xs leading-relaxed">
             Garanta sua participação neste momento único.
           </p>
         </div>
@@ -140,8 +140,8 @@ export function EventPublic() {
               </svg>
             </div>
             <div>
-              <p className="font-bold text-[#1B2B5E] capitalize">{formatDate(startDate)}</p>
-              <p className="text-sm text-gray-400">
+              <p className="font-inter font-bold text-[#1B2B5E] capitalize">{formatDate(startDate)}</p>
+              <p className="font-inter text-sm text-gray-400">
                 {formatTime(startDate)}{endDate && ` até ${formatTime(endDate)}`}
               </p>
             </div>
@@ -157,7 +157,7 @@ export function EventPublic() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </div>
-              <p className="font-bold text-[#1B2B5E]">{event.location}</p>
+              <p className="font-inter font-bold text-[#1B2B5E]">{event.location}</p>
             </div>
           )}
         </div>
@@ -180,7 +180,7 @@ export function EventPublic() {
         {event.about && (
           <div className="flex items-start gap-3 pt-4 border-t border-[#C9A84C]/30">
             <span className="text-[#C9A84C] text-lg leading-tight mt-0.5">✝</span>
-            <p className="text-xs text-gray-500 leading-relaxed">{event.about}</p>
+            <p className="font-inter text-xs text-gray-500 leading-relaxed">{event.about}</p>
           </div>
         )}
 
@@ -207,7 +207,7 @@ function PaymentMethodSelector({ methods, selectedId, onSelect, onRegister }: Pa
       {/* Seletor de método (somente quando há mais de um) */}
       {!single && (
         <div className="flex flex-col gap-2">
-          <p className="text-xs font-bold text-[#C9A84C] uppercase tracking-widest">
+          <p className="font-cinzel text-xs font-bold text-[#C9A84C] uppercase tracking-widest">
             Forma de pagamento
           </p>
           {methods.map(method => {
@@ -219,7 +219,7 @@ function PaymentMethodSelector({ methods, selectedId, onSelect, onRegister }: Pa
                 type="button"
                 onClick={() => onSelect(method.id)}
                 className={[
-                  'w-full text-left rounded-xl border px-4 py-3 transition-all text-sm',
+                  'font-inter w-full text-left rounded-xl border px-4 py-3 transition-all text-sm',
                   selected
                     ? 'border-[#1B2B5E] bg-[#1B2B5E]/5 ring-2 ring-[#1B2B5E]'
                     : 'border-gray-200 hover:border-[#1B2B5E]/40 cursor-pointer',
@@ -242,12 +242,12 @@ function PaymentMethodSelector({ methods, selectedId, onSelect, onRegister }: Pa
       {/* Preço em destaque */}
       {amount !== null && (
         <div>
-          <p className="text-xs font-bold text-[#C9A84C] uppercase tracking-widest">Valor</p>
-          <p className="text-3xl font-bold text-[#1B2B5E] mt-1">
+          <p className="font-cinzel text-xs font-bold text-[#C9A84C] uppercase tracking-widest">Valor</p>
+          <p className="font-cormorant text-4xl font-bold text-[#1B2B5E] mt-1">
             {amount === 0 ? 'Gratuito' : `R$ ${amount.toFixed(2).replace('.', ',')}`}
           </p>
           {selectedMethod && (
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="font-inter text-sm text-gray-500 mt-1">
               Pagamento via{' '}
               <span className="font-bold text-gray-700">
                 {TYPE_LABELS[selectedMethod.type] ?? selectedMethod.type}
@@ -261,7 +261,7 @@ function PaymentMethodSelector({ methods, selectedId, onSelect, onRegister }: Pa
       <button
         onClick={onRegister}
         disabled={!selectedId}
-        className="w-full bg-[#1B2B5E] hover:bg-[#152348] disabled:opacity-50 disabled:cursor-not-allowed text-[#F2EDE4] font-bold py-4 rounded-full text-sm tracking-widest uppercase transition-colors flex items-center justify-center gap-2"
+        className="font-bebas w-full bg-[#1B2B5E] hover:bg-[#152348] disabled:opacity-50 disabled:cursor-not-allowed text-[#F2EDE4] py-4 rounded-full text-xl tracking-widest uppercase transition-colors flex items-center justify-center gap-2"
       >
         Inscreva-se já! <span>→</span>
       </button>
