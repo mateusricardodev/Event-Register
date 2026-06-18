@@ -241,10 +241,22 @@ export function EventSetupPage() {
                     </div>
                   )}
                   <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(publicUrl)
-                      setCopied(true)
-                      setTimeout(() => setCopied(false), 1000)
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(publicUrl)
+                        setCopied(true)
+                        setTimeout(() => setCopied(false), 2000)
+                      } catch {
+                        // fallback para contextos sem permissão de clipboard
+                        const el = document.createElement('textarea')
+                        el.value = publicUrl
+                        document.body.appendChild(el)
+                        el.select()
+                        document.execCommand('copy')
+                        document.body.removeChild(el)
+                        setCopied(true)
+                        setTimeout(() => setCopied(false), 2000)
+                      }
                     }}
                     className="border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm font-semibold px-6 py-2 rounded-full transition-colors"
                   >
