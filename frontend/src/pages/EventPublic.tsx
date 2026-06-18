@@ -88,21 +88,20 @@ export function EventPublic() {
 
   return (
     <div className="min-h-screen bg-[#F2EDE4]">
-      {/* Hero — não alterar */}
-      <div className="overflow-hidden">
+      {/* Hero */}
+      <div className="w-full aspect-[4/3] md:aspect-[16/6] overflow-hidden">
         {event.bannerUrl ? (
           <img
             src={`${API_BASE_URL}${event.bannerUrl}`}
             alt={event.title}
-            className="w-full h-[300px] md:h-[500px] object-cover object-top"
+            className="w-full h-full object-contain bg-gray-900"
           />
         ) : (
-          <div className="w-full h-[300px] md:h-[500px] bg-teal-600 flex items-center justify-center">
-            <svg className="w-20 h-20 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1}
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
+          <div className="w-full h-full bg-[#1B2B5E] flex flex-col items-center justify-center gap-3 px-6">
+            <span className="font-cinzel text-xl md:text-3xl font-bold text-[#F2EDE4] text-center leading-snug">
+              {event.title}
+            </span>
+            <div className="h-px w-16 bg-[#C9A84C]" />
           </div>
         )}
       </div>
