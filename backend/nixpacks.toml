@@ -1,0 +1,5 @@
+[phases.build]
+cmds = ["npm install", "npx prisma generate", "npm run build"]
+
+[start]
+cmd = "npx prisma migrate deploy && node dist/main.js"
