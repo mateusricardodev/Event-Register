@@ -70,11 +70,7 @@ export function EventPublic() {
   const startDate = new Date(event.date)
   const endDate = event.endDate ? new Date(event.endDate) : null
 
-  const formatDate = (d: Date) =>
-    d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
-
-  const formatTime = (d: Date) =>
-    d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  const formatDate = (d: Date) => d.toLocaleDateString('pt-BR')
 
   const selectedMethod = event.paymentMethods.find(m => m.id === selectedMethodId) ?? null
   const hasPaymentMethods = event.paymentMethods.length > 0
@@ -140,9 +136,8 @@ export function EventPublic() {
               </svg>
             </div>
             <div>
-              <p className="font-inter font-bold text-[#1B2B5E] capitalize">{formatDate(startDate)}</p>
-              <p className="font-inter text-sm text-gray-400">
-                {formatTime(startDate)}{endDate && ` até ${formatTime(endDate)}`}
+              <p className="font-inter font-bold text-[#1B2B5E]">
+                {formatDate(startDate)}{endDate && ` até ${formatDate(endDate)}`}
               </p>
             </div>
           </div>
