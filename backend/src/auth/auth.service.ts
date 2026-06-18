@@ -18,22 +18,27 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto) {
-    const exists = await this.prisma.db.user.findUnique({
-      where: { email: dto.email },
-    });
+    try {
+      const exists = await this.prisma.db.user.findUnique({
+        where: { email: dto.email },
+      });
 
-    if (exists) {
-      throw new ConflictException('E-mail já cadastrado');
+      if (exists) {
+        throw new ConflictException('E-mail já cadastrado');
+      }
+
+      const hashed = await bcrypt.hash(dto.password, 10);
+
+      const user = await this.prisma.db.user.create({
+        data: { name: dto.name, email: dto.email, password: hashed },
+        select: { id: true, name: true, email: true, role: true, createdAt: true },
+      });
+
+      return user;
+    } catch (error) {
+      console.error('Erro ao criar conta:', error);
+      throw error;
     }
-
-    const hashed = await bcrypt.hash(dto.password, 10);
-
-    const user = await this.prisma.db.user.create({
-      data: { name: dto.name, email: dto.email, password: hashed },
-      select: { id: true, name: true, email: true, role: true, createdAt: true },
-    });
-
-    return user;
   }
 
   async login(dto: LoginDto) {

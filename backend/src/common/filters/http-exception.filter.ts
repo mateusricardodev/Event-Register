@@ -18,6 +18,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
+    if (status === HttpStatus.INTERNAL_SERVER_ERROR) {
+      console.error('[500] Erro interno não tratado:', exception);
+    }
+
     const message =
       exception instanceof HttpException
         ? exception.getResponse()
