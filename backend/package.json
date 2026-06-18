@@ -6,6 +6,9 @@
   "private": true,
   "license": "UNLICENSED",
   "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
@@ -37,7 +40,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "dotenv": "^17.4.2",
-    "file-type": "^22.0.1",
+    "file-type": "^21.3.4",
     "helmet": "^8.2.0",
     "mercadopago": "^3.1.0",
     "nodemailer": "^8.0.7",
