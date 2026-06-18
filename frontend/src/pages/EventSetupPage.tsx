@@ -113,7 +113,7 @@ export function EventSetupPage() {
               Seções da página
             </div>
             <div className="px-4 py-3 flex items-center justify-between">
-              <span className="text-sm text-gray-700">Sobre</span>
+              <span className="text-sm text-gray-700">Descrição</span>
               <button
                 onClick={() => setAboutEnabled((v) => !v)}
                 className={`relative w-10 h-5 rounded-full transition-colors ${
@@ -190,10 +190,10 @@ export function EventSetupPage() {
             )}
           </div>
 
-          {/* Sobre */}
+          {/* Descrição */}
           {aboutEnabled && (
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Sobre o evento</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Descrição</label>
               <textarea
                 value={about}
                 onChange={(e) => setAbout(e.target.value)}

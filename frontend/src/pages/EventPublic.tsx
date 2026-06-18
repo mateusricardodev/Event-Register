@@ -169,18 +169,11 @@ export function EventPublic() {
             selectedId={selectedMethodId}
             onSelect={setSelectedMethodId}
             onRegister={handleRegister}
+            description={event.about}
           />
         ) : (
           <div className="bg-white rounded-2xl shadow-sm p-5 text-center">
-            <p className="text-sm text-gray-400">Inscrições em breve</p>
-          </div>
-        )}
-
-        {/* Rodapé com informações extras */}
-        {event.about && (
-          <div className="flex items-start gap-3 pt-4 border-t border-[#C9A84C]/30">
-            <span className="text-[#C9A84C] text-lg leading-tight mt-0.5">✝</span>
-            <p className="font-inter text-xs text-gray-500 leading-relaxed">{event.about}</p>
+            <p className="font-inter text-sm text-gray-400">Inscrições em breve</p>
           </div>
         )}
 
@@ -194,9 +187,10 @@ interface PaymentMethodSelectorProps {
   selectedId: string | null
   onSelect: (id: string) => void
   onRegister: () => void
+  description?: string | null
 }
 
-function PaymentMethodSelector({ methods, selectedId, onSelect, onRegister }: PaymentMethodSelectorProps) {
+function PaymentMethodSelector({ methods, selectedId, onSelect, onRegister, description }: PaymentMethodSelectorProps) {
   const single = methods.length === 1
   const selectedMethod = methods.find(m => m.id === selectedId)
   const amount = selectedMethod ? Number(selectedMethod.value) : null
@@ -265,6 +259,13 @@ function PaymentMethodSelector({ methods, selectedId, onSelect, onRegister }: Pa
       >
         Inscreva-se já! <span>→</span>
       </button>
+
+      {/* Descrição */}
+      {description && (
+        <p className="font-inter text-xs text-gray-400 leading-relaxed text-center whitespace-pre-line">
+          {description}
+        </p>
+      )}
 
     </div>
   )
