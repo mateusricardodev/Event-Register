@@ -4,10 +4,27 @@ import { EventWizardHeader } from '../components/EventWizardHeader'
 import { DashboardLayout } from '../components/DashboardLayout'
 import api from '../api/axios'
 
-const OPTIONAL_FIELDS = [
-  'CEP', 'Celular', 'Cidade', 'Data de Nascimento',
-  'Endereço: bairro', 'Endereço: complemento', 'Endereço: logradouro', 'Endereço: número',
-  'Estado', 'Estado Civil', 'Sexo', 'Telefone Fixo', 'País',
+const FIELD_GROUPS = [
+  {
+    label: 'Dados pessoais',
+    fields: ['Data de Nascimento', 'Sexo', 'Estado Civil', 'Celular', 'Telefone Fixo'],
+  },
+  {
+    label: 'Endereço',
+    fields: ['CEP', 'Endereço: logradouro', 'Endereço: número', 'Endereço: bairro', 'Endereço: complemento', 'Cidade', 'Estado', 'País'],
+  },
+  {
+    label: 'Contato do responsável',
+    fields: ['Nome do Responsável', 'Telefone do Responsável'],
+  },
+  {
+    label: 'Saúde',
+    fields: ['Usa Medicamento'],
+  },
+  {
+    label: 'Documentos',
+    fields: ['Autorização de Responsável'],
+  },
 ]
 
 export function EventSetupForm() {
@@ -56,7 +73,7 @@ export function EventSetupForm() {
 
       <div className="max-w-2xl mx-auto py-8">
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-          {/* Header da tabela */}
+          {/* Header */}
           <div className="grid grid-cols-3 px-6 py-3 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide">
             <span>Campo</span>
             <span className="text-center">Obrigatório</span>
@@ -80,26 +97,33 @@ export function EventSetupForm() {
             </div>
           ))}
 
-          {/* Campos opcionais */}
-          {OPTIONAL_FIELDS.map((field) => (
-            <div key={field} className="grid grid-cols-3 items-center px-6 py-4 border-b border-gray-100 last:border-0">
-              <span className="text-sm text-gray-700">{field}</span>
-              <span />
-              <div className="flex items-center justify-end gap-3">
-                <span className="text-xs text-gray-400">{enabled.has(field) ? 'Ativado' : 'Desativado'}</span>
-                <button
-                  onClick={() => toggle(field)}
-                  className={`relative w-10 h-5 rounded-full transition-colors ${
-                    enabled.has(field) ? 'bg-teal-500' : 'bg-gray-300'
-                  }`}
-                >
-                  <span
-                    className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                      enabled.has(field) ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
+          {/* Grupos de campos opcionais */}
+          {FIELD_GROUPS.map((group) => (
+            <div key={group.label}>
+              <div className="px-6 py-2 bg-gray-50 border-b border-t border-gray-100">
+                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{group.label}</span>
               </div>
+              {group.fields.map((field) => (
+                <div key={field} className="grid grid-cols-3 items-center px-6 py-4 border-b border-gray-100 last:border-0">
+                  <span className="text-sm text-gray-700">{field}</span>
+                  <span />
+                  <div className="flex items-center justify-end gap-3">
+                    <span className="text-xs text-gray-400">{enabled.has(field) ? 'Ativado' : 'Desativado'}</span>
+                    <button
+                      onClick={() => toggle(field)}
+                      className={`relative w-10 h-5 rounded-full transition-colors ${
+                        enabled.has(field) ? 'bg-teal-500' : 'bg-gray-300'
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                          enabled.has(field) ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           ))}
         </div>

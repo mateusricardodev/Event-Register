@@ -62,15 +62,18 @@ const FIELD_CONFIG: Record<string, FieldInput> = {
   'Sexo':                   { label: 'Sexo',                 placeholder: 'Ex: Masculino' },
   'Telefone Fixo':          { label: 'Telefone fixo',        placeholder: '(00) 0000-0000' },
   'País':                   { label: 'País',                 placeholder: 'Ex: Brasil' },
+  'Nome do Responsável':    { label: 'Nome do responsável',  placeholder: 'Ex: Maria da Silva' },
+  'Telefone do Responsável':{ label: 'Telefone do responsável', placeholder: '(00) 00000-0000', format: formatPhone },
 }
 
-const PERSONAL_FIELDS = ['Data de Nascimento', 'Sexo', 'Estado Civil']
-const ADDRESS_FIELDS  = ['CEP', 'Endereço: logradouro', 'Endereço: número', 'Endereço: bairro', 'Endereço: complemento', 'Cidade', 'Estado', 'País']
-const EXTRA_SKIP = new Set(['Celular', 'Telefone Fixo'])
+const PERSONAL_FIELDS    = ['Data de Nascimento', 'Sexo', 'Estado Civil']
+const ADDRESS_FIELDS     = ['CEP', 'Endereço: logradouro', 'Endereço: número', 'Endereço: bairro', 'Endereço: complemento', 'Cidade', 'Estado', 'País']
+const RESPONSIBLE_FIELDS = ['Nome do Responsável', 'Telefone do Responsável']
+const EXTRA_SKIP         = new Set(['Celular', 'Telefone Fixo'])
 
-const inputClass = 'font-inter w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B2B5E]/40'
-const labelClass = 'font-inter block text-sm font-medium text-gray-700 mb-1'
-const sectionLabelClass = 'font-cinzel text-xs font-bold text-[#C9A84C] uppercase tracking-widest'
+const inputClass    = 'font-inter w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B2B5E]/40'
+const labelClass    = 'font-inter block text-sm font-medium text-gray-700 mb-1'
+const sectionLabel  = 'font-cinzel text-xs font-bold text-[#C9A84C] uppercase tracking-widest'
 
 export function PublicRegistration() {
   const { slug } = useParams<{ slug: string }>()
@@ -84,6 +87,8 @@ export function PublicRegistration() {
   const [error, setError] = useState('')
 
   const [paymentMethodId, setPaymentMethodId] = useState(locationState.paymentMethodId ?? '')
+  const [usaMedicamento, setUsaMedicamento] = useState<'sim' | 'nao' | ''>('')
+  const [qualMedicamento, setQualMedicamento] = useState('')
   const [form, setForm] = useState({
     fullName: '',
     email: '',
@@ -126,8 +131,14 @@ export function PublicRegistration() {
     try {
       const extraFields: Record<string, string> = {}
       for (const key of enabled) {
-        if (!EXTRA_SKIP.has(key) && key !== 'Data de Nascimento' && form.extra[key]) {
+        if (!EXTRA_SKIP.has(key) && key !== 'Data de Nascimento' && key !== 'Usa Medicamento' && key !== 'Autorização de Responsável' && form.extra[key]) {
           extraFields[key] = form.extra[key]
+        }
+      }
+      if (enabled.has('Usa Medicamento') && usaMedicamento) {
+        extraFields['Usa Medicamento'] = usaMedicamento
+        if (usaMedicamento === 'sim' && qualMedicamento.trim()) {
+          extraFields['Qual Medicamento'] = qualMedicamento.trim()
         }
       }
 
@@ -192,8 +203,9 @@ export function PublicRegistration() {
   const startDate = new Date(event.date)
   const formatDate = (d: Date) => d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
 
-  const hasPersonal = PERSONAL_FIELDS.some(f => enabled.has(f))
-  const hasAddress  = ADDRESS_FIELDS.some(f => enabled.has(f))
+  const hasPersonal    = PERSONAL_FIELDS.some(f => enabled.has(f))
+  const hasAddress     = ADDRESS_FIELDS.some(f => enabled.has(f))
+  const hasResponsible = RESPONSIBLE_FIELDS.some(f => enabled.has(f))
 
   function renderField(fieldName: string) {
     const config = FIELD_CONFIG[fieldName]
@@ -249,7 +261,7 @@ export function PublicRegistration() {
             {locationState.paymentMethodId ? (
               <div className="px-6 py-4 bg-[#1B2B5E]/5 border-b border-[#1B2B5E]/10 flex items-center justify-between">
                 <div>
-                  <p className={sectionLabelClass}>Forma de pagamento</p>
+                  <p className={sectionLabel}>Forma de pagamento</p>
                   <p className="font-inter text-sm font-bold text-[#1B2B5E] mt-0.5">
                     {TYPE_LABELS[locationState.paymentMethodType ?? ''] ?? locationState.paymentMethodType}
                   </p>
@@ -264,7 +276,7 @@ export function PublicRegistration() {
               </div>
             ) : (
               <div className="px-6 py-5 flex flex-col gap-3">
-                <p className={sectionLabelClass}>Forma de pagamento</p>
+                <p className={sectionLabel}>Forma de pagamento</p>
                 {event.paymentMethods.length === 0 ? (
                   <p className="font-inter text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
                     Nenhuma forma de pagamento disponível para este evento.
@@ -302,7 +314,7 @@ export function PublicRegistration() {
 
             {/* Dados básicos */}
             <div className="px-6 py-5 flex flex-col gap-4">
-              <p className={sectionLabelClass}>Dados básicos</p>
+              <p className={sectionLabel}>Dados básicos</p>
               <div>
                 <label className={labelClass}>Nome completo *</label>
                 <input
@@ -346,19 +358,105 @@ export function PublicRegistration() {
             {/* Dados pessoais */}
             {hasPersonal && (
               <div className="px-6 py-5 flex flex-col gap-4">
-                <p className={sectionLabelClass}>Dados pessoais</p>
+                <p className={sectionLabel}>Dados pessoais</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {PERSONAL_FIELDS.map(renderField)}
                 </div>
               </div>
             )}
 
+            {/* Contato do responsável */}
+            {hasResponsible && (
+              <div className="px-6 py-5 flex flex-col gap-4">
+                <p className={sectionLabel}>Contato do responsável</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {RESPONSIBLE_FIELDS.map(renderField)}
+                </div>
+              </div>
+            )}
+
+            {/* Saúde — usa medicamento */}
+            {enabled.has('Usa Medicamento') && (
+              <div className="px-6 py-5 flex flex-col gap-4">
+                <p className={sectionLabel}>Saúde</p>
+                <div>
+                  <label className={labelClass}>Faz uso de medicamento?</label>
+                  <div className="flex gap-3 mt-1">
+                    {(['sim', 'nao'] as const).map((opcao) => (
+                      <button
+                        key={opcao}
+                        type="button"
+                        onClick={() => {
+                          setUsaMedicamento(opcao)
+                          if (opcao === 'nao') setQualMedicamento('')
+                        }}
+                        className={[
+                          'px-6 py-2 rounded-full text-sm font-semibold border transition-all',
+                          usaMedicamento === opcao
+                            ? 'bg-[#1B2B5E] text-white border-[#1B2B5E]'
+                            : 'bg-white text-gray-600 border-gray-300 hover:border-[#1B2B5E]/40',
+                        ].join(' ')}
+                      >
+                        {opcao === 'sim' ? 'Sim' : 'Não'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {usaMedicamento === 'sim' && (
+                  <div>
+                    <label className={labelClass}>Qual medicamento?</label>
+                    <input
+                      type="text"
+                      value={qualMedicamento}
+                      onChange={e => setQualMedicamento(e.target.value)}
+                      placeholder="Ex: Ritalina 10mg"
+                      className={inputClass}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Endereço */}
             {hasAddress && (
               <div className="px-6 py-5 flex flex-col gap-4">
-                <p className={sectionLabelClass}>Endereço</p>
+                <p className={sectionLabel}>Endereço</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {ADDRESS_FIELDS.map(renderField)}
+                </div>
+              </div>
+            )}
+
+            {/* Autorização de Responsável */}
+            {enabled.has('Autorização de Responsável') && (
+              <div className="px-6 py-5 flex flex-col gap-3">
+                <p className={sectionLabel}>Documentos</p>
+                <div className="flex items-start gap-4 bg-[#F2EDE4] rounded-xl p-4">
+                  <div className="w-10 h-10 rounded-full bg-[#1B2B5E] flex items-center justify-center shrink-0">
+                    <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-inter text-sm font-semibold text-[#1B2B5E]">Autorização de Responsável</p>
+                    <p className="font-inter text-xs text-gray-500 mt-0.5">
+                      Baixe o modelo, preencha, assine e entregue no dia do evento.
+                    </p>
+                    <a
+                      href="/autorizacao-responsavel.pdf"
+                      download
+                      className="font-bebas inline-flex items-center gap-2 mt-3 bg-[#1B2B5E] hover:bg-[#152348] text-[#F2EDE4] px-5 py-2 rounded-full text-base tracking-widest uppercase transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                        />
+                      </svg>
+                      Baixar modelo
+                    </a>
+                  </div>
                 </div>
               </div>
             )}
