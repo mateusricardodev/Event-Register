@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import api from '../api/axios'
+import api, { API_BASE_URL } from '../api/axios'
 
 /**
  * MODO MOCK — como testar sem Mercado Pago real:
  * 1. Faça a inscrição normalmente pelo formulário.
  * 2. Copie o `providerPaymentId` que aparece na seção "Teste (modo mock)" abaixo.
  * 3. Execute no terminal:
- *    curl -X POST http://localhost:3000/payments/mock/<providerPaymentId>/approve
+ *    curl -X POST <VITE_API_URL>/payments/mock/<providerPaymentId>/approve
  * 4. O polling desta página detectará o status 'confirmed' em até 4 segundos.
  */
 
@@ -291,7 +291,7 @@ export function PixPayment() {
               Para simular o pagamento, execute no terminal:
             </p>
             <code className="block bg-amber-100 rounded px-3 py-2 text-xs text-amber-800 break-all">
-              curl -X POST http://localhost:3000/payments/mock/{state.providerPaymentId}/approve
+              curl -X POST {API_BASE_URL}/payments/mock/{state.providerPaymentId}/approve
             </code>
           </div>
         )}

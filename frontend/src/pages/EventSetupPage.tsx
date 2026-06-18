@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { EventWizardHeader } from '../components/EventWizardHeader'
 import { DashboardLayout } from '../components/DashboardLayout'
-import api from '../api/axios'
+import api, { API_BASE_URL } from '../api/axios'
 
 export function EventSetupPage() {
   const { id } = useParams<{ id: string }>()
@@ -148,7 +148,7 @@ export function EventSetupPage() {
             {bannerUrl ? (
               <div className="relative w-full aspect-[660/650] rounded-lg overflow-hidden">
                 <img
-                  src={`http://localhost:3000${bannerUrl}`}
+                  src={`${API_BASE_URL}${bannerUrl}`}
                   alt="Capa do evento"
                   className="w-full h-full object-cover"
                 />

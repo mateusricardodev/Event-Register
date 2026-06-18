@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import api from '../api/axios'
+import api, { API_BASE_URL } from '../api/axios'
 
 interface PaymentMethod {
   id: string
@@ -92,7 +92,7 @@ export function EventPublic() {
       <div className="relative bg-teal-600 text-white overflow-hidden min-h-[650px] md:min-h-[700px]">
         {event.bannerUrl ? (
           <img
-            src={`http://localhost:3000${event.bannerUrl}`}
+            src={`${API_BASE_URL}${event.bannerUrl}`}
             alt={event.title}
             className="absolute inset-0 w-full h-full object-cover object-center"
           />
