@@ -146,7 +146,7 @@ export function EventSetupPage() {
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
             <label className="block text-sm font-semibold text-gray-700 mb-1">Imagem de capa</label>
             {bannerUrl ? (
-              <div className="relative w-full h-36 rounded-lg overflow-hidden">
+              <div className="relative w-full aspect-[660/650] rounded-lg overflow-hidden">
                 <img
                   src={`http://localhost:3000${bannerUrl}`}
                   alt="Capa do evento"
@@ -166,7 +166,7 @@ export function EventSetupPage() {
                 </label>
               </div>
             ) : (
-              <label className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-teal-400 transition-colors bg-gray-50">
+              <label className="flex flex-col items-center justify-center w-full aspect-[660/650] border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-teal-400 transition-colors bg-gray-50">
                 {uploading ? (
                   <span className="text-sm text-gray-400">Enviando...</span>
                 ) : (

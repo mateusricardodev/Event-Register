@@ -52,7 +52,7 @@ export function EventPublic() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#F2EDE4] flex items-center justify-center">
         <p className="text-gray-400 text-sm">Carregando evento...</p>
       </div>
     )
@@ -60,8 +60,8 @@ export function EventPublic() {
 
   if (notFound || !event) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-3">
-        <p className="text-lg font-semibold text-gray-700">Evento não encontrado</p>
+      <div className="min-h-screen bg-[#F2EDE4] flex flex-col items-center justify-center gap-3">
+        <p className="text-lg font-semibold text-[#1B2B5E]">Evento não encontrado</p>
         <p className="text-sm text-gray-400">O endereço pode estar incorreto ou o evento não está publicado.</p>
       </div>
     )
@@ -91,9 +91,9 @@ export function EventPublic() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero */}
-      <div className="relative bg-teal-600 text-white overflow-hidden min-h-[480px] md:min-h-[520px]">
+    <div className="min-h-screen bg-[#F2EDE4]">
+      {/* Hero — não alterar */}
+      <div className="relative bg-teal-600 text-white overflow-hidden min-h-[650px] md:min-h-[700px]">
         {event.bannerUrl ? (
           <img
             src={`http://localhost:3000${event.bannerUrl}`}
@@ -111,80 +111,79 @@ export function EventPublic() {
         )}
       </div>
 
-      <div className="bg-gray-50 text-gray-900 text-center py-6 px-4">
-        <h1 className="text-2xl md:text-3xl font-bold">{event.title}</h1>
-      </div>
+      {/* Seção de inscrição */}
+      <div className="max-w-lg mx-auto px-5 py-10 flex flex-col gap-6">
 
-      <div className="max-w-4xl mx-auto px-4 py-10 grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Left — details */}
-        <div className="md:col-span-2 flex flex-col gap-6">
-          {/* Date & location */}
-          <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5 flex flex-col gap-3">
-            <div className="flex items-start gap-3">
-              <svg className="w-5 h-5 text-teal-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        {/* Cabeçalho */}
+        <div className="flex flex-col items-center gap-3 text-center">
+          <h2 className="text-2xl font-bold tracking-[0.3em] text-[#1B2B5E] uppercase">
+            Inscrição
+          </h2>
+          <div className="flex items-center gap-3">
+            <div className="h-px w-14 bg-[#C9A84C]" />
+            <span className="text-[#C9A84C] text-base leading-none">✝</span>
+            <div className="h-px w-14 bg-[#C9A84C]" />
+          </div>
+          <p className="text-sm text-gray-500 max-w-xs leading-relaxed">
+            Garanta sua participação neste momento único.
+          </p>
+        </div>
+
+        {/* Card de data e local */}
+        <div className="bg-white rounded-2xl shadow-sm p-5 flex flex-col gap-5">
+          <div className="flex items-center gap-4">
+            <div className="w-11 h-11 rounded-full bg-[#1B2B5E] flex items-center justify-center shrink-0">
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
               </svg>
-              <div>
-                <p className="text-sm font-semibold text-gray-800 capitalize">{formatDate(startDate)}</p>
-                <p className="text-sm text-gray-500">
-                  {formatTime(startDate)}{endDate && ` até ${formatTime(endDate)}`}
-                </p>
-              </div>
             </div>
+            <div>
+              <p className="font-bold text-[#1B2B5E] capitalize">{formatDate(startDate)}</p>
+              <p className="text-sm text-gray-400">
+                {formatTime(startDate)}{endDate && ` até ${formatTime(endDate)}`}
+              </p>
+            </div>
+          </div>
 
-            {event.location && (
-              <div className="flex items-start gap-3">
-                <svg className="w-5 h-5 text-teal-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          {event.location && (
+            <div className="flex items-center gap-4">
+              <div className="w-11 h-11 rounded-full bg-[#1B2B5E] flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                     d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
                   />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                <p className="text-sm text-gray-800">{event.location}</p>
               </div>
-            )}
-          </div>
-
-          {/* About */}
-          {event.about && (
-            <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
-              <h2 className="text-base font-semibold text-gray-800 mb-3">Sobre o evento</h2>
-              <p className="text-sm text-gray-600 whitespace-pre-line">{event.about}</p>
-            </div>
-          )}
-
-          {/* Payment selector (mobile) */}
-          {hasPaymentMethods && (
-            <div className="md:hidden">
-              <PaymentMethodSelector
-                methods={event.paymentMethods}
-                selectedId={selectedMethodId}
-                onSelect={setSelectedMethodId}
-                onRegister={handleRegister}
-              />
+              <p className="font-bold text-[#1B2B5E]">{event.location}</p>
             </div>
           )}
         </div>
 
-        {/* Right — registration card (desktop) */}
-        <div className="hidden md:flex flex-col gap-4">
-          <div className="sticky top-6">
-            {hasPaymentMethods ? (
-              <PaymentMethodSelector
-                methods={event.paymentMethods}
-                selectedId={selectedMethodId}
-                onSelect={setSelectedMethodId}
-                onRegister={handleRegister}
-              />
-            ) : (
-              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5 text-center">
-                <p className="text-sm text-gray-400">Inscrições em breve</p>
-              </div>
-            )}
+        {/* Card de valor + botão */}
+        {hasPaymentMethods ? (
+          <PaymentMethodSelector
+            methods={event.paymentMethods}
+            selectedId={selectedMethodId}
+            onSelect={setSelectedMethodId}
+            onRegister={handleRegister}
+          />
+        ) : (
+          <div className="bg-white rounded-2xl shadow-sm p-5 text-center">
+            <p className="text-sm text-gray-400">Inscrições em breve</p>
           </div>
-        </div>
+        )}
+
+        {/* Rodapé com informações extras */}
+        {event.about && (
+          <div className="flex items-start gap-3 pt-4 border-t border-[#C9A84C]/30">
+            <span className="text-[#C9A84C] text-lg leading-tight mt-0.5">✝</span>
+            <p className="text-xs text-gray-500 leading-relaxed">{event.about}</p>
+          </div>
+        )}
+
       </div>
     </div>
   )
@@ -203,21 +202,14 @@ function PaymentMethodSelector({ methods, selectedId, onSelect, onRegister }: Pa
   const amount = selectedMethod ? Number(selectedMethod.value) : null
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5 flex flex-col gap-4">
-      {/* Preço em destaque */}
-      {amount !== null && (
-        <div>
-          <p className="text-xs text-gray-400 uppercase tracking-wide">Valor</p>
-          <p className="text-2xl font-bold text-gray-800">
-            {amount === 0 ? 'Gratuito' : `R$ ${amount.toFixed(2).replace('.', ',')}`}
-          </p>
-        </div>
-      )}
+    <div className="bg-white rounded-2xl shadow-sm p-5 flex flex-col gap-5">
 
-      {/* Seletor só aparece quando tem mais de uma opção */}
+      {/* Seletor de método (somente quando há mais de um) */}
       {!single && (
         <div className="flex flex-col gap-2">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Forma de pagamento</p>
+          <p className="text-xs font-bold text-[#C9A84C] uppercase tracking-widest">
+            Forma de pagamento
+          </p>
           {methods.map(method => {
             const selected = method.id === selectedId
             const value = Number(method.value)
@@ -227,17 +219,17 @@ function PaymentMethodSelector({ methods, selectedId, onSelect, onRegister }: Pa
                 type="button"
                 onClick={() => onSelect(method.id)}
                 className={[
-                  'w-full text-left rounded-lg border px-4 py-3 transition-all text-sm',
+                  'w-full text-left rounded-xl border px-4 py-3 transition-all text-sm',
                   selected
-                    ? 'border-teal-500 bg-teal-50 ring-2 ring-teal-400'
-                    : 'border-gray-200 hover:border-teal-400 hover:bg-teal-50 cursor-pointer',
+                    ? 'border-[#1B2B5E] bg-[#1B2B5E]/5 ring-2 ring-[#1B2B5E]'
+                    : 'border-gray-200 hover:border-[#1B2B5E]/40 cursor-pointer',
                 ].join(' ')}
               >
                 <div className="flex items-center justify-between">
-                  <span className={`font-semibold ${selected ? 'text-teal-700' : 'text-gray-800'}`}>
+                  <span className={`font-semibold ${selected ? 'text-[#1B2B5E]' : 'text-gray-800'}`}>
                     {TYPE_LABELS[method.type] ?? method.type}
                   </span>
-                  <span className={`font-bold ${selected ? 'text-teal-600' : 'text-gray-700'}`}>
+                  <span className={`font-bold ${selected ? 'text-[#1B2B5E]' : 'text-gray-700'}`}>
                     {value === 0 ? 'Grátis' : `R$ ${value.toFixed(2).replace('.', ',')}`}
                   </span>
                 </div>
@@ -247,20 +239,33 @@ function PaymentMethodSelector({ methods, selectedId, onSelect, onRegister }: Pa
         </div>
       )}
 
-      {/* Quando é única, mostra o tipo selecionado */}
-      {single && (
-        <p className="text-sm text-gray-500">
-          Pagamento via <span className="font-semibold text-gray-700">{TYPE_LABELS[methods[0].type] ?? methods[0].type}</span>
-        </p>
+      {/* Preço em destaque */}
+      {amount !== null && (
+        <div>
+          <p className="text-xs font-bold text-[#C9A84C] uppercase tracking-widest">Valor</p>
+          <p className="text-3xl font-bold text-[#1B2B5E] mt-1">
+            {amount === 0 ? 'Gratuito' : `R$ ${amount.toFixed(2).replace('.', ',')}`}
+          </p>
+          {selectedMethod && (
+            <p className="text-sm text-gray-500 mt-1">
+              Pagamento via{' '}
+              <span className="font-bold text-gray-700">
+                {TYPE_LABELS[selectedMethod.type] ?? selectedMethod.type}
+              </span>
+            </p>
+          )}
+        </div>
       )}
 
+      {/* Botão CTA */}
       <button
         onClick={onRegister}
         disabled={!selectedId}
-        className="w-full bg-teal-500 hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-full text-sm transition-colors"
+        className="w-full bg-[#1B2B5E] hover:bg-[#152348] disabled:opacity-50 disabled:cursor-not-allowed text-[#F2EDE4] font-bold py-4 rounded-full text-sm tracking-widest uppercase transition-colors flex items-center justify-center gap-2"
       >
-        INSCREVA-SE JÁ!
+        Inscreva-se já! <span>→</span>
       </button>
+
     </div>
   )
 }
