@@ -1,1 +1,0 @@
-ALTER TABLE "Registration" ALTER COLUMN "ticketId" DROP NOT NULL;
