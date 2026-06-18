@@ -15,13 +15,18 @@ async function bootstrap() {
 
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 
+  const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://event-register-ashen.vercel.app',
+    'http://187.77.226.111',
+    ...(process.env.FRONTEND_URL
+      ? process.env.FRONTEND_URL.split(',').map((u) => u.trim())
+      : []),
+  ];
+
   app.enableCors({
-    origin: [
-      'http://localhost:5173',
-      'http://localhost:3000',
-      'https://event-register-ashen.vercel.app',
-      ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
-    ],
+    origin: allowedOrigins,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
   });
