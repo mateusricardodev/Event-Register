@@ -94,7 +94,7 @@ export function EventPublic() {
           <img
             src={`${API_BASE_URL}${event.bannerUrl}`}
             alt={event.title}
-            className="absolute inset-0 w-full h-full object-cover object-center"
+            className="w-full h-[300px] md:h-[450px] object-cover object-center rounded-lg"
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
