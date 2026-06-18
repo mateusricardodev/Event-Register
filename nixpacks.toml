@@ -1,0 +1,14 @@
+[phases.setup]
+nixPkgs = ["nodejs_20"]
+
+[phases.install]
+cmds = ["cd backend && npm ci"]
+
+[phases.build]
+cmds = [
+  "cd backend && npx prisma generate",
+  "cd backend && npm run build"
+]
+
+[start]
+cmd = "cd backend && npx prisma migrate deploy && node dist/main.js"
