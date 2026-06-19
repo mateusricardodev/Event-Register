@@ -34,7 +34,7 @@ export function EditRegistration() {
   useEffect(() => {
     if (!eventId || !regId) return
     api.get(`/events/${eventId}/registrations`).then(({ data }) => {
-      const reg: Registration = data.find((r: Registration) => r.id === regId)
+      const reg: Registration = data.data.find((r: Registration) => r.id === regId)
       if (reg) {
         setForm({
           name: reg.user.name,
