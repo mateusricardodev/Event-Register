@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, IsObject } from 'class-validator';
 
 export class UpdateRegistrationDto {
   @IsString()
@@ -24,4 +24,8 @@ export class UpdateRegistrationDto {
   @IsString()
   @IsOptional()
   paymentCategory?: string;
+
+  @IsObject()
+  @IsOptional()
+  extraFields?: Record<string, string>;
 }

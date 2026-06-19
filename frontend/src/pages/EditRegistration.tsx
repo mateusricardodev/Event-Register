@@ -10,9 +10,37 @@ interface Registration {
   cpf: string | null
   phone: string | null
   birthDate: string | null
+  extraFields: string | null
   user: { id: string; name: string; email: string }
   ticket: { id: string; name: string; price: string } | null
 }
+
+const FIELD_LABELS: Record<string, string> = {
+  'CEP':                     'CEP',
+  'Cidade':                  'Cidade',
+  'Endereço: bairro':        'Bairro',
+  'Endereço: complemento':   'Complemento',
+  'Endereço: logradouro':    'Logradouro',
+  'Endereço: número':        'Número',
+  'Estado':                  'Estado',
+  'Estado Civil':            'Estado civil',
+  'Sexo':                    'Sexo',
+  'País':                    'País',
+  'Nome do Responsável':     'Nome do responsável',
+  'Telefone do Responsável': 'Telefone do responsável',
+}
+
+// Campos que já aparecem nos blocos base ou não são armazenados
+const BASE_ONLY = new Set([
+  'Celular',
+  'Data de Nascimento',
+  'Autorização de Responsável',
+  'Telefone Fixo',
+  'Usa Medicamento',
+])
+
+const inputClass =
+  'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400'
 
 export function EditRegistration() {
   const { id: eventId, regId } = useParams<{ id: string; regId: string }>()
@@ -31,25 +59,60 @@ export function EditRegistration() {
     birthDate: '',
   })
 
+  const [formFieldKeys, setFormFieldKeys] = useState<string[]>([])
+  const [extraMap, setExtraMap] = useState<Record<string, string>>({})
+  const [usaMedicamento, setUsaMedicamento] = useState<'sim' | 'nao' | ''>('')
+  const [qualMedicamento, setQualMedicamento] = useState('')
+
   useEffect(() => {
     if (!eventId || !regId) return
-    api.get(`/events/${eventId}/registrations`).then(({ data }) => {
-      const reg: Registration = data.data.find((r: Registration) => r.id === regId)
-      if (reg) {
-        setForm({
-          name: reg.user.name,
-          email: reg.user.email,
-          cpf: reg.cpf
-            ? reg.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
-            : '',
-          phone: reg.phone
-            ? reg.phone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')
-            : '',
-          birthDate: reg.birthDate ? reg.birthDate.split('T')[0] : '',
-        })
-      }
-      setLoading(false)
-    })
+    Promise.all([
+      api.get(`/events/${eventId}`),
+      api.get(`/events/${eventId}/registrations`),
+    ])
+      .then(([evtRes, regRes]) => {
+        const eventData = evtRes.data
+        const reg: Registration = regRes.data.data.find(
+          (r: Registration) => r.id === regId,
+        )
+
+        if (eventData.formFields) {
+          try {
+            setFormFieldKeys(JSON.parse(eventData.formFields) as string[])
+          } catch {}
+        }
+
+        if (reg) {
+          setForm({
+            name: reg.user.name,
+            email: reg.user.email,
+            cpf: reg.cpf
+              ? reg.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+              : '',
+            phone: reg.phone
+              ? reg.phone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')
+              : '',
+            birthDate: reg.birthDate ? reg.birthDate.split('T')[0] : '',
+          })
+
+          if (reg.extraFields) {
+            try {
+              const parsed = JSON.parse(reg.extraFields) as Record<string, string>
+              const {
+                'Usa Medicamento': usaMed,
+                'Qual Medicamento': qualMed,
+                ...rest
+              } = parsed
+              setExtraMap(rest)
+              if (usaMed) setUsaMedicamento(usaMed as 'sim' | 'nao')
+              if (qualMed) setQualMedicamento(qualMed)
+            } catch {}
+          }
+        }
+
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
   }, [eventId, regId])
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -79,11 +142,25 @@ export function EditRegistration() {
     setSaving(true)
 
     try {
+      const updatedExtra: Record<string, string> = { ...extraMap }
+
+      if (formFieldKeys.includes('Usa Medicamento')) {
+        if (usaMedicamento) {
+          updatedExtra['Usa Medicamento'] = usaMedicamento
+          if (usaMedicamento === 'sim' && qualMedicamento.trim()) {
+            updatedExtra['Qual Medicamento'] = qualMedicamento.trim()
+          } else {
+            delete updatedExtra['Qual Medicamento']
+          }
+        }
+      }
+
       await api.put(`/registrations/${regId}`, {
         name: form.name,
         cpf: form.cpf.replace(/\D/g, ''),
         phone: form.phone.replace(/\D/g, '') || undefined,
         birthDate: form.birthDate || undefined,
+        ...(Object.keys(updatedExtra).length > 0 && { extraFields: updatedExtra }),
       })
 
       setSuccess(true)
@@ -94,6 +171,18 @@ export function EditRegistration() {
       setSaving(false)
     }
   }
+
+  // Campos extras do formulário (excluindo os base e Usa Medicamento que tem render próprio)
+  const extraFormKeys = formFieldKeys.filter((k) => !BASE_ONLY.has(k))
+
+  // Campos legados que estão em extraFields mas não estão em formFields (ex: inscrição antiga)
+  const legacyKeys = Object.keys(extraMap).filter(
+    (k) => !formFieldKeys.includes(k) && k !== 'Qual Medicamento',
+  )
+
+  const allExtraKeys = [...new Set([...extraFormKeys, ...legacyKeys])]
+  const showUsaMedicamento = formFieldKeys.includes('Usa Medicamento')
+  const hasExtraSection = allExtraKeys.length > 0 || showUsaMedicamento
 
   if (success) {
     return (
@@ -159,7 +248,7 @@ export function EditRegistration() {
                   value={form.name}
                   onChange={handleChange}
                   required
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+                  className={inputClass}
                 />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -176,7 +265,7 @@ export function EditRegistration() {
                     }
                     required
                     placeholder="000.000.000-00"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+                    className={inputClass}
                   />
                 </div>
                 <div>
@@ -210,7 +299,7 @@ export function EditRegistration() {
                     setForm((f) => ({ ...f, phone: formatPhone(e.target.value) }))
                   }
                   placeholder="(00) 00000-0000"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+                  className={inputClass}
                 />
               </div>
               <div>
@@ -222,11 +311,77 @@ export function EditRegistration() {
                   name="birthDate"
                   value={form.birthDate}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+                  className={inputClass}
                 />
               </div>
             </div>
           </div>
+
+          {/* Campos do formulário (extras) */}
+          {hasExtraSection && (
+            <div className="px-6 py-5">
+              <h2 className="font-bold text-gray-800 mb-4">Campos do formulário</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {allExtraKeys.map((key) => (
+                  <div key={key}>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">
+                      {FIELD_LABELS[key] ?? key}
+                    </label>
+                    <input
+                      type="text"
+                      value={extraMap[key] ?? ''}
+                      onChange={(e) =>
+                        setExtraMap((m) => ({ ...m, [key]: e.target.value }))
+                      }
+                      className={inputClass}
+                    />
+                  </div>
+                ))}
+
+                {showUsaMedicamento && (
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium text-gray-600 mb-2">
+                      Faz uso de medicamento?
+                    </label>
+                    <div className="flex gap-3">
+                      {(['sim', 'nao'] as const).map((opcao) => (
+                        <button
+                          key={opcao}
+                          type="button"
+                          onClick={() => {
+                            setUsaMedicamento(opcao)
+                            if (opcao === 'nao') setQualMedicamento('')
+                          }}
+                          className={[
+                            'px-6 py-2 rounded-full text-sm font-semibold border transition-all',
+                            usaMedicamento === opcao
+                              ? 'bg-violet-600 text-white border-violet-600'
+                              : 'bg-white text-gray-600 border-gray-300 hover:border-violet-400',
+                          ].join(' ')}
+                        >
+                          {opcao === 'sim' ? 'Sim' : 'Não'}
+                        </button>
+                      ))}
+                    </div>
+                    {usaMedicamento === 'sim' && (
+                      <div className="mt-3">
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Qual medicamento?
+                        </label>
+                        <input
+                          type="text"
+                          value={qualMedicamento}
+                          onChange={(e) => setQualMedicamento(e.target.value)}
+                          placeholder="Ex: Ritalina 10mg"
+                          className={inputClass}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Erro e botão */}
           <div className="px-6 py-5 flex items-center justify-between gap-4">

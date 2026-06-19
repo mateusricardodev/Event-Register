@@ -172,6 +172,9 @@ export class RegistrationsService {
           birthDate: dto.birthDate ? new Date(dto.birthDate) : null,
         }),
         ...(dto.ticketId && { ticketId: dto.ticketId }),
+        ...(dto.extraFields !== undefined && {
+          extraFields: JSON.stringify(dto.extraFields),
+        }),
       },
       include: {
         user: { select: { id: true, name: true, email: true } },
