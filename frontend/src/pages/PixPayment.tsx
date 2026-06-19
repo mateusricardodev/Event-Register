@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import QRCode from 'qrcode'
 import api, { API_BASE_URL } from '../api/axios'
 
 /**
@@ -13,6 +14,7 @@ import api, { API_BASE_URL } from '../api/axios'
 
 interface PixState {
   registrationId: string
+  code?: string | null
   providerPaymentId?: string
   qrCodeBase64?: string | null
   qrCodeCopiaECola?: string | null
@@ -44,6 +46,14 @@ export function PixPayment() {
 
   const [stage, setStage] = useState<Stage>(state?.free ? 'confirmed' : 'pending')
   const [copied, setCopied] = useState(false)
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!state?.code) return
+    QRCode.toDataURL(state.code, { width: 256, margin: 2, color: { dark: '#1B2B5E', light: '#F2EDE4' } })
+      .then(setQrDataUrl)
+      .catch(() => undefined)
+  }, [state?.code])
   const [secondsLeft, setSecondsLeft] = useState<number>(() => {
     if (!state?.expiresAt) return 900
     const diff = Math.floor((new Date(state.expiresAt).getTime() - Date.now()) / 1000)
@@ -150,10 +160,20 @@ export function PixPayment() {
             </p>
           )}
 
-          <div className="bg-gray-100 rounded-lg px-4 py-2 mb-6">
-            <p className="font-cinzel text-xs text-[#C9A84C] uppercase tracking-widest mb-1">Número da inscrição</p>
-            <p className="font-mono text-sm text-gray-700 break-all">{state.registrationId}</p>
-          </div>
+          {state.code && (
+            <div className="bg-[#F2EDE4] border border-[#1B2B5E]/10 rounded-xl p-4 mb-6 flex flex-col items-center gap-3">
+              <p className="font-cinzel text-xs text-[#C9A84C] uppercase tracking-widest">Código de credenciamento</p>
+              {qrDataUrl ? (
+                <img src={qrDataUrl} alt="QR Code da inscrição" className="w-44 h-44 rounded-lg" />
+              ) : (
+                <div className="w-44 h-44 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <Spinner className="w-6 h-6 text-[#1B2B5E]" />
+                </div>
+              )}
+              <p className="font-mono text-lg font-bold text-[#1B2B5E] tracking-widest">{state.code}</p>
+              <p className="font-inter text-xs text-gray-400 text-center">Apresente este QR code no credenciamento do evento</p>
+            </div>
+          )}
 
           <button
             onClick={() => navigate(`/evento/${slug}`)}

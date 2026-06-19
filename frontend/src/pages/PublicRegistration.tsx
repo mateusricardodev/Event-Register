@@ -189,6 +189,7 @@ export function PublicRegistration() {
         navigate(`/evento/${slug}/pagamento-pix`, {
           state: {
             registrationId: data.registrationId,
+            code: data.code,
             amount: 0,
             eventTitle: event?.title,
             email: form.email,
@@ -201,6 +202,7 @@ export function PublicRegistration() {
       navigate(`/evento/${slug}/pagamento-pix`, {
         state: {
           registrationId: data.registrationId,
+          code: data.code,
           providerPaymentId: data.providerPaymentId,
           qrCodeBase64: data.qrCodeBase64,
           qrCodeCopiaECola: data.qrCodeCopiaECola,

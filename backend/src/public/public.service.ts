@@ -134,6 +134,7 @@ export class PublicService {
       if (existing?.payment) {
         return {
           registrationId: existing.id,
+          code: existing.code,
           paymentId: existing.payment.id,
           providerPaymentId: existing.payment.providerPaymentId,
           qrCodeBase64: existing.payment.qrCodeBase64,
@@ -199,6 +200,7 @@ export class PublicService {
 
       return {
         registrationId: registration.id,
+        code: registration.code,
         amount: 0,
         status: 'confirmed' as const,
       };
@@ -213,6 +215,7 @@ export class PublicService {
 
     return {
       registrationId: registration.id,
+      code: registration.code,
       ...pix,
       status: 'pending' as const,
     };
