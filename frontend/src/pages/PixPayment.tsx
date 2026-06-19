@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import QRCode from 'qrcode'
 import html2canvas from 'html2canvas'
+import jsPDF from 'jspdf'
 import api, { API_BASE_URL } from '../api/axios'
 
 /**
@@ -124,13 +125,13 @@ export function PixPayment() {
         useCORS: true,
         logging: false,
       })
-      const dataUrl = canvas.toDataURL('image/png')
-      const link = document.createElement('a')
-      link.download = `ingresso-${state?.code ?? state?.registrationId}.png`
-      link.href = dataUrl
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+      const imgData = canvas.toDataURL('image/png')
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: 'a4' })
+      const pageW = pdf.internal.pageSize.getWidth()
+      const imgW = pageW - 40
+      const imgH = (canvas.height * imgW) / canvas.width
+      pdf.addImage(imgData, 'PNG', 20, 20, imgW, imgH)
+      pdf.save(`ingresso-${state?.code ?? state?.registrationId}.pdf`)
     } catch (err) {
       console.error('Erro ao gerar ingresso:', err)
     } finally {
