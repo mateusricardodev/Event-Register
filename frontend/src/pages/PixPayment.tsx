@@ -122,11 +122,17 @@ export function PixPayment() {
         backgroundColor: '#ffffff',
         scale: 2,
         useCORS: true,
+        logging: false,
       })
+      const dataUrl = canvas.toDataURL('image/png')
       const link = document.createElement('a')
       link.download = `ingresso-${state?.code ?? state?.registrationId}.png`
-      link.href = canvas.toDataURL('image/png')
+      link.href = dataUrl
+      document.body.appendChild(link)
       link.click()
+      document.body.removeChild(link)
+    } catch (err) {
+      console.error('Erro ao gerar ingresso:', err)
     } finally {
       setDownloading(false)
     }
