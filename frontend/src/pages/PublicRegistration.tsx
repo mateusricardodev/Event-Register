@@ -190,6 +190,8 @@ export function PublicRegistration() {
           state: {
             registrationId: data.registrationId,
             code: data.code,
+            participantName: form.fullName,
+            participantCpf: form.cpf,
             amount: 0,
             eventTitle: event?.title,
             email: form.email,
@@ -203,6 +205,8 @@ export function PublicRegistration() {
         state: {
           registrationId: data.registrationId,
           code: data.code,
+          participantName: form.fullName,
+          participantCpf: form.cpf,
           providerPaymentId: data.providerPaymentId,
           qrCodeBase64: data.qrCodeBase64,
           qrCodeCopiaECola: data.qrCodeCopiaECola,

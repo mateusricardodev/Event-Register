@@ -16,6 +16,8 @@ import api, { API_BASE_URL } from '../api/axios'
 interface PixState {
   registrationId: string
   code?: string | null
+  participantName?: string
+  participantCpf?: string
   providerPaymentId?: string
   qrCodeBase64?: string | null
   qrCodeCopiaECola?: string | null
@@ -134,11 +136,11 @@ export function PixPayment() {
       pdf.setFillColor(27, 43, 94)
       pdf.rect(0, 0, W, 48, 'F')
 
-      // label "INGRESSO" dourado
+      // label "INGRESSO" dourado — sem charSpace para centralizar corretamente
       pdf.setTextColor(201, 168, 76)
       pdf.setFontSize(9)
       pdf.setFont('helvetica', 'bold')
-      pdf.text('INGRESSO', W / 2, 17, { align: 'center', charSpace: 4 })
+      pdf.text('I N G R E S S O', W / 2, 17, { align: 'center' })
 
       // nome do evento
       pdf.setTextColor(255, 255, 255)
@@ -164,12 +166,12 @@ export function PixPayment() {
       pdf.setTextColor(201, 168, 76)
       pdf.setFontSize(7)
       pdf.setFont('helvetica', 'bold')
-      pdf.text('CÓDIGO DE CREDENCIAMENTO', W / 2, cY + 90, { align: 'center', charSpace: 1 })
+      pdf.text('CÓDIGO DE CREDENCIAMENTO', W / 2, cY + 90, { align: 'center' })
 
       // código em destaque
       pdf.setTextColor(27, 43, 94)
       pdf.setFontSize(20)
-      pdf.text(state?.code ?? '-', W / 2, cY + 104, { align: 'center', charSpace: 5 })
+      pdf.text(state?.code ?? '-', W / 2, cY + 104, { align: 'center' })
 
       // linha divisória
       pdf.setDrawColor(230, 230, 230)
@@ -191,9 +193,11 @@ export function PixPayment() {
         dy += 14
       }
 
-      if (state?.eventTitle) addRow('Evento', state.eventTitle)
-      if (state?.email)      addRow('E-mail', state.email)
-      if (amount > 0)        addRow('Valor pago', `R$ ${Number(amount).toFixed(2).replace('.', ',')}`)
+      if (state?.participantName) addRow('Participante', state.participantName)
+      if (state?.participantCpf)  addRow('Documento', state.participantCpf)
+      if (state?.eventTitle)      addRow('Evento', state.eventTitle)
+      if (state?.email)           addRow('E-mail', state.email)
+      if (amount > 0)             addRow('Valor pago', `R$ ${Number(amount).toFixed(2).replace('.', ',')}`)
 
       // rodapé
       pdf.setFont('helvetica', 'normal')
