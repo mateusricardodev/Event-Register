@@ -89,6 +89,7 @@ export function PublicRegistration() {
   const [paymentMethodId, setPaymentMethodId] = useState(locationState.paymentMethodId ?? '')
   const [usaMedicamento, setUsaMedicamento] = useState<'sim' | 'nao' | ''>('')
   const [qualMedicamento, setQualMedicamento] = useState('')
+  const [cepLoading, setCepLoading] = useState(false)
   const [form, setForm] = useState({
     fullName: '',
     email: '',
@@ -114,6 +115,38 @@ export function PublicRegistration() {
 
   function setExtra(key: string, value: string) {
     setForm(f => ({ ...f, extra: { ...f.extra, [key]: value } }))
+  }
+
+  async function handleCepChange(raw: string) {
+    const formatted = formatCep(raw)
+    setExtra('CEP', formatted)
+    const digits = raw.replace(/\D/g, '')
+    if (digits.length !== 8) return
+    setCepLoading(true)
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`)
+      const data = await res.json()
+      if (data.erro) return
+      const candidates: Record<string, string> = {
+        'Endereço: logradouro': data.logradouro ?? '',
+        'Endereço: bairro':     data.bairro ?? '',
+        'Endereço: complemento': data.complemento ?? '',
+        'Cidade':               data.localidade ?? '',
+        'Estado':               data.uf ?? '',
+        'País':                 'Brasil',
+      }
+      setForm(f => {
+        const extra = { ...f.extra }
+        for (const [key, value] of Object.entries(candidates)) {
+          if (enabled.has(key) && value) extra[key] = value
+        }
+        return { ...f, extra }
+      })
+    } catch {
+      // falha silenciosa — usuário pode preencher manualmente
+    } finally {
+      setCepLoading(false)
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -422,7 +455,29 @@ export function PublicRegistration() {
               <div className="px-6 py-5 flex flex-col gap-4">
                 <p className={sectionLabel}>Endereço</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {ADDRESS_FIELDS.map(renderField)}
+                  {enabled.has('CEP') && (
+                    <div key="CEP">
+                      <label className={labelClass}>CEP</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={form.extra['CEP'] ?? ''}
+                          onChange={e => handleCepChange(e.target.value)}
+                          placeholder="00000-000"
+                          className={inputClass}
+                        />
+                        {cepLoading && (
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                            <svg className="w-4 h-4 animate-spin text-[#1B2B5E]" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 000 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {ADDRESS_FIELDS.filter(f => f !== 'CEP').map(renderField)}
                 </div>
               </div>
             )}
