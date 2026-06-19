@@ -9,6 +9,7 @@ interface PaymentMethod {
   type: string
   value: string
   installments: number
+  description: string | null
   startDate: string | null
   endDate: string | null
 }
@@ -30,6 +31,7 @@ export function EventSetupPayment() {
     type: 'pix',
     value: '',
     installments: '1',
+    description: '',
     startDate: '',
     endDate: '',
   })
@@ -51,11 +53,12 @@ export function EventSetupPayment() {
         type: form.type,
         value: form.value ? Number(form.value) : 0,
         installments: form.type === 'credit_card' ? Number(form.installments) : 1,
+        description: form.description || undefined,
         startDate: form.startDate || undefined,
         endDate: form.endDate || undefined,
       })
       setMethods((m) => [...m, data])
-      setForm({ type: 'pix', value: '', installments: '1', startDate: '', endDate: '' })
+      setForm({ type: 'pix', value: '', installments: '1', description: '', startDate: '', endDate: '' })
     } finally {
       setSaving(false)
     }
@@ -92,6 +95,9 @@ export function EventSetupPayment() {
                         <span className="text-gray-500 text-sm ml-2">{m.installments}x</span>
                       )}
                       <span className="text-gray-500 text-sm ml-2">{TYPE_LABELS[m.type] ?? m.type}</span>
+                      {m.description && (
+                        <p className="text-xs text-gray-500 mt-0.5">{m.description}</p>
+                      )}
                       {m.startDate && m.endDate && (
                         <p className="text-xs text-gray-400 mt-0.5">
                           {new Date(m.startDate).toLocaleDateString('pt-BR')} a{' '}
@@ -160,6 +166,18 @@ export function EventSetupPayment() {
                   />
                 </div>
               </div>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Descrição</label>
+              <input
+                name="description"
+                type="text"
+                value={form.description}
+                onChange={handleChange}
+                placeholder="Ex: R$ 50 na inscrição + R$ 50 no dia do evento"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-6">

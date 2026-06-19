@@ -13,6 +13,10 @@ export class CreatePaymentMethodDto {
   @IsOptional()
   installments?: number;
 
+  @IsString()
+  @IsOptional()
+  description?: string;
+
   @IsDateString()
   @IsOptional()
   startDate?: string;

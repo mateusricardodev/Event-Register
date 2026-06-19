@@ -144,6 +144,7 @@ export class EventsService {
         type: dto.type,
         value: dto.value ?? 0,
         installments: dto.installments ?? 1,
+        description: dto.description ?? null,
         startDate: dto.startDate ? new Date(dto.startDate) : null,
         endDate: dto.endDate ? new Date(dto.endDate) : null,
       },

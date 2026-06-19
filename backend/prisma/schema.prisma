@@ -79,6 +79,7 @@ model EventPaymentMethod {
   type         String
   value        Decimal   @default(0)
   installments Int       @default(1)
+  description  String?
   startDate    DateTime?
   endDate      DateTime?
   createdAt    DateTime  @default(now())
