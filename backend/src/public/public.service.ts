@@ -194,6 +194,7 @@ export class PublicService {
           eventDate: event.date,
           eventLocation: event.location,
           registrationId: registration.id,
+          registrationCode: registration.code,
           amountPaid: 0,
         });
       }

@@ -141,6 +141,7 @@ export class RegistrationsService {
       eventDate: event.date,
       eventLocation: event.location,
       registrationId: registration.id,
+      registrationCode: registration.code,
     });
 
     return registration;
@@ -247,6 +248,7 @@ export class RegistrationsService {
       eventDate: event.date,
       eventLocation: event.location,
       registrationId: registration.id,
+      registrationCode: registration.code,
     });
 
     return registration;

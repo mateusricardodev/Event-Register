@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import nodemailer from 'nodemailer';
+import QRCode from 'qrcode';
 type Transporter = ReturnType<typeof nodemailer.createTransport>;
 
 export interface RegistrationConfirmationData {
@@ -10,6 +11,7 @@ export interface RegistrationConfirmationData {
   eventDate: Date;
   eventLocation?: string | null;
   registrationId: string;
+  registrationCode?: string | null;
   ticketName?: string | null;
   amountPaid?: number | null;
 }
@@ -19,7 +21,6 @@ export class MailService {
   private readonly logger = new Logger(MailService.name);
   private readonly isDev = process.env.NODE_ENV !== 'production';
 
-  // In dev we create the Ethereal transporter lazily (async)
   private transporter: Transporter | null = null;
   private transporterPromise: Promise<Transporter> | null = null;
 
@@ -40,7 +41,6 @@ export class MailService {
   private async getTransporter(): Promise<Transporter> {
     if (this.transporter) return this.transporter;
 
-    // Lazily create Ethereal account once
     if (!this.transporterPromise) {
       this.transporterPromise = nodemailer.createTestAccount().then((account) => {
         this.logger.log(
@@ -74,13 +74,30 @@ export class MailService {
       minute: '2-digit',
     });
 
+    // Gera QR code como buffer PNG para anexar inline
+    let qrBuffer: Buffer | null = null;
+    if (data.registrationCode) {
+      try {
+        qrBuffer = await QRCode.toBuffer(data.registrationCode, {
+          width: 200,
+          margin: 2,
+          color: { dark: '#1B2B5E', light: '#F2EDE4' },
+        });
+      } catch {
+        this.logger.warn('Falha ao gerar QR code para o email — enviando sem QR');
+      }
+    }
+
     try {
       const transport = await this.getTransporter();
       const info = await transport.sendMail({
         from,
         to: data.participantEmail,
         subject: `Inscrição confirmada — ${data.eventTitle}`,
-        html: this.buildEmailHtml({ ...data, formattedDate, formattedTime }),
+        html: this.buildEmailHtml({ ...data, formattedDate, formattedTime, hasQr: !!qrBuffer }),
+        attachments: qrBuffer
+          ? [{ filename: 'qrcode.png', content: qrBuffer, cid: 'qrcode@inscricoes' }]
+          : [],
       });
 
       if (this.isDev) {
@@ -97,8 +114,59 @@ export class MailService {
   }
 
   private buildEmailHtml(
-    data: RegistrationConfirmationData & { formattedDate: string; formattedTime: string },
+    data: RegistrationConfirmationData & {
+      formattedDate: string;
+      formattedTime: string;
+      hasQr: boolean;
+    },
   ): string {
+    const amountRow =
+      data.amountPaid && data.amountPaid > 0
+        ? `<tr>
+            <td style="padding:10px 0;border-bottom:1px solid #e5e0d6;">
+              <table width="100%" cellpadding="0" cellspacing="0"><tr>
+                <td style="color:#8a8070;font-size:13px;">Valor pago</td>
+                <td style="text-align:right;color:#1B2B5E;font-size:15px;font-weight:700;">
+                  R$ ${Number(data.amountPaid).toFixed(2).replace('.', ',')}
+                </td>
+              </tr></table>
+            </td>
+          </tr>`
+        : '';
+
+    const ticketRow = data.ticketName
+      ? `<tr>
+          <td style="padding:10px 0;border-bottom:1px solid #e5e0d6;">
+            <table width="100%" cellpadding="0" cellspacing="0"><tr>
+              <td style="color:#8a8070;font-size:13px;">Ingresso</td>
+              <td style="text-align:right;color:#1f2937;font-size:13px;font-weight:600;">${data.ticketName}</td>
+            </tr></table>
+          </td>
+        </tr>`
+      : '';
+
+    const qrSection = data.hasQr
+      ? `<!-- QR Code -->
+        <table width="100%" cellpadding="0" cellspacing="0"
+               style="background:#F2EDE4;border-radius:12px;margin-bottom:24px;">
+          <tr>
+            <td style="padding:24px;text-align:center;">
+              <p style="margin:0 0 4px 0;color:#C9A84C;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">
+                Código de Credenciamento
+              </p>
+              <img src="cid:qrcode@inscricoes" alt="QR Code" width="140" height="140"
+                   style="display:block;margin:16px auto;border-radius:8px;" />
+              <p style="margin:0;color:#1B2B5E;font-size:20px;font-weight:700;font-family:monospace;letter-spacing:4px;">
+                ${data.registrationCode}
+              </p>
+              <p style="margin:8px 0 0 0;color:#8a8070;font-size:11px;">
+                Apresente este QR code no credenciamento do evento
+              </p>
+            </td>
+          </tr>
+        </table>`
+      : '';
+
     return `
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -107,76 +175,64 @@ export class MailService {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Confirmação de Inscrição</title>
 </head>
-<body style="margin:0;padding:0;background:#f8fafc;font-family:'Segoe UI',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:32px 0;">
+<body style="margin:0;padding:0;background:#F2EDE4;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F2EDE4;padding:32px 0;">
     <tr>
       <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0"
-               style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <table width="580" cellpadding="0" cellspacing="0"
+               style="max-width:580px;width:100%;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 4px 32px rgba(27,43,94,0.12);">
 
           <!-- Header -->
           <tr>
-            <td style="background:linear-gradient(135deg,#7c3aed 0%,#6d28d9 100%);padding:36px 40px;text-align:center;">
-              <p style="margin:0 0 8px 0;color:#ddd6fe;font-size:13px;letter-spacing:2px;text-transform:uppercase;font-weight:600;">
+            <td style="background:#1B2B5E;padding:36px 40px;text-align:center;">
+              <p style="margin:0 0 10px 0;color:#C9A84C;font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:700;">
                 inscrições.app
               </p>
-              <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;line-height:1.3;">
+              <h1 style="margin:0 0 6px 0;color:#ffffff;font-size:26px;font-weight:700;">
                 Inscrição Confirmada!
               </h1>
+              <p style="margin:0;color:#a0b0d0;font-size:14px;">
+                Olá, <strong style="color:#ffffff;">${data.participantName}</strong> — sua vaga está garantida.
+              </p>
             </td>
           </tr>
 
           <!-- Body -->
           <tr>
-            <td style="padding:40px;">
+            <td style="padding:36px 40px;">
 
-              <p style="margin:0 0 24px 0;color:#374151;font-size:16px;line-height:1.6;">
-                Olá, <strong>${data.participantName}</strong>! 👋
-              </p>
-              <p style="margin:0 0 32px 0;color:#6b7280;font-size:15px;line-height:1.6;">
-                Sua inscrição foi recebida e confirmada com sucesso. Guarde este email — ele é o seu comprovante.
-              </p>
+              ${qrSection}
 
-              <!-- Event Card -->
+              <!-- Detalhes do evento -->
               <table width="100%" cellpadding="0" cellspacing="0"
-                     style="background:#f5f3ff;border-radius:12px;border-left:4px solid #7c3aed;overflow:hidden;margin-bottom:32px;">
+                     style="background:#F2EDE4;border-radius:12px;margin-bottom:24px;">
                 <tr>
-                  <td style="padding:24px 28px;">
-                    <p style="margin:0 0 16px 0;color:#5b21b6;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">
+                  <td style="padding:20px 24px;">
+                    <p style="margin:0 0 12px 0;color:#C9A84C;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">
                       Detalhes do Evento
                     </p>
-                    <p style="margin:0 0 8px 0;color:#1f2937;font-size:20px;font-weight:700;">
+                    <p style="margin:0 0 8px 0;color:#1B2B5E;font-size:18px;font-weight:700;">
                       ${data.eventTitle}
                     </p>
-                    <p style="margin:0 0 6px 0;color:#6b7280;font-size:14px;">
+                    <p style="margin:0 0 4px 0;color:#5a6070;font-size:13px;">
                       📅 ${data.formattedDate} às ${data.formattedTime}
                     </p>
-                    ${
-                      data.eventLocation
-                        ? `<p style="margin:0;color:#6b7280;font-size:14px;">📍 ${data.eventLocation}</p>`
-                        : ''
-                    }
+                    ${data.eventLocation
+                      ? `<p style="margin:0;color:#5a6070;font-size:13px;">📍 ${data.eventLocation}</p>`
+                      : ''}
                   </td>
                 </tr>
               </table>
 
-              <!-- Registration ID -->
-              <table width="100%" cellpadding="0" cellspacing="0"
-                     style="background:#f9fafb;border-radius:12px;border:1px solid #e5e7eb;margin-bottom:32px;">
-                <tr>
-                  <td style="padding:20px 28px;text-align:center;">
-                    <p style="margin:0 0 6px 0;color:#9ca3af;font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;">
-                      Número da Inscrição
-                    </p>
-                    <p style="margin:0;color:#1f2937;font-size:15px;font-weight:700;font-family:monospace;letter-spacing:1px;">
-                      ${data.registrationId}
-                    </p>
-                  </td>
-                </tr>
+              <!-- Linha de detalhes -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+                ${ticketRow}
+                ${amountRow}
               </table>
 
-              <p style="margin:0;color:#9ca3af;font-size:13px;line-height:1.6;">
-                Caso precise de ajuda ou queira cancelar sua inscrição, entre em contato com o organizador do evento.
+              <!-- Aviso -->
+              <p style="margin:0;color:#8a8070;font-size:12px;line-height:1.7;text-align:center;">
+                Caso precise de ajuda, entre em contato com o organizador do evento.
               </p>
 
             </td>
@@ -184,10 +240,10 @@ export class MailService {
 
           <!-- Footer -->
           <tr>
-            <td style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:24px 40px;text-align:center;">
-              <p style="margin:0;color:#d1d5db;font-size:12px;">
-                Este email foi enviado automaticamente pela plataforma
-                <strong style="color:#7c3aed;">inscrições.app</strong>.
+            <td style="background:#1B2B5E;padding:20px 40px;text-align:center;">
+              <p style="margin:0;color:#a0b0d0;font-size:11px;">
+                Este e-mail foi enviado automaticamente por
+                <strong style="color:#C9A84C;">inscrições.app</strong>.
               </p>
             </td>
           </tr>
@@ -197,7 +253,6 @@ export class MailService {
     </tr>
   </table>
 </body>
-</html>
-    `.trim();
+</html>`.trim();
   }
 }

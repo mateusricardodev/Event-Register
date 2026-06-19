@@ -115,6 +115,7 @@ export class PaymentsService {
 
       return {
         registrationId: reg.id,
+        registrationCode: reg.code,
         participantName: reg.user.name,
         participantEmail: reg.user.email,
         eventTitle: reg.event.title,
@@ -148,6 +149,7 @@ export class PaymentsService {
       eventDate: emailData.eventDate,
       eventLocation: emailData.eventLocation,
       registrationId: emailData.registrationId,
+      registrationCode: emailData.registrationCode,
       ticketName: emailData.ticketName,
       amountPaid: emailData.amountPaid,
     });
