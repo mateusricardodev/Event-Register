@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import QRCode from 'qrcode'
-import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
 import api, { API_BASE_URL } from '../api/axios'
 
@@ -50,7 +49,6 @@ export function PixPayment() {
   const [copied, setCopied] = useState(false)
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
   const [downloading, setDownloading] = useState(false)
-  const ticketRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!state?.code) return
@@ -116,22 +114,92 @@ export function PixPayment() {
   const ss = String(secondsLeft % 60).padStart(2, '0')
 
   async function handleDownload() {
-    if (!ticketRef.current) return
     setDownloading(true)
     try {
-      const canvas = await html2canvas(ticketRef.current, {
-        backgroundColor: '#ffffff',
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        logging: false,
-      })
-      const imgData = canvas.toDataURL('image/png')
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: 'a4' })
-      const pageW = pdf.internal.pageSize.getWidth()
-      const imgW = pageW - 40
-      const imgH = (canvas.height * imgW) / canvas.width
-      pdf.addImage(imgData, 'PNG', 20, 20, imgW, imgH)
+      // garante QR code disponível
+      let qr = qrDataUrl
+      if (!qr && state?.code) {
+        qr = await QRCode.toDataURL(state.code, { width: 300, margin: 2, color: { dark: '#1B2B5E', light: '#F2EDE4' } })
+      }
+
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+      const W = pdf.internal.pageSize.getWidth()
+      const H = pdf.internal.pageSize.getHeight()
+
+      // fundo creme
+      pdf.setFillColor(242, 237, 228)
+      pdf.rect(0, 0, W, H, 'F')
+
+      // header azul
+      pdf.setFillColor(27, 43, 94)
+      pdf.rect(0, 0, W, 48, 'F')
+
+      // label "INGRESSO" dourado
+      pdf.setTextColor(201, 168, 76)
+      pdf.setFontSize(9)
+      pdf.setFont('helvetica', 'bold')
+      pdf.text('INGRESSO', W / 2, 17, { align: 'center', charSpace: 4 })
+
+      // nome do evento
+      pdf.setTextColor(255, 255, 255)
+      pdf.setFontSize(17)
+      const title = state?.eventTitle ?? 'Evento'
+      const titleLines = pdf.splitTextToSize(title, W - 30) as string[]
+      pdf.text(titleLines, W / 2, 32, { align: 'center' })
+
+      // card branco
+      const cX = 18, cY = 58, cW = W - 36, cH = 190
+      pdf.setFillColor(255, 255, 255)
+      pdf.setDrawColor(220, 220, 220)
+      pdf.setLineWidth(0.3)
+      pdf.roundedRect(cX, cY, cW, cH, 4, 4, 'FD')
+
+      // QR code centrado
+      if (qr) {
+        const qrSize = 68
+        pdf.addImage(qr, 'PNG', (W - qrSize) / 2, cY + 10, qrSize, qrSize)
+      }
+
+      // label "CÓDIGO DE CREDENCIAMENTO"
+      pdf.setTextColor(201, 168, 76)
+      pdf.setFontSize(7)
+      pdf.setFont('helvetica', 'bold')
+      pdf.text('CÓDIGO DE CREDENCIAMENTO', W / 2, cY + 90, { align: 'center', charSpace: 1 })
+
+      // código em destaque
+      pdf.setTextColor(27, 43, 94)
+      pdf.setFontSize(20)
+      pdf.text(state?.code ?? '-', W / 2, cY + 104, { align: 'center', charSpace: 5 })
+
+      // linha divisória
+      pdf.setDrawColor(230, 230, 230)
+      pdf.line(cX + 10, cY + 114, cX + cW - 10, cY + 114)
+
+      // detalhes
+      let dy = cY + 128
+      const labelColor: [number, number, number] = [130, 130, 130]
+      const valueColor: [number, number, number] = [30, 30, 30]
+
+      const addRow = (label: string, value: string) => {
+        pdf.setFont('helvetica', 'normal')
+        pdf.setFontSize(8.5)
+        pdf.setTextColor(...labelColor)
+        pdf.text(label, cX + 10, dy)
+        pdf.setFont('helvetica', 'bold')
+        pdf.setTextColor(...valueColor)
+        pdf.text(value, cX + cW - 10, dy, { align: 'right' })
+        dy += 14
+      }
+
+      if (state?.eventTitle) addRow('Evento', state.eventTitle)
+      if (state?.email)      addRow('E-mail', state.email)
+      if (amount > 0)        addRow('Valor pago', `R$ ${Number(amount).toFixed(2).replace('.', ',')}`)
+
+      // rodapé
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7.5)
+      pdf.setTextColor(150, 150, 150)
+      pdf.text('Apresente este documento no credenciamento do evento.', W / 2, H - 12, { align: 'center' })
 
       const blob = pdf.output('blob')
       const url = URL.createObjectURL(blob)
@@ -165,7 +233,7 @@ export function PixPayment() {
   if (stage === 'confirmed') {
     return (
       <div className="min-h-screen bg-[#F2EDE4] flex items-center justify-center px-4 py-12">
-        <div ref={ticketRef} className="bg-white border border-gray-200 rounded-2xl shadow-sm p-8 text-center max-w-md w-full">
+        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-8 text-center max-w-md w-full">
           <div className="w-20 h-20 bg-[#1B2B5E]/10 rounded-full flex items-center justify-center mx-auto mb-5">
             <svg className="w-10 h-10 text-[#1B2B5E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
