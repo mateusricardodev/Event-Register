@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import QRCode from 'qrcode'
+import html2canvas from 'html2canvas'
 import api, { API_BASE_URL } from '../api/axios'
 
 /**
@@ -47,6 +48,8 @@ export function PixPayment() {
   const [stage, setStage] = useState<Stage>(state?.free ? 'confirmed' : 'pending')
   const [copied, setCopied] = useState(false)
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
+  const [downloading, setDownloading] = useState(false)
+  const ticketRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!state?.code) return
@@ -111,6 +114,24 @@ export function PixPayment() {
   const mm = String(Math.floor(secondsLeft / 60)).padStart(2, '0')
   const ss = String(secondsLeft % 60).padStart(2, '0')
 
+  async function handleDownload() {
+    if (!ticketRef.current) return
+    setDownloading(true)
+    try {
+      const canvas = await html2canvas(ticketRef.current, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        useCORS: true,
+      })
+      const link = document.createElement('a')
+      link.download = `ingresso-${state?.code ?? state?.registrationId}.png`
+      link.href = canvas.toDataURL('image/png')
+      link.click()
+    } finally {
+      setDownloading(false)
+    }
+  }
+
   async function handleCopy() {
     if (!state?.qrCodeCopiaECola) return
     try {
@@ -126,7 +147,7 @@ export function PixPayment() {
   if (stage === 'confirmed') {
     return (
       <div className="min-h-screen bg-[#F2EDE4] flex items-center justify-center px-4 py-12">
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-8 text-center max-w-md w-full">
+        <div ref={ticketRef} className="bg-white border border-gray-200 rounded-2xl shadow-sm p-8 text-center max-w-md w-full">
           <div className="w-20 h-20 bg-[#1B2B5E]/10 rounded-full flex items-center justify-center mx-auto mb-5">
             <svg className="w-10 h-10 text-[#1B2B5E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
@@ -174,6 +195,23 @@ export function PixPayment() {
               <p className="font-inter text-xs text-gray-400 text-center">Apresente este QR code no credenciamento do evento</p>
             </div>
           )}
+
+          <button
+            onClick={handleDownload}
+            disabled={downloading || !qrDataUrl}
+            className="font-bebas w-full bg-[#C9A84C] hover:bg-[#b8973e] disabled:opacity-60 disabled:cursor-not-allowed text-white py-3 rounded-full text-xl tracking-widest uppercase transition-colors flex items-center justify-center gap-2 mb-3"
+          >
+            {downloading ? (
+              <><Spinner className="w-4 h-4" /> Gerando...</>
+            ) : (
+              <>
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Baixar Ingresso
+              </>
+            )}
+          </button>
 
           <button
             onClick={() => navigate(`/evento/${slug}`)}
