@@ -123,6 +123,7 @@ export function PixPayment() {
         backgroundColor: '#ffffff',
         scale: 2,
         useCORS: true,
+        allowTaint: true,
         logging: false,
       })
       const imgData = canvas.toDataURL('image/png')
@@ -131,9 +132,19 @@ export function PixPayment() {
       const imgW = pageW - 40
       const imgH = (canvas.height * imgW) / canvas.width
       pdf.addImage(imgData, 'PNG', 20, 20, imgW, imgH)
-      pdf.save(`ingresso-${state?.code ?? state?.registrationId}.pdf`)
+
+      const blob = pdf.output('blob')
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `ingresso-${state?.code ?? state?.registrationId}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
     } catch (err) {
       console.error('Erro ao gerar ingresso:', err)
+      alert('Não foi possível gerar o PDF. Tente novamente.')
     } finally {
       setDownloading(false)
     }
@@ -205,7 +216,7 @@ export function PixPayment() {
 
           <button
             onClick={handleDownload}
-            disabled={downloading || !qrDataUrl}
+            disabled={downloading}
             className="font-bebas w-full bg-[#C9A84C] hover:bg-[#b8973e] disabled:opacity-60 disabled:cursor-not-allowed text-white py-3 rounded-full text-xl tracking-widest uppercase transition-colors flex items-center justify-center gap-2 mb-3"
           >
             {downloading ? (
