@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import {
-  Search, Plus, Pencil, ArrowLeft, Calendar, MapPin,
-} from 'lucide-react'
+import { Search, Plus, Pencil, ArrowLeft, Calendar, MapPin, Users, CheckCircle, Clock, XCircle } from 'lucide-react'
 import { DashboardLayout } from '../components/DashboardLayout'
 import { useAuthStore } from '../store/auth.store'
 import api from '../api/axios'
@@ -29,22 +27,14 @@ interface Event {
   _count: { registrations: number }
 }
 
-const STATUS_BADGE: Record<Registration['status'], { label: string; cls: string }> = {
-  confirmed: { label: 'Confirmado', cls: 'bg-green-100 text-green-700' },
-  pending: { label: 'Pendente', cls: 'bg-yellow-100 text-yellow-700' },
-  canceled: { label: 'Cancelado', cls: 'bg-red-100 text-red-700' },
+const STATUS: Record<Registration['status'], { label: string; bg: string; color: string }> = {
+  confirmed: { label: 'Confirmado', bg: '#F0FDF4', color: '#166534' },
+  pending:   { label: 'Pendente',   bg: '#FFFBEB', color: '#92400E' },
+  canceled:  { label: 'Cancelado',  bg: '#FEF2F2', color: '#991B1B' },
 }
 
 function initials(name: string) {
-  return (
-    name
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((w) => w[0])
-      .join('')
-      .toUpperCase() || '?'
-  )
+  return name.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase() || '?'
 }
 
 function brl(v: number) {
@@ -54,22 +44,19 @@ function brl(v: number) {
 export function EventDetail() {
   const { id } = useParams<{ id: string }>()
   const { user } = useAuthStore()
-  const [event, setEvent] = useState<Event | null>(null)
+  const [event, setEvent]             = useState<Event | null>(null)
   const [registrations, setRegistrations] = useState<Registration[]>([])
-  const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState('')
-  const [dateFrom, setDateFrom] = useState('')
-  const [dateTo, setDateTo] = useState('')
+  const [loading, setLoading]         = useState(true)
+  const [search, setSearch]           = useState('')
+  const [dateFrom, setDateFrom]       = useState('')
+  const [dateTo, setDateTo]           = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [cancelConfirm, setCancelConfirm] = useState<string | null>(null)
-  const [canceling, setCanceling] = useState(false)
+  const [canceling, setCanceling]     = useState(false)
 
   useEffect(() => {
     if (!id) return
-    Promise.all([
-      api.get(`/events/${id}`),
-      api.get(`/events/${id}/registrations`),
-    ])
+    Promise.all([api.get(`/events/${id}`), api.get(`/events/${id}/registrations`)])
       .then(([evtRes, regRes]) => {
         setEvent(evtRes.data)
         setRegistrations(regRes.data.data)
@@ -82,9 +69,7 @@ export function EventDetail() {
     setCanceling(true)
     try {
       await api.patch(`/registrations/${regId}/cancel`)
-      setRegistrations((prev) =>
-        prev.map((r) => (r.id === regId ? { ...r, status: 'canceled' } : r)),
-      )
+      setRegistrations((prev) => prev.map((r) => (r.id === regId ? { ...r, status: 'canceled' } : r)))
     } finally {
       setCanceling(false)
       setCancelConfirm(null)
@@ -93,135 +78,169 @@ export function EventDetail() {
 
   const filtered = registrations.filter((r) => {
     const q = search.toLowerCase()
-    const matchSearch =
-      !q ||
-      r.user.name.toLowerCase().includes(q) ||
-      r.user.email.toLowerCase().includes(q) ||
-      r.id.toLowerCase().includes(q) ||
-      (r.cpf ?? '').includes(q)
-
+    const matchSearch = !q || r.user.name.toLowerCase().includes(q) || r.user.email.toLowerCase().includes(q) || r.id.toLowerCase().includes(q) || (r.cpf ?? '').includes(q)
     const created = new Date(r.createdAt)
-    const matchFrom = !dateFrom || created >= new Date(dateFrom)
-    const matchTo = !dateTo || created <= new Date(dateTo + 'T23:59:59')
+    const matchFrom   = !dateFrom || created >= new Date(dateFrom)
+    const matchTo     = !dateTo   || created <= new Date(dateTo + 'T23:59:59')
     const matchStatus = !statusFilter || r.status === statusFilter
-
     return matchSearch && matchFrom && matchTo && matchStatus
   })
 
   const counts = {
     confirmed: registrations.filter((r) => r.status === 'confirmed').length,
-    pending: registrations.filter((r) => r.status === 'pending').length,
-    canceled: registrations.filter((r) => r.status === 'canceled').length,
+    pending:   registrations.filter((r) => r.status === 'pending').length,
+    canceled:  registrations.filter((r) => r.status === 'canceled').length,
   }
 
   const statCards = [
-    { label: 'Confirmados', value: counts.confirmed, color: 'text-green-600' },
-    { label: 'Pendentes', value: counts.pending, color: 'text-yellow-500' },
-    { label: 'Cancelados', value: counts.canceled, color: 'text-red-500' },
+    { label: 'Total',       value: registrations.length, icon: Users,       accent: '#00186D' },
+    { label: 'Confirmados', value: counts.confirmed,     icon: CheckCircle, accent: '#166534' },
+    { label: 'Pendentes',   value: counts.pending,       icon: Clock,       accent: '#92400E' },
+    { label: 'Cancelados',  value: counts.canceled,      icon: XCircle,     accent: '#991B1B' },
   ]
+
+  const inputStyle: React.CSSProperties = {
+    background: '#FFFFFF',
+    border: '1px solid rgba(0,24,109,0.15)',
+    borderRadius: '10px',
+    color: '#0A0A09',
+    fontFamily: 'Inter, sans-serif',
+    fontSize: '0.8125rem',
+    padding: '0.5rem 0.75rem',
+    outline: 'none',
+    width: '100%',
+  }
 
   return (
     <DashboardLayout active="eventos">
-      {/* Header */}
+
+      {/* ── Cabeçalho ── */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
         <div className="min-w-0">
           <Link
             to="/eventos"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-2"
+            className="inline-flex items-center gap-1.5 text-xs font-medium mb-3 transition-colors"
+            style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}
           >
-            <ArrowLeft size={15} />
+            <ArrowLeft size={14} />
             Voltar aos eventos
           </Link>
-          <h1 className="text-2xl font-bold text-gray-800 truncate">
+
+          <h1
+            className="leading-tight truncate"
+            style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.85rem', fontWeight: 600, color: '#00186D' }}
+          >
             {event?.title ?? '...'}
           </h1>
+
           {event && (
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 mt-1">
-              <span className="inline-flex items-center gap-1">
-                <Calendar size={14} />
-                {new Date(event.date).toLocaleDateString('pt-BR', {
-                  day: '2-digit',
-                  month: 'long',
-                  year: 'numeric',
-                })}
+            <div className="flex flex-wrap items-center gap-4 mt-1.5">
+              <span className="inline-flex items-center gap-1.5 text-xs" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
+                <Calendar size={13} style={{ color: '#00186D', opacity: 0.5 }} />
+                {new Date(event.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
               </span>
               {event.location && (
-                <span className="inline-flex items-center gap-1">
-                  <MapPin size={14} />
+                <span className="inline-flex items-center gap-1.5 text-xs" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
+                  <MapPin size={13} style={{ color: '#00186D', opacity: 0.5 }} />
                   {event.location}
                 </span>
               )}
             </div>
           )}
         </div>
+
         {event && user?.id === event.createdBy && (
           <Link
             to={`/events/${id}/edit`}
-            className="shrink-0 inline-flex items-center gap-2 border border-violet-500 text-violet-600 hover:bg-violet-50 font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors"
+            className="shrink-0 inline-flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-xl transition-all"
+            style={{
+              border: '1.5px solid rgba(0,24,109,0.25)',
+              color: '#00186D',
+              fontFamily: 'Inter, sans-serif',
+            }}
           >
-            <Pencil size={16} />
+            <Pencil size={15} />
             Editar evento
           </Link>
         )}
       </div>
 
-      {/* Totalizadores */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      {/* ── Métricas ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {statCards.map((c) => (
           <div
             key={c.label}
-            className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm text-center"
+            className="rounded-2xl p-5"
+            style={{
+              background: '#FFFFFF',
+              border: '1px solid rgba(0,24,109,0.08)',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+            }}
           >
-            <p className={`text-3xl font-bold ${c.color}`}>{c.value}</p>
-            <p className="text-xs text-gray-500 mt-1 uppercase tracking-wide">{c.label}</p>
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center mb-3"
+              style={{ background: `${c.accent}12` }}
+            >
+              <c.icon size={15} style={{ color: c.accent }} />
+            </div>
+            <p className="text-2xl font-bold" style={{ color: '#0A0A09', fontFamily: 'Inter, sans-serif' }}>
+              {c.value}
+            </p>
+            <p className="text-xs mt-0.5" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
+              {c.label}
+            </p>
           </div>
         ))}
       </div>
 
-      {/* Inscrições */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-          <h2 className="font-bold text-gray-800">Inscrições</h2>
+      {/* ── Tabela de inscrições ── */}
+      <div
+        className="rounded-2xl overflow-hidden"
+        style={{
+          background: '#FFFFFF',
+          border: '1px solid rgba(0,24,109,0.08)',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+        }}
+      >
+        {/* Toolbar */}
+        <div
+          className="flex items-center justify-between px-5 py-4"
+          style={{ borderBottom: '1px solid rgba(0,24,109,0.07)' }}
+        >
+          <h2 className="font-semibold text-sm" style={{ color: '#00186D', fontFamily: 'Inter, sans-serif' }}>
+            Inscrições
+          </h2>
           <Link
             to={`/events/${id}/registrations/new`}
-            className="inline-flex items-center gap-2 bg-[#14B8A6] hover:bg-teal-600 text-white text-sm font-bold px-4 py-2 rounded-lg transition-colors"
+            className="inline-flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-xl transition-all"
+            style={{ background: '#00186D', color: '#FFFFFF', fontFamily: 'Inter, sans-serif', boxShadow: '0 2px 8px rgba(0,24,109,0.18)' }}
           >
-            <Plus size={16} />
+            <Plus size={14} />
             Nova inscrição
           </Link>
         </div>
 
         {/* Filtros */}
-        <div className="px-5 py-4 border-b border-gray-100 grid grid-cols-1 sm:grid-cols-4 gap-3">
+        <div
+          className="px-5 py-4 grid grid-cols-1 sm:grid-cols-4 gap-3"
+          style={{ borderBottom: '1px solid rgba(0,24,109,0.07)', background: 'rgba(0,24,109,0.02)' }}
+        >
           <div className="relative sm:col-span-1">
-            <Search
-              size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#6B7280' }} />
             <input
               type="text"
               placeholder="Nome, CPF, e-mail ou código"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+              style={{ ...inputStyle, paddingLeft: '2.25rem' }}
             />
           </div>
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
-          />
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
-          />
+          <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} style={inputStyle} />
+          <input type="date" value={dateTo}   onChange={(e) => setDateTo(e.target.value)}   style={inputStyle} />
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 bg-white"
+            style={{ ...inputStyle, cursor: 'pointer' }}
           >
             <option value="">Todos os status</option>
             <option value="confirmed">Confirmado</option>
@@ -232,82 +251,103 @@ export function EventDetail() {
 
         {/* Cabeçalho das colunas */}
         {!loading && filtered.length > 0 && (
-          <div className="hidden sm:flex items-center gap-4 px-5 py-2.5 bg-gray-50 border-b border-gray-100 text-[11px] font-semibold text-gray-400 uppercase tracking-wide">
-            <span className="w-10 shrink-0" />
-            <span className="flex-1">Participante</span>
-            <span className="hidden lg:block w-32 shrink-0">CPF</span>
-            <span className="hidden md:block w-28 shrink-0">Tipo</span>
-            <span className="w-24 text-center shrink-0">Status</span>
-            <span className="w-24 text-right shrink-0">Valor</span>
-            <span className="w-[120px] shrink-0" />
+          <div
+            className="hidden sm:flex items-center gap-4 px-5 py-2.5"
+            style={{ background: 'rgba(0,24,109,0.02)', borderBottom: '1px solid rgba(0,24,109,0.06)' }}
+          >
+            <span className="w-9 shrink-0" />
+            {[
+              { label: 'Participante', cls: 'flex-1' },
+              { label: 'CPF',         cls: 'hidden lg:block w-32 shrink-0' },
+              { label: 'Tipo',        cls: 'hidden md:block w-28 shrink-0' },
+              { label: 'Status',      cls: 'w-24 text-center shrink-0' },
+              { label: 'Valor',       cls: 'w-24 text-right shrink-0' },
+              { label: '',            cls: 'w-[100px] shrink-0' },
+            ].map((col) => (
+              <span
+                key={col.label}
+                className={`text-[10px] font-semibold uppercase tracking-[0.1em] ${col.cls}`}
+                style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}
+              >
+                {col.label}
+              </span>
+            ))}
           </div>
         )}
 
-        {/* Lista */}
+        {/* Linhas */}
         {loading ? (
-          <p className="text-center text-gray-400 text-sm py-12">Carregando...</p>
+          <p className="text-center py-14 text-sm" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
+            Carregando...
+          </p>
         ) : filtered.length === 0 ? (
-          <p className="text-center text-gray-400 text-sm py-12">
+          <p className="text-center py-14 text-sm" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
             Nenhuma inscrição encontrada.
           </p>
         ) : (
-          <ul className="divide-y divide-gray-100">
+          <ul>
             {filtered.map((reg) => {
-              const badge = STATUS_BADGE[reg.status]
+              const badge = STATUS[reg.status]
               return (
                 <li
                   key={reg.id}
-                  className="flex items-center gap-4 px-5 py-3 hover:bg-gray-50 transition-colors"
+                  className="flex items-center gap-4 px-5 py-3.5 transition-colors"
+                  style={{ borderBottom: '1px solid rgba(0,24,109,0.05)' }}
                 >
-                  <span className="w-10 h-10 rounded-full bg-teal-100 text-teal-700 font-bold text-sm flex items-center justify-center shrink-0">
+                  <span
+                    className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                    style={{ background: 'rgba(0,24,109,0.07)', color: '#00186D', fontFamily: 'Inter, sans-serif' }}
+                  >
                     {initials(reg.user.name)}
                   </span>
 
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-gray-800 text-sm truncate">
+                    <p className="font-semibold text-sm truncate" style={{ color: '#0A0A09', fontFamily: 'Inter, sans-serif' }}>
                       {reg.user.name}
                     </p>
-                    <p className="text-xs text-gray-500 truncate">{reg.user.email}</p>
+                    <p className="text-xs truncate" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
+                      {reg.user.email}
+                    </p>
                   </div>
 
-                  <span className="hidden lg:block text-xs text-gray-400 w-32 shrink-0 truncate">
-                    {reg.cpf
-                      ? reg.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
-                      : '—'}
+                  <span className="hidden lg:block text-xs w-32 shrink-0 truncate" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
+                    {reg.cpf ? reg.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : '—'}
                   </span>
 
-                  <span className="hidden md:block text-sm text-gray-400 w-28 shrink-0 truncate">
+                  <span className="hidden md:block text-xs w-28 shrink-0 truncate" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
                     {reg.ticket?.name ?? '—'}
                   </span>
 
                   <span
-                    className={`text-xs font-semibold px-2 py-1 rounded-full w-24 text-center shrink-0 ${badge.cls}`}
+                    className="text-xs font-semibold px-2.5 py-1 rounded-full w-24 text-center shrink-0"
+                    style={{ background: badge.bg, color: badge.color, fontFamily: 'Inter, sans-serif' }}
                   >
                     {badge.label}
                   </span>
 
-                  <span className="text-gray-600 text-sm w-24 text-right shrink-0">
+                  <span className="text-sm w-24 text-right shrink-0" style={{ color: '#0A0A09', fontFamily: 'Inter, sans-serif' }}>
                     {reg.payment ? brl(Number(reg.payment.amount)) : brl(0)}
                   </span>
 
-                  {/* Ações */}
-                  <div className="flex items-center gap-2 shrink-0 w-[120px] justify-end">
+                  <div className="flex items-center gap-2 shrink-0 w-[100px] justify-end">
                     <Link
                       to={`/events/${id}/registrations/${reg.id}/edit`}
-                      className="p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="p-1.5 rounded-lg transition-all"
+                      style={{ color: '#6B7280' }}
                       title="Editar inscrição"
                     >
-                      <Pencil size={15} />
+                      <Pencil size={14} />
                     </Link>
                     {reg.status !== 'canceled' ? (
                       <button
                         onClick={() => setCancelConfirm(reg.id)}
-                        className="text-xs text-red-500 border border-red-300 px-2.5 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
+                        className="text-xs px-2.5 py-1.5 rounded-lg transition-all"
+                        style={{ border: '1px solid rgba(220,38,38,0.3)', color: '#DC2626', fontFamily: 'Inter, sans-serif' }}
                       >
                         Cancelar
                       </button>
                     ) : (
-                      <span className="w-[68px]" />
+                      <span className="w-[60px]" />
                     )}
                   </div>
                 </li>
@@ -316,31 +356,47 @@ export function EventDetail() {
           </ul>
         )}
 
-        <div className="px-5 py-3 border-t border-gray-100 text-xs text-gray-400">
+        {/* Rodapé da tabela */}
+        <div
+          className="px-5 py-3 text-xs"
+          style={{ borderTop: '1px solid rgba(0,24,109,0.06)', color: '#6B7280', fontFamily: 'Inter, sans-serif' }}
+        >
           {filtered.length} inscrição(ões) exibida(s)
         </div>
       </div>
 
-      {/* Modal de confirmação de cancelamento */}
+      {/* ── Modal de cancelamento ── */}
       {cancelConfirm && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full">
-            <h3 className="font-semibold text-gray-800 mb-2">Cancelar inscrição</h3>
-            <p className="text-sm text-gray-500 mb-6">
-              Tem certeza que deseja cancelar esta inscrição? Esta ação não pode ser
-              desfeita.
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50 px-4"
+          style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(4px)' }}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl p-7"
+            style={{ background: '#FFFFFF', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}
+          >
+            <h3
+              className="font-semibold mb-2"
+              style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.25rem', color: '#00186D' }}
+            >
+              Cancelar inscrição
+            </h3>
+            <p className="text-sm mb-6" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
+              Tem certeza que deseja cancelar esta inscrição? Esta ação não pode ser desfeita.
             </p>
-            <div className="flex gap-3 justify-end">
+            <div className="flex justify-end gap-3">
               <button
                 onClick={() => setCancelConfirm(null)}
-                className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 text-sm rounded-xl"
+                style={{ border: '1px solid rgba(0,24,109,0.15)', color: '#33425C', fontFamily: 'Inter, sans-serif' }}
               >
                 Voltar
               </button>
               <button
                 onClick={() => handleCancel(cancelConfirm)}
                 disabled={canceling}
-                className="px-4 py-2 text-sm text-white bg-red-500 hover:bg-red-600 rounded-full transition-colors disabled:opacity-60"
+                className="px-4 py-2 text-sm font-semibold rounded-xl"
+                style={{ background: '#DC2626', color: '#FFFFFF', fontFamily: 'Inter, sans-serif', opacity: canceling ? 0.7 : 1 }}
               >
                 {canceling ? 'Cancelando...' : 'Confirmar cancelamento'}
               </button>
