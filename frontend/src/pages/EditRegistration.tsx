@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft, CheckCircle } from 'lucide-react'
 import { DashboardLayout } from '../components/DashboardLayout'
+import { WizardCard, WizardField, WizardInput, wizardPrimaryBtn } from '../components/WizardShared'
 import api from '../api/axios'
 
 interface Registration {
@@ -30,7 +31,6 @@ const FIELD_LABELS: Record<string, string> = {
   'Telefone do Responsável': 'Telefone do responsável',
 }
 
-// Campos que já aparecem nos blocos base ou não são armazenados
 const BASE_ONLY = new Set([
   'Celular',
   'Data de Nascimento',
@@ -39,30 +39,22 @@ const BASE_ONLY = new Set([
   'Usa Medicamento',
 ])
 
-const inputClass =
-  'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400'
-
 export function EditRegistration() {
   const { id: eventId, regId } = useParams<{ id: string; regId: string }>()
   const navigate = useNavigate()
 
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [success, setSuccess] = useState(false)
-  const [error, setError] = useState('')
+  const [loading, setLoading]   = useState(true)
+  const [saving, setSaving]     = useState(false)
+  const [success, setSuccess]   = useState(false)
+  const [error, setError]       = useState('')
 
   const [form, setForm] = useState({
-    name: '',
-    email: '',
-    cpf: '',
-    phone: '',
-    birthDate: '',
+    name: '', email: '', cpf: '', phone: '', birthDate: '',
   })
-
-  const [formFieldKeys, setFormFieldKeys] = useState<string[]>([])
-  const [extraMap, setExtraMap] = useState<Record<string, string>>({})
-  const [usaMedicamento, setUsaMedicamento] = useState<'sim' | 'nao' | ''>('')
-  const [qualMedicamento, setQualMedicamento] = useState('')
+  const [formFieldKeys, setFormFieldKeys]       = useState<string[]>([])
+  const [extraMap, setExtraMap]                 = useState<Record<string, string>>({})
+  const [usaMedicamento, setUsaMedicamento]     = useState<'sim' | 'nao' | ''>('')
+  const [qualMedicamento, setQualMedicamento]   = useState('')
 
   useEffect(() => {
     if (!eventId || !regId) return
@@ -72,97 +64,63 @@ export function EditRegistration() {
     ])
       .then(([evtRes, regRes]) => {
         const eventData = evtRes.data
-        const reg: Registration = regRes.data.data.find(
-          (r: Registration) => r.id === regId,
-        )
-
+        const reg: Registration = regRes.data.data.find((r: Registration) => r.id === regId)
         if (eventData.formFields) {
-          try {
-            setFormFieldKeys(JSON.parse(eventData.formFields) as string[])
-          } catch {}
+          try { setFormFieldKeys(JSON.parse(eventData.formFields) as string[]) } catch {}
         }
-
         if (reg) {
           setForm({
-            name: reg.user.name,
-            email: reg.user.email,
-            cpf: reg.cpf
-              ? reg.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
-              : '',
-            phone: reg.phone
-              ? reg.phone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')
-              : '',
+            name:      reg.user.name,
+            email:     reg.user.email,
+            cpf:       reg.cpf  ? reg.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : '',
+            phone:     reg.phone ? reg.phone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3') : '',
             birthDate: reg.birthDate ? reg.birthDate.split('T')[0] : '',
           })
-
           if (reg.extraFields) {
             try {
               const parsed = JSON.parse(reg.extraFields) as Record<string, string>
-              const {
-                'Usa Medicamento': usaMed,
-                'Qual Medicamento': qualMed,
-                ...rest
-              } = parsed
+              const { 'Usa Medicamento': usaMed, 'Qual Medicamento': qualMed, ...rest } = parsed
               setExtraMap(rest)
               if (usaMed) setUsaMedicamento(usaMed as 'sim' | 'nao')
               if (qualMed) setQualMedicamento(qualMed)
             } catch {}
           }
         }
-
         setLoading(false)
       })
       .catch(() => setLoading(false))
   }, [eventId, regId])
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
+  function formatCpf(v: string) {
+    return v.replace(/\D/g,'').slice(0,11)
+      .replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2')
   }
-
-  function formatCpf(value: string) {
-    return value
-      .replace(/\D/g, '')
-      .slice(0, 11)
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
-  }
-
-  function formatPhone(value: string) {
-    return value
-      .replace(/\D/g, '')
-      .slice(0, 11)
-      .replace(/(\d{2})(\d)/, '($1) $2')
-      .replace(/(\d{5})(\d)/, '$1-$2')
+  function formatPhone(v: string) {
+    return v.replace(/\D/g,'').slice(0,11)
+      .replace(/(\d{2})(\d)/,'($1) $2').replace(/(\d{5})(\d)/,'$1-$2')
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
     setSaving(true)
-
     try {
       const updatedExtra: Record<string, string> = { ...extraMap }
-
-      if (formFieldKeys.includes('Usa Medicamento')) {
-        if (usaMedicamento) {
-          updatedExtra['Usa Medicamento'] = usaMedicamento
-          if (usaMedicamento === 'sim' && qualMedicamento.trim()) {
-            updatedExtra['Qual Medicamento'] = qualMedicamento.trim()
-          } else {
-            delete updatedExtra['Qual Medicamento']
-          }
+      if (formFieldKeys.includes('Usa Medicamento') && usaMedicamento) {
+        updatedExtra['Usa Medicamento'] = usaMedicamento
+        if (usaMedicamento === 'sim' && qualMedicamento.trim()) {
+          updatedExtra['Qual Medicamento'] = qualMedicamento.trim()
+        } else {
+          delete updatedExtra['Qual Medicamento']
         }
       }
-
       await api.put(`/registrations/${regId}`, {
-        name: form.name,
-        cpf: form.cpf.replace(/\D/g, ''),
-        phone: form.phone.replace(/\D/g, '') || undefined,
+        name:      form.name,
+        cpf:       form.cpf.replace(/\D/g,''),
+        phone:     form.phone.replace(/\D/g,'') || undefined,
         birthDate: form.birthDate || undefined,
         ...(Object.keys(updatedExtra).length > 0 && { extraFields: updatedExtra }),
       })
-
       setSuccess(true)
       setTimeout(() => navigate(`/events/${eventId}`), 2000)
     } catch (err: any) {
@@ -172,31 +130,27 @@ export function EditRegistration() {
     }
   }
 
-  // Campos extras do formulário (excluindo os base e Usa Medicamento que tem render próprio)
   const extraFormKeys = formFieldKeys.filter((k) => !BASE_ONLY.has(k))
-
-  // Campos legados que estão em extraFields mas não estão em formFields (ex: inscrição antiga)
-  const legacyKeys = Object.keys(extraMap).filter(
-    (k) => !formFieldKeys.includes(k) && k !== 'Qual Medicamento',
-  )
-
-  const allExtraKeys = [...new Set([...extraFormKeys, ...legacyKeys])]
-  const showUsaMedicamento = formFieldKeys.includes('Usa Medicamento')
-  const hasExtraSection = allExtraKeys.length > 0 || showUsaMedicamento
+  const legacyKeys    = Object.keys(extraMap).filter((k) => !formFieldKeys.includes(k) && k !== 'Qual Medicamento')
+  const allExtraKeys  = [...new Set([...extraFormKeys, ...legacyKeys])]
+  const showUsaMed    = formFieldKeys.includes('Usa Medicamento')
 
   if (success) {
     return (
       <DashboardLayout active="eventos">
-        <div className="flex items-center justify-center py-16">
-          <div className="bg-white border border-green-200 rounded-xl shadow-sm p-10 text-center max-w-md w-full">
-            <span className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle size={32} className="text-green-600" />
-            </span>
-            <h2 className="text-xl font-bold text-green-700 mb-2">
-              Inscrição atualizada com sucesso!
+        <div className="flex items-center justify-center py-20">
+          <div className="flex flex-col items-center gap-4 text-center max-w-sm">
+            <div
+              className="w-14 h-14 rounded-full flex items-center justify-center"
+              style={{ background: 'rgba(0,24,109,0.07)' }}
+            >
+              <CheckCircle size={28} style={{ color: '#00186D' }} />
+            </div>
+            <h2 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.5rem', fontWeight: 600, color: '#00186D' }}>
+              Inscrição atualizada!
             </h2>
-            <p className="text-gray-500 text-sm">
-              Redirecionando para a lista de inscrições...
+            <p className="text-sm" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
+              Redirecionando para o evento...
             </p>
           </div>
         </div>
@@ -207,7 +161,7 @@ export function EditRegistration() {
   if (loading) {
     return (
       <DashboardLayout active="eventos">
-        <p className="text-center text-gray-400 py-20 text-sm">Carregando...</p>
+        <p className="text-center py-20 text-sm" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>Carregando...</p>
       </DashboardLayout>
     )
   }
@@ -215,182 +169,135 @@ export function EditRegistration() {
   return (
     <DashboardLayout active="eventos">
       <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <Link
             to={`/events/${eventId}`}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-2"
+            className="inline-flex items-center gap-1.5 text-sm mb-4"
+            style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}
           >
-            <ArrowLeft size={15} />
-            Voltar ao evento
+            <ArrowLeft size={14} /> Voltar ao evento
           </Link>
-          <h1 className="text-2xl font-bold text-gray-800">Editar inscrição</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Atualize os dados deste participante.
+          <p className="text-xs font-semibold uppercase tracking-[0.1em] mb-1" style={{ color: '#D4B16A', fontFamily: 'Cinzel, serif' }}>
+            Inscrições
           </p>
+          <h1 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.75rem', fontWeight: 600, color: '#00186D', lineHeight: 1.2 }}>
+            Editar inscrição
+          </h1>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white rounded-xl border border-gray-200 shadow-sm divide-y divide-gray-100"
-        >
-          {/* Dados básicos */}
-          <div className="px-6 py-5">
-            <h2 className="font-bold text-gray-800 mb-4">Dados básicos do participante</h2>
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
-                  Nome completo *
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={form.name}
-                  onChange={handleChange}
-                  required
-                  className={inputClass}
-                />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">
-                    CPF *
-                  </label>
-                  <input
-                    type="text"
-                    name="cpf"
-                    value={form.cpf}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, cpf: formatCpf(e.target.value) }))
-                    }
-                    required
-                    placeholder="000.000.000-00"
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={form.email}
-                    disabled
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-400 cursor-not-allowed"
-                  />
-                </div>
-              </div>
-            </div>
+        {error && (
+          <div
+            className="mb-4 text-sm rounded-xl px-4 py-3"
+            style={{ background: '#FEF2F2', color: '#991B1B', border: '1px solid #FECACA', fontFamily: 'Inter, sans-serif' }}
+          >
+            {error}
           </div>
+        )}
 
-          {/* Dados complementares */}
-          <div className="px-6 py-5">
-            <h2 className="font-bold text-gray-800 mb-4">Dados complementares</h2>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <WizardCard>
+            <p className="text-xs font-semibold uppercase tracking-[0.1em]" style={{ color: '#D4B16A', fontFamily: 'Cinzel, serif' }}>
+              Dados básicos
+            </p>
+            <WizardField label="Nome completo" required>
+              <WizardInput
+                name="name" value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                required
+              />
+            </WizardField>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
-                  Celular
-                </label>
-                <input
-                  type="text"
-                  name="phone"
-                  value={form.phone}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, phone: formatPhone(e.target.value) }))
-                  }
-                  placeholder="(00) 00000-0000"
-                  className={inputClass}
+              <WizardField label="CPF" required>
+                <WizardInput
+                  value={form.cpf}
+                  onChange={(e) => setForm((f) => ({ ...f, cpf: formatCpf(e.target.value) }))}
+                  placeholder="000.000.000-00" required
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
-                  Data de nascimento
-                </label>
-                <input
-                  type="date"
-                  name="birthDate"
-                  value={form.birthDate}
-                  onChange={handleChange}
-                  className={inputClass}
-                />
-              </div>
+              </WizardField>
+              <WizardField label="E-mail">
+                <WizardInput value={form.email} disabled style={{ cursor: 'not-allowed', opacity: 0.55 }} />
+              </WizardField>
             </div>
-          </div>
+          </WizardCard>
 
-          {/* Campos do formulário (extras) */}
-          {hasExtraSection && (
-            <div className="px-6 py-5">
-              <h2 className="font-bold text-gray-800 mb-4">Campos do formulário</h2>
+          <WizardCard>
+            <p className="text-xs font-semibold uppercase tracking-[0.1em]" style={{ color: '#D4B16A', fontFamily: 'Cinzel, serif' }}>
+              Dados complementares
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <WizardField label="Celular">
+                <WizardInput
+                  value={form.phone}
+                  onChange={(e) => setForm((f) => ({ ...f, phone: formatPhone(e.target.value) }))}
+                  placeholder="(00) 00000-0000"
+                />
+              </WizardField>
+              <WizardField label="Data de nascimento">
+                <WizardInput
+                  type="date" name="birthDate" value={form.birthDate}
+                  onChange={(e) => setForm((f) => ({ ...f, birthDate: e.target.value }))}
+                />
+              </WizardField>
+            </div>
+          </WizardCard>
+
+          {(allExtraKeys.length > 0 || showUsaMed) && (
+            <WizardCard>
+              <p className="text-xs font-semibold uppercase tracking-[0.1em]" style={{ color: '#D4B16A', fontFamily: 'Cinzel, serif' }}>
+                Campos do formulário
+              </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {allExtraKeys.map((key) => (
-                  <div key={key}>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">
-                      {FIELD_LABELS[key] ?? key}
-                    </label>
-                    <input
-                      type="text"
+                  <WizardField key={key} label={FIELD_LABELS[key] ?? key}>
+                    <WizardInput
                       value={extraMap[key] ?? ''}
-                      onChange={(e) =>
-                        setExtraMap((m) => ({ ...m, [key]: e.target.value }))
-                      }
-                      className={inputClass}
+                      onChange={(e) => setExtraMap((m) => ({ ...m, [key]: e.target.value }))}
                     />
-                  </div>
+                  </WizardField>
                 ))}
 
-                {showUsaMedicamento && (
-                  <div className="sm:col-span-2">
-                    <label className="block text-sm font-medium text-gray-600 mb-2">
+                {showUsaMed && (
+                  <div className="sm:col-span-2 flex flex-col gap-2">
+                    <p className="text-sm font-medium" style={{ color: '#33425C', fontFamily: 'Inter, sans-serif' }}>
                       Faz uso de medicamento?
-                    </label>
-                    <div className="flex gap-3">
-                      {(['sim', 'nao'] as const).map((opcao) => (
+                    </p>
+                    <div className="flex gap-2">
+                      {(['sim', 'nao'] as const).map((op) => (
                         <button
-                          key={opcao}
+                          key={op}
                           type="button"
                           onClick={() => {
-                            setUsaMedicamento(opcao)
-                            if (opcao === 'nao') setQualMedicamento('')
+                            setUsaMedicamento(op)
+                            if (op === 'nao') setQualMedicamento('')
                           }}
-                          className={[
-                            'px-6 py-2 rounded-full text-sm font-semibold border transition-all',
-                            usaMedicamento === opcao
-                              ? 'bg-violet-600 text-white border-violet-600'
-                              : 'bg-white text-gray-600 border-gray-300 hover:border-violet-400',
-                          ].join(' ')}
+                          className="px-5 py-2 rounded-full text-sm font-semibold transition-all"
+                          style={
+                            usaMedicamento === op
+                              ? { background: '#00186D', color: '#FFFFFF', border: '1.5px solid #00186D' }
+                              : { background: 'transparent', color: '#6B7280', border: '1.5px solid rgba(0,24,109,0.2)' }
+                          }
                         >
-                          {opcao === 'sim' ? 'Sim' : 'Não'}
+                          {op === 'sim' ? 'Sim' : 'Não'}
                         </button>
                       ))}
                     </div>
                     {usaMedicamento === 'sim' && (
-                      <div className="mt-3">
-                        <label className="block text-sm font-medium text-gray-600 mb-1">
-                          Qual medicamento?
-                        </label>
-                        <input
-                          type="text"
+                      <WizardField label="Qual medicamento?">
+                        <WizardInput
                           value={qualMedicamento}
                           onChange={(e) => setQualMedicamento(e.target.value)}
                           placeholder="Ex: Ritalina 10mg"
-                          className={inputClass}
                         />
-                      </div>
+                      </WizardField>
                     )}
                   </div>
                 )}
               </div>
-            </div>
+            </WizardCard>
           )}
 
-          {/* Erro e botão */}
-          <div className="px-6 py-5 flex items-center justify-between gap-4">
-            {error ? <p className="text-red-500 text-sm">{error}</p> : <span />}
-            <button
-              type="submit"
-              disabled={saving}
-              className="shrink-0 bg-[#14B8A6] hover:bg-teal-600 disabled:opacity-60 text-white font-bold px-8 py-2.5 rounded-lg transition-colors text-sm"
-            >
+          <div className="flex items-center justify-end gap-3 pb-8">
+            <button type="submit" disabled={saving} style={wizardPrimaryBtn(saving)}>
               {saving ? 'Salvando...' : 'Salvar alterações'}
             </button>
           </div>
