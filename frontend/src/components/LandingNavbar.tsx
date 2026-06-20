@@ -1,7 +1,15 @@
 import { Link } from 'react-router-dom'
-import { CalendarHeart, Menu, X } from 'lucide-react'
 import { useState } from 'react'
+import { Menu, X } from 'lucide-react'
 import { useAuthStore } from '../store/auth.store'
+
+const NAV_LINKS = [
+  { label: 'Recursos', href: '#recursos' },
+  { label: 'Para quem é', href: '#para-quem' },
+  { label: 'Planos', href: '#planos' },
+  { label: 'Sobre', href: '#sobre' },
+  { label: 'Contato', href: '#contato' },
+]
 
 export function LandingNavbar() {
   const [open, setOpen] = useState(false)
@@ -9,38 +17,52 @@ export function LandingNavbar() {
   const logout = useAuthStore((s) => s.logout)
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100 shadow-sm">
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+    <header
+      className="fixed top-0 left-0 right-0 z-50"
+      style={{
+        background: 'rgba(255,255,255,0.97)',
+        borderBottom: '1px solid rgba(0,24,109,0.08)',
+        backdropFilter: 'blur(12px)',
+      }}
+    >
+      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-8">
+
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-xl bg-purple-700 flex items-center justify-center shadow-md group-hover:bg-purple-600 transition-colors">
-            <CalendarHeart className="w-4 h-4 text-white" />
-          </div>
-          <span className="font-bold text-slate-800 text-lg tracking-tight">
-            inscrições<span className="text-teal-500">.app</span>
-          </span>
+        <Link to="/" className="shrink-0">
+          <img src="/logo-ecclesio.png" alt="Ecclesio" className="h-8 object-contain" />
         </Link>
 
-        {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
-          <a href="#como-funciona" className="hover:text-purple-700 transition-colors">Como funciona</a>
-          <a href="#diferenciais" className="hover:text-purple-700 transition-colors">Diferenciais</a>
-          <a href="#depoimentos" className="hover:text-purple-700 transition-colors">Depoimentos</a>
+        {/* Nav desktop */}
+        <nav className="hidden md:flex items-center gap-7">
+          {NAV_LINKS.map((l) => (
+            <a
+              key={l.label}
+              href={l.href}
+              className="text-sm font-medium transition-colors"
+              style={{ color: '#33425C', fontFamily: 'Inter, sans-serif' }}
+              onMouseEnter={(e) => ((e.target as HTMLElement).style.color = '#00186D')}
+              onMouseLeave={(e) => ((e.target as HTMLElement).style.color = '#33425C')}
+            >
+              {l.label}
+            </a>
+          ))}
         </nav>
 
-        {/* CTA buttons */}
-        <div className="hidden md:flex items-center gap-3">
+        {/* CTA desktop */}
+        <div className="hidden md:flex items-center gap-3 shrink-0">
           {token ? (
             <>
               <Link
                 to="/dashboard"
-                className="text-sm font-semibold text-white bg-purple-700 hover:bg-purple-600 transition-all px-5 py-2 rounded-xl shadow-md active:scale-95"
+                className="text-sm font-semibold px-5 py-2 rounded-xl transition-all"
+                style={{ background: '#00186D', color: '#FFFFFF', fontFamily: 'Inter, sans-serif' }}
               >
                 Meu painel
               </Link>
               <button
                 onClick={() => logout()}
-                className="text-sm font-medium text-slate-600 hover:text-purple-700 transition-colors px-4 py-2 rounded-xl hover:bg-purple-50"
+                className="text-sm font-medium px-4 py-2 rounded-xl transition-all"
+                style={{ color: '#33425C', fontFamily: 'Inter, sans-serif' }}
               >
                 Sair
               </button>
@@ -49,15 +71,22 @@ export function LandingNavbar() {
             <>
               <Link
                 to="/login"
-                className="text-sm font-medium text-slate-600 hover:text-purple-700 transition-colors px-4 py-2 rounded-xl hover:bg-purple-50"
+                className="text-sm font-medium px-4 py-2 rounded-xl transition-all"
+                style={{ color: '#33425C', fontFamily: 'Inter, sans-serif' }}
               >
                 Entrar
               </Link>
               <Link
                 to="/register"
-                className="text-sm font-semibold text-white bg-teal-500 hover:bg-teal-400 transition-all px-5 py-2 rounded-xl shadow-md hover:shadow-teal-200 hover:shadow-lg active:scale-95"
+                className="text-sm font-semibold px-5 py-2 rounded-xl transition-all"
+                style={{
+                  background: '#00186D',
+                  color: '#FFFFFF',
+                  fontFamily: 'Inter, sans-serif',
+                  boxShadow: '0 2px 10px rgba(0,24,109,0.18)',
+                }}
               >
-                Criar Evento
+                Criar conta
               </Link>
             </>
           )}
@@ -65,48 +94,68 @@ export function LandingNavbar() {
 
         {/* Mobile toggle */}
         <button
-          className="md:hidden text-slate-600 hover:text-purple-700 transition-colors"
+          className="md:hidden p-2 rounded-lg"
+          style={{ color: '#33425C' }}
           onClick={() => setOpen(!open)}
+          aria-label="Menu"
         >
-          {open ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          {open ? <X size={22} /> : <Menu size={22} />}
         </button>
       </div>
 
       {/* Mobile menu */}
       {open && (
-        <div className="md:hidden bg-white border-t border-slate-100 px-6 py-4 flex flex-col gap-4 text-sm font-medium text-slate-600">
-          <a href="#como-funciona" onClick={() => setOpen(false)} className="hover:text-purple-700 transition-colors">Como funciona</a>
-          <a href="#diferenciais" onClick={() => setOpen(false)} className="hover:text-purple-700 transition-colors">Diferenciais</a>
-          <a href="#depoimentos" onClick={() => setOpen(false)} className="hover:text-purple-700 transition-colors">Depoimentos</a>
-          <hr className="border-slate-100" />
+        <div
+          className="md:hidden px-6 py-5 flex flex-col gap-4"
+          style={{ background: '#FFFFFF', borderTop: '1px solid rgba(0,24,109,0.08)' }}
+        >
+          {NAV_LINKS.map((l) => (
+            <a
+              key={l.label}
+              href={l.href}
+              onClick={() => setOpen(false)}
+              className="text-sm font-medium"
+              style={{ color: '#33425C', fontFamily: 'Inter, sans-serif' }}
+            >
+              {l.label}
+            </a>
+          ))}
+          <div className="h-px" style={{ background: 'rgba(0,24,109,0.08)' }} />
           {token ? (
             <>
               <Link
                 to="/dashboard"
                 onClick={() => setOpen(false)}
-                className="text-center font-semibold text-white bg-purple-700 hover:bg-purple-600 transition-colors py-2.5 rounded-xl"
+                className="text-center text-sm font-semibold py-3 rounded-xl"
+                style={{ background: '#00186D', color: '#FFFFFF' }}
               >
                 Meu painel
               </Link>
               <button
-                onClick={() => {
-                  logout()
-                  setOpen(false)
-                }}
-                className="text-left hover:text-purple-700 transition-colors"
+                onClick={() => { logout(); setOpen(false) }}
+                className="text-sm font-medium text-left"
+                style={{ color: '#33425C' }}
               >
                 Sair
               </button>
             </>
           ) : (
             <>
-              <Link to="/login" onClick={() => setOpen(false)} className="hover:text-purple-700 transition-colors">Entrar</Link>
+              <Link
+                to="/login"
+                onClick={() => setOpen(false)}
+                className="text-sm font-medium"
+                style={{ color: '#33425C', fontFamily: 'Inter, sans-serif' }}
+              >
+                Entrar
+              </Link>
               <Link
                 to="/register"
                 onClick={() => setOpen(false)}
-                className="text-center font-semibold text-white bg-teal-500 hover:bg-teal-400 transition-colors py-2.5 rounded-xl"
+                className="text-center text-sm font-semibold py-3 rounded-xl"
+                style={{ background: '#00186D', color: '#FFFFFF', fontFamily: 'Inter, sans-serif' }}
               >
-                Criar Evento
+                Criar conta
               </Link>
             </>
           )}

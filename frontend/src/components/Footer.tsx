@@ -1,53 +1,64 @@
 import { Link } from 'react-router-dom'
-import { CalendarHeart, Heart } from 'lucide-react'
 
 export function Footer() {
   return (
-    <footer className="bg-slate-900 text-slate-400 py-12">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid md:grid-cols-4 gap-8 mb-10">
+    <footer style={{ background: '#00186D', color: 'rgba(255,255,255,0.55)' }}>
+      <div className="max-w-7xl mx-auto px-6 py-14">
+
+        <div className="grid md:grid-cols-4 gap-10 mb-12">
           {/* Brand */}
           <div className="md:col-span-2">
-            <Link to="/" className="flex items-center gap-2 mb-3 group">
-              <div className="w-7 h-7 rounded-lg bg-purple-700 flex items-center justify-center">
-                <CalendarHeart className="w-4 h-4 text-white" />
-              </div>
-              <span className="font-bold text-white text-base">
-                inscrições<span className="text-teal-400">.app</span>
-              </span>
+            <Link to="/" className="inline-block mb-4">
+              <img src="/logo-ecclesio.png" alt="Ecclesio" className="h-8 object-contain brightness-0 invert" />
             </Link>
-            <p className="text-sm leading-relaxed max-w-xs">
-              Plataforma de gestão de eventos para igrejas e comunidades cristãs. Simples, eficiente e gratuita para começar.
+            <p className="text-sm leading-relaxed max-w-xs" style={{ fontFamily: 'Inter, sans-serif' }}>
+              Plataforma de gestão de eventos para igrejas e comunidades católicas. Simples, eficiente e gratuita para começar.
             </p>
+
+            {/* Linha dourada */}
+            <div className="h-px w-12 mt-6" style={{ background: '#D4B16A' }} />
           </div>
 
           {/* Plataforma */}
           <div>
-            <h4 className="text-white font-semibold text-sm mb-4">Plataforma</h4>
-            <ul className="flex flex-col gap-2 text-sm">
-              <li><Link to="/register" className="hover:text-white transition-colors">Criar conta</Link></li>
-              <li><Link to="/login" className="hover:text-white transition-colors">Entrar</Link></li>
-              <li><a href="#como-funciona" className="hover:text-white transition-colors">Como funciona</a></li>
-              <li><a href="#diferenciais" className="hover:text-white transition-colors">Diferenciais</a></li>
+            <h4
+              className="text-sm font-semibold mb-4"
+              style={{ color: '#FFFFFF', fontFamily: 'Cinzel, serif', letterSpacing: '0.08em' }}
+            >
+              Plataforma
+            </h4>
+            <ul className="flex flex-col gap-2.5 text-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
+              <li><Link to="/register" className="transition-colors hover:text-white">Criar conta</Link></li>
+              <li><Link to="/login" className="transition-colors hover:text-white">Entrar</Link></li>
+              <li><a href="#como-funciona" className="transition-colors hover:text-white">Como funciona</a></li>
+              <li><a href="#diferenciais" className="transition-colors hover:text-white">Diferenciais</a></li>
             </ul>
           </div>
 
-          {/* Projeto */}
+          {/* Institucional */}
           <div>
-            <h4 className="text-white font-semibold text-sm mb-4">Projeto</h4>
-            <ul className="flex flex-col gap-2 text-sm">
-              <li><span className="text-slate-500 select-none">Sobre</span></li>
-              <li><span className="text-slate-500 select-none">Privacidade</span></li>
-              <li><span className="text-slate-500 select-none">Termos de uso</span></li>
+            <h4
+              className="text-sm font-semibold mb-4"
+              style={{ color: '#FFFFFF', fontFamily: 'Cinzel, serif', letterSpacing: '0.08em' }}
+            >
+              Institucional
+            </h4>
+            <ul className="flex flex-col gap-2.5 text-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
+              <li><span style={{ color: 'rgba(255,255,255,0.3)' }}>Sobre</span></li>
+              <li><span style={{ color: 'rgba(255,255,255,0.3)' }}>Privacidade</span></li>
+              <li><span style={{ color: 'rgba(255,255,255,0.3)' }}>Termos de uso</span></li>
+              <li><span style={{ color: 'rgba(255,255,255,0.3)' }}>Contato</span></li>
             </ul>
           </div>
         </div>
 
-        <div className="border-t border-slate-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-          <p>© 2025 inscrições.app. Todos os direitos reservados.</p>
-          <p className="flex items-center gap-1">
-            Feito com <Heart className="w-3 h-3 text-teal-400 fill-teal-400" /> para a comunidade cristã
-          </p>
+        {/* Rodapé */}
+        <div
+          className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs"
+          style={{ borderTop: '1px solid rgba(255,255,255,0.1)', fontFamily: 'Inter, sans-serif' }}
+        >
+          <p>© {new Date().getFullYear()} Ecclesio. Todos os direitos reservados.</p>
+          <p style={{ color: '#D4B16A' }}>✦ Feito para a missão da Igreja</p>
         </div>
       </div>
     </footer>

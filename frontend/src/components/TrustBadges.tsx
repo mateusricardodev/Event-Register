@@ -1,62 +1,59 @@
 import { ShieldCheck, Lock, FileCheck2, ServerCrash, Globe2, BadgeCheck } from 'lucide-react'
 
 const badges = [
-  {
-    icon: ShieldCheck,
-    title: 'Proteção de Dados',
-    description: 'Dados dos participantes armazenados com segurança e sem compartilhamento com terceiros.',
-  },
-  {
-    icon: Lock,
-    title: 'Conexão Segura',
-    description: 'Toda comunicação é criptografada via HTTPS, garantindo privacidade nas transmissões.',
-  },
-  {
-    icon: FileCheck2,
-    title: 'Conformidade LGPD',
-    description: 'Plataforma desenvolvida seguindo as diretrizes da Lei Geral de Proteção de Dados.',
-  },
-  {
-    icon: ServerCrash,
-    title: 'Alta Disponibilidade',
-    description: 'Infraestrutura estável para que seu evento esteja acessível sempre que precisar.',
-  },
-  {
-    icon: Globe2,
-    title: 'Acesso Universal',
-    description: 'Funciona em qualquer dispositivo com navegador, sem instalação ou conta para participantes.',
-  },
-  {
-    icon: BadgeCheck,
-    title: 'Plataforma Confiável',
-    description: 'Desenvolvida especialmente para o contexto de eventos cristãos e comunitários.',
-  },
+  { icon: ShieldCheck, title: 'Proteção de Dados',       description: 'Dados dos participantes armazenados com segurança e sem compartilhamento.' },
+  { icon: Lock,        title: 'Conexão Segura',          description: 'Toda comunicação é criptografada via HTTPS.' },
+  { icon: FileCheck2,  title: 'Conformidade LGPD',       description: 'Plataforma desenvolvida seguindo as diretrizes da LGPD.' },
+  { icon: ServerCrash, title: 'Alta Disponibilidade',    description: 'Infraestrutura estável para que seu evento esteja sempre acessível.' },
+  { icon: Globe2,      title: 'Acesso Universal',        description: 'Funciona em qualquer dispositivo, sem instalação ou conta para participantes.' },
+  { icon: BadgeCheck,  title: 'Plataforma Confiável',    description: 'Desenvolvida especialmente para eventos católicos e comunitários.' },
 ]
 
 export function TrustBadges() {
   return (
-    <section className="py-20 bg-white border-y border-slate-100">
+    <section className="py-20" style={{ background: '#FFFFFF', borderTop: '1px solid rgba(0,24,109,0.06)', borderBottom: '1px solid rgba(0,24,109,0.06)' }}>
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-12">
-          <span className="text-teal-500 font-semibold text-sm uppercase tracking-widest">Segurança & Confiança</span>
-          <h2 className="mt-2 text-3xl font-extrabold text-slate-900">Seus dados e os dos seus participantes estão seguros</h2>
-          <p className="mt-3 text-slate-500 max-w-xl mx-auto text-sm">
-            Levamos a privacidade a sério. Construímos a plataforma com as melhores práticas de segurança desde o início.
-          </p>
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="h-px w-8" style={{ background: '#D4B16A' }} />
+            <span
+              className="text-xs font-semibold tracking-[0.15em] uppercase"
+              style={{ color: '#D4B16A', fontFamily: 'Cinzel, serif' }}
+            >
+              Segurança & Confiança
+            </span>
+            <div className="h-px w-8" style={{ background: '#D4B16A' }} />
+          </div>
+          <h2
+            style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '2rem', fontWeight: 600, color: '#00186D' }}
+          >
+            Seus dados estão seguros
+          </h2>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {badges.map(({ icon: Icon, title, description }) => (
             <div
               key={title}
-              className="flex items-start gap-4 p-5 rounded-2xl bg-slate-50 border border-slate-100 hover:border-purple-200 hover:bg-purple-50/40 transition-all duration-200 group"
+              className="flex items-start gap-4 p-5 rounded-2xl transition-all"
+              style={{
+                background: '#FAFAFA',
+                border: '1px solid rgba(0,24,109,0.07)',
+              }}
             >
-              <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shrink-0 group-hover:border-purple-200 transition-colors shadow-sm">
-                <Icon className="w-5 h-5 text-purple-600" />
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: 'rgba(0,24,109,0.06)' }}
+              >
+                <Icon size={17} style={{ color: '#00186D' }} />
               </div>
               <div>
-                <p className="font-semibold text-slate-800 text-sm mb-1">{title}</p>
-                <p className="text-slate-500 text-xs leading-relaxed">{description}</p>
+                <p className="font-semibold text-sm mb-1" style={{ color: '#0A0A09', fontFamily: 'Inter, sans-serif' }}>
+                  {title}
+                </p>
+                <p className="text-xs leading-relaxed" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
+                  {description}
+                </p>
               </div>
             </div>
           ))}

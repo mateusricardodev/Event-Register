@@ -4,7 +4,7 @@ import { ChevronDown } from 'lucide-react'
 const items = [
   {
     q: 'A plataforma é gratuita?',
-    a: 'Sim. Você pode criar sua conta e gerenciar seus eventos sem nenhum custo. Nossa missão é tornar a gestão de eventos acessível para qualquer ministério ou comunidade cristã.',
+    a: 'Sim. Você pode criar sua conta e gerenciar seus eventos sem nenhum custo. Nossa missão é tornar a gestão de eventos acessível para qualquer ministério ou comunidade.',
   },
   {
     q: 'O participante precisa criar uma conta para se inscrever?',
@@ -23,12 +23,8 @@ const items = [
     a: 'Sim. O painel do organizador exibe todos os inscritos em tempo real, com filtros por status, busca por nome ou CPF e a possibilidade de editar ou cancelar inscrições individualmente.',
   },
   {
-    q: 'A plataforma funciona bem no celular?',
-    a: 'Totalmente. Tanto o painel do organizador quanto a página de inscrição do participante são responsivos e otimizados para dispositivos móveis.',
-  },
-  {
     q: 'Meus dados e os dos participantes estão seguros?',
-    a: 'Sim. A plataforma foi desenvolvida seguindo boas práticas de segurança e conformidade com a LGPD (Lei Geral de Proteção de Dados). Nenhum dado é compartilhado com terceiros.',
+    a: 'Sim. A plataforma foi desenvolvida seguindo boas práticas de segurança e conformidade com a LGPD. Nenhum dado é compartilhado com terceiros.',
   },
 ]
 
@@ -36,20 +32,36 @@ function FAQItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false)
 
   return (
-    <div className="border border-slate-200 rounded-2xl overflow-hidden">
+    <div
+      className="rounded-xl overflow-hidden"
+      style={{ border: '1px solid rgba(0,24,109,0.1)' }}
+    >
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-slate-50 transition-colors group"
+        className="w-full flex items-center justify-between px-5 py-4 text-left transition-colors"
+        style={{ background: open ? 'rgba(0,24,109,0.03)' : '#FFFFFF' }}
       >
-        <span className="font-semibold text-slate-800 text-sm pr-4">{q}</span>
+        <span className="font-medium text-sm pr-4" style={{ color: '#0A0A09', fontFamily: 'Inter, sans-serif' }}>
+          {q}
+        </span>
         <ChevronDown
-          className={`w-5 h-5 text-slate-400 shrink-0 transition-transform duration-300 ${open ? 'rotate-180 text-purple-600' : ''}`}
+          size={18}
+          className="shrink-0 transition-transform duration-300"
+          style={{
+            color: open ? '#D4B16A' : '#6B7280',
+            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+          }}
         />
       </button>
-      <div
-        className={`overflow-hidden transition-all duration-300 ${open ? 'max-h-48' : 'max-h-0'}`}
-      >
-        <p className="px-5 pb-4 text-sm text-slate-500 leading-relaxed border-t border-slate-100 pt-3">
+      <div className={`overflow-hidden transition-all duration-300 ${open ? 'max-h-48' : 'max-h-0'}`}>
+        <p
+          className="px-5 pb-4 pt-3 text-sm leading-relaxed"
+          style={{
+            color: '#6B7280',
+            fontFamily: 'Inter, sans-serif',
+            borderTop: '1px solid rgba(0,24,109,0.06)',
+          }}
+        >
           {a}
         </p>
       </div>
@@ -59,17 +71,30 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 
 export function FAQ() {
   return (
-    <section className="py-24 bg-slate-50">
+    <section className="py-24" style={{ background: '#FFFFFF' }}>
       <div className="max-w-3xl mx-auto px-6">
         <div className="text-center mb-12">
-          <span className="text-teal-500 font-semibold text-sm uppercase tracking-widest">Dúvidas frequentes</span>
-          <h2 className="mt-2 text-4xl font-extrabold text-slate-900">Perguntas e respostas</h2>
-          <p className="mt-3 text-slate-500">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="h-px w-8" style={{ background: '#D4B16A' }} />
+            <span
+              className="text-xs font-semibold tracking-[0.15em] uppercase"
+              style={{ color: '#D4B16A', fontFamily: 'Cinzel, serif' }}
+            >
+              Dúvidas frequentes
+            </span>
+            <div className="h-px w-8" style={{ background: '#D4B16A' }} />
+          </div>
+          <h2
+            style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '2.25rem', fontWeight: 600, color: '#00186D' }}
+          >
+            Perguntas e respostas
+          </h2>
+          <p className="mt-2 text-sm" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
             Não encontrou sua dúvida? Entre em contato com nossa equipe.
           </p>
         </div>
 
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2">
           {items.map((item) => (
             <FAQItem key={item.q} {...item} />
           ))}

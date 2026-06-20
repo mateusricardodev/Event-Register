@@ -1,4 +1,4 @@
-import { X, Check, ArrowRight } from 'lucide-react'
+import { X, Check } from 'lucide-react'
 
 const before = [
   'Formulário no Google Forms desconexo do evento',
@@ -20,64 +20,83 @@ const after = [
 
 export function BeforeAfter() {
   return (
-    <section className="py-24 bg-slate-50">
+    <section className="py-24" style={{ background: '#F5F2E8' }}>
       <div className="max-w-5xl mx-auto px-6">
         <div className="text-center mb-14">
-          <span className="text-teal-500 font-semibold text-sm uppercase tracking-widest">Comparativo</span>
-          <h2 className="mt-2 text-4xl font-extrabold text-slate-900">A diferença na prática</h2>
-          <p className="mt-3 text-slate-500 max-w-xl mx-auto">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="h-px w-8" style={{ background: '#D4B16A' }} />
+            <span
+              className="text-xs font-semibold tracking-[0.15em] uppercase"
+              style={{ color: '#D4B16A', fontFamily: 'Cinzel, serif' }}
+            >
+              Comparativo
+            </span>
+            <div className="h-px w-8" style={{ background: '#D4B16A' }} />
+          </div>
+          <h2
+            style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '2.25rem', fontWeight: 600, color: '#00186D' }}
+          >
+            A diferença na prática
+          </h2>
+          <p className="mt-2 text-sm max-w-md mx-auto" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
             Chega de improvisar com ferramentas que não foram feitas para isso.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Before */}
-          <div className="bg-white rounded-3xl p-6 border-2 border-red-100 shadow-sm">
+        <div className="grid md:grid-cols-2 gap-5">
+          {/* Antes */}
+          <div
+            className="rounded-2xl p-6"
+            style={{ background: '#FFFFFF', border: '1px solid rgba(239,68,68,0.15)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
+          >
             <div className="flex items-center gap-2 mb-5">
-              <div className="w-8 h-8 rounded-xl bg-red-100 flex items-center justify-center">
-                <X className="w-4 h-4 text-red-500" />
-              </div>
-              <span className="font-bold text-slate-700 text-base">Sem a plataforma</span>
+              <span
+                className="w-8 h-8 rounded-xl flex items-center justify-center"
+                style={{ background: 'rgba(239,68,68,0.08)' }}
+              >
+                <X size={16} style={{ color: '#EF4444' }} />
+              </span>
+              <span className="font-semibold text-sm" style={{ color: '#33425C', fontFamily: 'Inter, sans-serif' }}>Sem a plataforma</span>
             </div>
             <ul className="flex flex-col gap-3">
               {before.map((item) => (
-                <li key={item} className="flex items-start gap-3 text-sm text-slate-500">
-                  <X className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
+                <li key={item} className="flex items-start gap-2.5 text-sm" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
+                  <X size={14} className="mt-0.5 shrink-0" style={{ color: '#EF4444' }} />
                   {item}
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* After */}
-          <div className="bg-white rounded-3xl p-6 border-2 border-teal-100 shadow-sm relative overflow-hidden">
-            <div className="absolute top-4 right-4 bg-teal-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-              inscrições.app
-            </div>
+          {/* Depois */}
+          <div
+            className="rounded-2xl p-6 relative overflow-hidden"
+            style={{ background: '#FFFFFF', border: '1px solid rgba(0,24,109,0.12)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
+          >
+            <span
+              className="absolute top-4 right-4 text-xs font-semibold px-3 py-1 rounded-full"
+              style={{ background: 'rgba(0,24,109,0.08)', color: '#00186D', fontFamily: 'Cinzel, serif', letterSpacing: '0.06em' }}
+            >
+              Ecclesio
+            </span>
             <div className="flex items-center gap-2 mb-5">
-              <div className="w-8 h-8 rounded-xl bg-teal-100 flex items-center justify-center">
-                <Check className="w-4 h-4 text-teal-600" />
-              </div>
-              <span className="font-bold text-slate-700 text-base">Com inscrições.app</span>
+              <span
+                className="w-8 h-8 rounded-xl flex items-center justify-center"
+                style={{ background: 'rgba(0,24,109,0.06)' }}
+              >
+                <Check size={16} style={{ color: '#00186D' }} />
+              </span>
+              <span className="font-semibold text-sm" style={{ color: '#33425C', fontFamily: 'Inter, sans-serif' }}>Com o Ecclesio</span>
             </div>
             <ul className="flex flex-col gap-3">
               {after.map((item) => (
-                <li key={item} className="flex items-start gap-3 text-sm text-slate-700">
-                  <Check className="w-4 h-4 text-teal-500 mt-0.5 shrink-0" />
+                <li key={item} className="flex items-start gap-2.5 text-sm" style={{ color: '#0A0A09', fontFamily: 'Inter, sans-serif' }}>
+                  <Check size={14} className="mt-0.5 shrink-0" style={{ color: '#D4B16A' }} />
                   {item}
                 </li>
               ))}
             </ul>
           </div>
-        </div>
-
-        <div className="flex justify-center mt-8">
-          <a
-            href="#como-funciona"
-            className="flex items-center gap-2 text-sm font-semibold text-purple-700 hover:text-purple-600 transition-colors"
-          >
-            Ver como funciona <ArrowRight className="w-4 h-4" />
-          </a>
         </div>
       </div>
     </section>
