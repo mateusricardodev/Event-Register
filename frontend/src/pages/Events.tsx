@@ -25,18 +25,10 @@ export function Events() {
     let active = true
     api
       .get<EventItem[]>('/events')
-      .then(({ data }) => {
-        if (active) setEvents(data)
-      })
-      .catch(() => {
-        if (active) setEvents([])
-      })
-      .finally(() => {
-        if (active) setLoading(false)
-      })
-    return () => {
-      active = false
-    }
+      .then(({ data }) => { if (active) setEvents(data) })
+      .catch(() => { if (active) setEvents([]) })
+      .finally(() => { if (active) setLoading(false) })
+    return () => { active = false }
   }, [])
 
   async function handleDelete() {
@@ -54,49 +46,78 @@ export function Events() {
     }
   }
 
-  const now = new Date()
+  const now     = new Date()
   const ongoing = events.filter((e) => new Date(e.endDate ?? e.date) >= now)
-  const ended = events.filter((e) => new Date(e.endDate ?? e.date) < now)
+  const ended   = events.filter((e) => new Date(e.endDate ?? e.date) < now)
 
   return (
     <DashboardLayout active="eventos">
-      {/* Header */}
+      {/* ── Cabeçalho ── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Eventos</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p
+            className="text-xs font-semibold uppercase tracking-[0.12em] mb-1"
+            style={{ color: '#D4B16A', fontFamily: 'Cinzel, serif' }}
+          >
+            Gestão
+          </p>
+          <h1
+            className="leading-tight"
+            style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.85rem', fontWeight: 600, color: '#00186D' }}
+          >
+            Eventos
+          </h1>
+          <p className="text-sm mt-1" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
             Gerencie todos os seus eventos em um só lugar.
           </p>
         </div>
+
         <Link
           to="/events/new"
-          className="shrink-0 inline-flex items-center gap-2 bg-[#14B8A6] hover:bg-teal-600 text-white font-bold text-sm px-5 py-2.5 rounded-lg transition-colors"
+          className="shrink-0 inline-flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-xl transition-all"
+          style={{
+            background: '#00186D',
+            color: '#FFFFFF',
+            fontFamily: 'Inter, sans-serif',
+            boxShadow: '0 2px 12px rgba(0,24,109,0.20)',
+          }}
         >
-          <Plus size={18} />
+          <Plus size={16} />
           Novo evento
         </Link>
       </div>
 
+      {/* ── Conteúdo ── */}
       {loading ? (
         <div className="grid gap-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <CardSkeleton key={i} />
-          ))}
+          {Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)}
         </div>
       ) : events.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-10 text-center max-w-xl mx-auto">
-          <span className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
-            <Calendar size={22} className="text-gray-400" />
+        <div
+          className="rounded-2xl p-10 text-center max-w-xl mx-auto"
+          style={{ background: '#FFFFFF', border: '1px solid rgba(0,24,109,0.08)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
+        >
+          <span
+            className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4"
+            style={{ background: 'rgba(0,24,109,0.06)' }}
+          >
+            <Calendar size={20} style={{ color: '#00186D' }} />
           </span>
-          <h2 className="font-bold text-gray-800 mb-1">Nenhum evento ainda</h2>
-          <p className="text-sm text-gray-500 mb-5">
+          <h2
+            className="mb-2"
+            style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.5rem', fontWeight: 600, color: '#00186D' }}
+          >
+            Nenhum evento ainda
+          </h2>
+          <p className="text-sm mb-6" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
             Crie seu primeiro evento e comece a receber inscrições.
           </p>
           <Link
             to="/events/new"
-            className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white font-semibold text-sm px-6 py-2.5 rounded-lg transition-colors"
+            className="inline-flex items-center gap-2 text-sm font-semibold px-6 py-2.5 rounded-xl transition-all"
+            style={{ background: '#00186D', color: '#FFFFFF', fontFamily: 'Inter, sans-serif', boxShadow: '0 2px 12px rgba(0,24,109,0.20)' }}
           >
-            <Plus size={18} />
+            <Plus size={16} />
             Criar evento
           </Link>
         </div>
@@ -105,58 +126,52 @@ export function Events() {
           {ongoing.length > 0 && (
             <Section title="Em andamento" count={ongoing.length}>
               {ongoing.map((e) => (
-                <EventCard
-                  key={e.id}
-                  event={e}
-                  onDelete={() => setConfirmId(e.id)}
-                />
+                <EventCard key={e.id} event={e} onDelete={() => setConfirmId(e.id)} />
               ))}
             </Section>
           )}
-
           {ended.length > 0 && (
             <Section title="Encerrados" count={ended.length} muted>
               {ended.map((e) => (
-                <EventCard
-                  key={e.id}
-                  event={e}
-                  muted
-                  onDelete={() => setConfirmId(e.id)}
-                />
+                <EventCard key={e.id} event={e} muted onDelete={() => setConfirmId(e.id)} />
               ))}
             </Section>
           )}
         </div>
       )}
 
-      {/* Modal de confirmação */}
+      {/* ── Modal de confirmação ── */}
       {confirmId && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm">
-            <h3 className="text-base font-semibold text-gray-800 mb-2">Excluir evento</h3>
-            <p className="text-sm text-gray-500 mb-4">
+        <div className="fixed inset-0 flex items-center justify-center z-50 px-4" style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(4px)' }}>
+          <div
+            className="w-full max-w-sm rounded-2xl p-7"
+            style={{ background: '#FFFFFF', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}
+          >
+            <h3 className="font-semibold mb-2" style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.25rem', color: '#00186D' }}>
+              Excluir evento
+            </h3>
+            <p className="text-sm mb-5" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
               Tem certeza que deseja excluir este evento? Esta ação não pode ser desfeita.
             </p>
             {deleteError && (
-              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2 mb-4">
+              <p className="text-sm rounded-xl px-4 py-3 mb-4" style={{ background: '#FEF2F2', color: '#991B1B', fontFamily: 'Inter, sans-serif' }}>
                 {deleteError}
               </p>
             )}
             <div className="flex justify-end gap-3">
               <button
-                onClick={() => {
-                  setConfirmId(null)
-                  setDeleteError('')
-                }}
+                onClick={() => { setConfirmId(null); setDeleteError('') }}
                 disabled={deleting}
-                className="px-5 py-2 text-sm text-gray-600 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors disabled:opacity-60"
+                className="px-4 py-2 text-sm rounded-xl transition-all"
+                style={{ border: '1px solid rgba(0,24,109,0.15)', color: '#33425C', fontFamily: 'Inter, sans-serif' }}
               >
                 Cancelar
               </button>
               <button
                 onClick={handleDelete}
                 disabled={deleting}
-                className="px-5 py-2 text-sm text-white bg-red-500 hover:bg-red-600 rounded-full transition-colors disabled:opacity-60"
+                className="px-4 py-2 text-sm font-semibold rounded-xl transition-all"
+                style={{ background: '#DC2626', color: '#FFFFFF', fontFamily: 'Inter, sans-serif', opacity: deleting ? 0.7 : 1 }}
               >
                 {deleting ? 'Excluindo...' : 'Excluir'}
               </button>
@@ -168,105 +183,116 @@ export function Events() {
   )
 }
 
-function Section({
-  title,
-  count,
-  muted,
-  children,
-}: {
-  title: string
-  count: number
-  muted?: boolean
-  children: React.ReactNode
-}) {
+// ── Componentes auxiliares ────────────────────────────────────────────────
+
+function Section({ title, count, muted, children }: { title: string; count: number; muted?: boolean; children: React.ReactNode }) {
   return (
     <div>
-      <h2
-        className={`text-xs font-semibold uppercase tracking-wide mb-3 ${
-          muted ? 'text-gray-400' : 'text-gray-500'
-        }`}
-      >
-        {title} ({count})
-      </h2>
-      <div className="grid gap-4">{children}</div>
+      <div className="flex items-center gap-3 mb-4">
+        <h2
+          className="text-xs font-semibold uppercase tracking-[0.12em]"
+          style={{ color: muted ? '#9CA3AF' : '#6B7280', fontFamily: 'Cinzel, serif' }}
+        >
+          {title}
+        </h2>
+        <span
+          className="text-xs font-semibold px-2 py-0.5 rounded-full"
+          style={{ background: muted ? 'rgba(0,0,0,0.04)' : 'rgba(0,24,109,0.06)', color: muted ? '#9CA3AF' : '#00186D', fontFamily: 'Inter, sans-serif' }}
+        >
+          {count}
+        </span>
+      </div>
+      <div className="grid gap-3">{children}</div>
     </div>
   )
 }
 
-function EventCard({
-  event,
-  muted,
-  onDelete,
-}: {
-  event: EventItem
-  muted?: boolean
-  onDelete: () => void
-}) {
+function EventCard({ event, muted, onDelete }: { event: EventItem; muted?: boolean; onDelete: () => void }) {
   return (
     <div
-      className={`bg-white border border-gray-200 rounded-xl shadow-sm p-5 flex items-center gap-4 ${
-        muted ? 'opacity-70' : ''
-      }`}
+      className="flex items-center gap-4 p-5 rounded-2xl transition-all"
+      style={{
+        background: '#FFFFFF',
+        border: '1px solid rgba(0,24,109,0.08)',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+        opacity: muted ? 0.65 : 1,
+      }}
     >
-      <span className="w-12 h-12 rounded-lg bg-violet-100 flex items-center justify-center shrink-0">
-        <Calendar size={22} className="text-violet-600" />
+      {/* Ícone */}
+      <span
+        className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+        style={{ background: 'rgba(0,24,109,0.06)' }}
+      >
+        <Calendar size={19} style={{ color: '#00186D' }} />
       </span>
 
+      {/* Info */}
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <h3 className="font-semibold text-gray-800 truncate">{event.title}</h3>
+        <div className="flex items-center gap-2 mb-1">
+          <h3
+            className="font-semibold truncate text-sm"
+            style={{ color: '#0A0A09', fontFamily: 'Inter, sans-serif' }}
+          >
+            {event.title}
+          </h3>
           <span
-            className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${
+            className="text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0"
+            style={
               event.isPublished
-                ? 'bg-green-100 text-green-700'
-                : 'bg-gray-100 text-gray-500'
-            }`}
+                ? { background: '#F0FDF4', color: '#166534' }
+                : { background: 'rgba(0,0,0,0.05)', color: '#6B7280' }
+            }
           >
             {event.isPublished ? 'Publicado' : 'Rascunho'}
           </span>
         </div>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 mt-1">
-          <span className="inline-flex items-center gap-1">
-            <Calendar size={13} />
-            {new Date(event.date).toLocaleDateString('pt-BR', {
-              day: '2-digit',
-              month: 'long',
-              year: 'numeric',
-            })}
+
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          <span className="inline-flex items-center gap-1 text-xs" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
+            <Calendar size={12} />
+            {new Date(event.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
           </span>
           {event.location && (
-            <span className="inline-flex items-center gap-1">
-              <MapPin size={13} />
+            <span className="inline-flex items-center gap-1 text-xs" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
+              <MapPin size={12} />
               {event.location}
             </span>
           )}
-          <span className="inline-flex items-center gap-1">
-            <Users size={13} />
+          <span className="inline-flex items-center gap-1 text-xs" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
+            <Users size={12} />
             {event._count.registrations} inscritos
           </span>
         </div>
       </div>
 
+      {/* Ações */}
       <div className="flex items-center gap-2 shrink-0">
         <Link
           to={`/events/${event.id}`}
-          className="text-sm text-teal-600 border border-teal-300 hover:bg-teal-50 font-medium px-3 py-1.5 rounded-lg transition-colors"
+          className="text-xs font-semibold px-3.5 py-1.5 rounded-lg transition-all"
+          style={{
+            border: '1px solid rgba(0,24,109,0.2)',
+            color: '#00186D',
+            fontFamily: 'Inter, sans-serif',
+          }}
         >
           Ver
         </Link>
         <Link
           to={`/events/${event.id}/edit`}
-          className="p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+          className="p-2 rounded-lg transition-all"
+          style={{ color: '#6B7280' }}
           title="Editar"
         >
-          <Pencil size={16} />
+          <Pencil size={15} />
         </Link>
         <button
           onClick={onDelete}
-          className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+          className="p-2 rounded-lg transition-all"
+          style={{ color: '#EF4444' }}
           title="Excluir"
         >
-          <Trash2 size={16} />
+          <Trash2 size={15} />
         </button>
       </div>
     </div>
@@ -275,11 +301,14 @@ function EventCard({
 
 function CardSkeleton() {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5 flex items-center gap-4 animate-pulse">
-      <div className="w-12 h-12 rounded-lg bg-gray-200 shrink-0" />
+    <div
+      className="flex items-center gap-4 p-5 rounded-2xl animate-pulse"
+      style={{ background: '#FFFFFF', border: '1px solid rgba(0,24,109,0.08)' }}
+    >
+      <div className="w-11 h-11 rounded-xl shrink-0" style={{ background: 'rgba(0,24,109,0.06)' }} />
       <div className="flex-1">
-        <div className="h-4 w-40 bg-gray-200 rounded mb-2" />
-        <div className="h-3 w-64 bg-gray-100 rounded" />
+        <div className="h-4 w-48 rounded-lg mb-2" style={{ background: 'rgba(0,24,109,0.06)' }} />
+        <div className="h-3 w-64 rounded" style={{ background: 'rgba(0,24,109,0.04)' }} />
       </div>
     </div>
   )
