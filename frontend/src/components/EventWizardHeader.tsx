@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom'
+import { Check } from 'lucide-react'
 
 const steps = [
-  { label: 'Informações\nbásicas', icon: 'ℹ️', key: 'info' },
-  { label: 'Forma de\nPagamento', icon: '💳', key: 'payment' },
-  { label: 'Formulário\nde inscrição', icon: '📋', key: 'form' },
-  { label: 'Página do\nevento', icon: '🗓️', key: 'page' },
+  { label: 'Informações', key: 'info' },
+  { label: 'Pagamento',   key: 'payment' },
+  { label: 'Formulário',  key: 'form' },
+  { label: 'Página',      key: 'page' },
 ]
 
 interface Props {
@@ -13,41 +14,80 @@ interface Props {
 }
 
 export function EventWizardHeader({ active, eventId }: Props) {
-  const stepIndex = steps.findIndex((s) => s.key === active)
+  const activeIndex = steps.findIndex((s) => s.key === active)
 
   function linkFor(key: string) {
     if (!eventId) return '#'
-    if (key === 'info') return `/events/${eventId}/edit`
+    if (key === 'info')    return `/events/${eventId}/edit`
     if (key === 'payment') return `/events/${eventId}/setup/payment`
-    if (key === 'form') return `/events/${eventId}/setup/form`
-    if (key === 'page') return `/events/${eventId}/setup/page`
+    if (key === 'form')    return `/events/${eventId}/setup/form`
+    if (key === 'page')    return `/events/${eventId}/setup/page`
     return '#'
   }
 
   return (
-    <div className="bg-white border-b border-gray-200">
-      <div className="max-w-3xl mx-auto flex">
+    <div
+      className="mb-8"
+      style={{ borderBottom: '1px solid rgba(0,24,109,0.08)', paddingBottom: '1.5rem' }}
+    >
+      {/* Label superior */}
+      <p
+        className="text-xs font-semibold uppercase tracking-[0.12em] mb-4"
+        style={{ color: '#D4B16A', fontFamily: 'Cinzel, serif' }}
+      >
+        Configuração do evento
+      </p>
+
+      {/* Steps */}
+      <div className="flex items-center gap-0">
         {steps.map((step, i) => {
           const isActive = step.key === active
-          const isDone = i < stepIndex
+          const isDone   = i < activeIndex
+          const isLast   = i === steps.length - 1
 
           return (
-            <Link
-              key={step.key}
-              to={eventId ? linkFor(step.key) : '#'}
-              className={`flex-1 flex flex-col items-center py-4 gap-1 border-b-2 transition-colors text-center ${
-                isActive
-                  ? 'border-teal-500 text-teal-600'
-                  : isDone
-                  ? 'border-teal-300 text-teal-500'
-                  : 'border-transparent text-gray-400'
-              }`}
-            >
-              <span className="text-xl">{step.icon}</span>
-              <span className="text-xs font-medium leading-tight whitespace-pre-line">
-                {step.label}
-              </span>
-            </Link>
+            <div key={step.key} className="flex items-center flex-1">
+              <Link
+                to={eventId ? linkFor(step.key) : '#'}
+                className="flex items-center gap-2.5 group"
+              >
+                {/* Círculo numerado */}
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-all"
+                  style={{
+                    background: isDone
+                      ? '#00186D'
+                      : isActive
+                      ? '#D4B16A'
+                      : 'rgba(0,24,109,0.06)',
+                    color: isDone || isActive ? '#FFFFFF' : '#6B7280',
+                    fontFamily: 'Inter, sans-serif',
+                  }}
+                >
+                  {isDone ? <Check size={13} /> : i + 1}
+                </div>
+
+                {/* Label */}
+                <span
+                  className="text-sm font-medium hidden sm:block"
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    color: isActive ? '#00186D' : isDone ? '#33425C' : '#9CA3AF',
+                    fontWeight: isActive ? 600 : 400,
+                  }}
+                >
+                  {step.label}
+                </span>
+              </Link>
+
+              {/* Linha conectora */}
+              {!isLast && (
+                <div
+                  className="flex-1 h-px mx-3"
+                  style={{ background: isDone ? '#00186D' : 'rgba(0,24,109,0.1)' }}
+                />
+              )}
+            </div>
           )
         })}
       </div>

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { Check } from 'lucide-react'
 import { EventWizardHeader } from '../components/EventWizardHeader'
 import { DashboardLayout } from '../components/DashboardLayout'
+import { WizardCard, Toggle, wizardNavBtn, wizardPrimaryBtn } from '../components/WizardShared'
 import api from '../api/axios'
 
 const FIELD_GROUPS = [
@@ -17,30 +19,23 @@ const FIELD_GROUPS = [
     label: 'Contato do responsável',
     fields: ['Nome do Responsável', 'Telefone do Responsável'],
   },
-  {
-    label: 'Saúde',
-    fields: ['Usa Medicamento'],
-  },
-  {
-    label: 'Documentos',
-    fields: ['Autorização de Responsável'],
-  },
+  { label: 'Saúde',      fields: ['Usa Medicamento'] },
+  { label: 'Documentos', fields: ['Autorização de Responsável'] },
 ]
 
+const FIXED_FIELDS = ['Nome completo', 'Documento (CPF)', 'E-mail']
+
 export function EventSetupForm() {
-  const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
+  const { id }    = useParams<{ id: string }>()
+  const navigate  = useNavigate()
   const [enabled, setEnabled] = useState<Set<string>>(new Set())
-  const [saving, setSaving] = useState(false)
+  const [saving, setSaving]   = useState(false)
 
   useEffect(() => {
     if (!id) return
     api.get(`/events/${id}`).then(({ data }) => {
       if (data.formFields) {
-        try {
-          const parsed: string[] = JSON.parse(data.formFields)
-          setEnabled(new Set(parsed))
-        } catch {}
+        try { setEnabled(new Set(JSON.parse(data.formFields))) } catch {}
       }
     })
   }, [id])
@@ -48,8 +43,7 @@ export function EventSetupForm() {
   function toggle(field: string) {
     setEnabled((prev) => {
       const next = new Set(prev)
-      if (next.has(field)) next.delete(field)
-      else next.add(field)
+      next.has(field) ? next.delete(field) : next.add(field)
       return next
     })
   }
@@ -58,89 +52,108 @@ export function EventSetupForm() {
     if (!id) return
     setSaving(true)
     try {
-      await api.put(`/events/${id}`, {
-        formFields: JSON.stringify([...enabled]),
-      })
+      await api.put(`/events/${id}`, { formFields: JSON.stringify([...enabled]) })
       navigate(`/events/${id}/setup/page`)
     } finally {
       setSaving(false)
     }
   }
 
+  const colHdr = (label: string, cls: string) => (
+    <span
+      key={label}
+      className={`text-[10px] font-semibold uppercase tracking-[0.1em] ${cls}`}
+      style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}
+    >
+      {label}
+    </span>
+  )
+
   return (
     <DashboardLayout active="eventos">
       <EventWizardHeader active="form" eventId={id} />
 
-      <div className="max-w-2xl mx-auto py-8">
-        <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-          {/* Header */}
-          <div className="grid grid-cols-3 px-6 py-3 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-            <span>Campo</span>
-            <span className="text-center">Obrigatório</span>
-            <span className="text-right">Ativado/Desativado</span>
+      <div className="max-w-2xl mx-auto flex flex-col gap-5">
+        <WizardCard>
+          {/* Cabeçalho da tabela */}
+          <div
+            className="grid grid-cols-3 pb-2"
+            style={{ borderBottom: '1px solid rgba(0,24,109,0.08)' }}
+          >
+            {colHdr('Campo',              'col-span-1')}
+            {colHdr('Obrigatório',        'col-span-1 text-center')}
+            {colHdr('Ativado / Desativado', 'col-span-1 text-right')}
           </div>
 
           {/* Campos fixos */}
-          {['Nome completo', 'Documento (CPF)', 'E-mail'].map((field) => (
-            <div key={field} className="grid grid-cols-3 items-center px-6 py-4 border-b border-gray-100">
-              <span className="text-sm font-medium text-gray-800">{field}</span>
+          {FIXED_FIELDS.map((field) => (
+            <div
+              key={field}
+              className="grid grid-cols-3 items-center py-3"
+              style={{ borderBottom: '1px solid rgba(0,24,109,0.06)' }}
+            >
+              <span className="text-sm font-medium" style={{ color: '#0A0A09', fontFamily: 'Inter, sans-serif' }}>
+                {field}
+              </span>
               <div className="flex justify-center">
-                <span className="w-4 h-4 rounded bg-teal-500 flex items-center justify-center">
-                  <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 12 12">
-                    <path d="M10 3L5 8.5 2 5.5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-                  </svg>
+                <span
+                  className="w-5 h-5 rounded-md flex items-center justify-center"
+                  style={{ background: '#00186D' }}
+                >
+                  <Check size={11} color="white" />
                 </span>
               </div>
               <div className="flex justify-end">
-                <span className="text-xs text-gray-400">Obrigatório em todos os eventos</span>
+                <span className="text-xs" style={{ color: '#9CA3AF', fontFamily: 'Inter, sans-serif' }}>
+                  Obrigatório
+                </span>
               </div>
             </div>
           ))}
 
-          {/* Grupos de campos opcionais */}
+          {/* Grupos opcionais */}
           {FIELD_GROUPS.map((group) => (
             <div key={group.label}>
-              <div className="px-6 py-2 bg-gray-50 border-b border-t border-gray-100">
-                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{group.label}</span>
+              <div
+                className="py-2 mt-2"
+                style={{ borderTop: '1px solid rgba(0,24,109,0.06)' }}
+              >
+                <span
+                  className="text-[10px] font-semibold uppercase tracking-[0.1em]"
+                  style={{ color: '#D4B16A', fontFamily: 'Cinzel, serif' }}
+                >
+                  {group.label}
+                </span>
               </div>
+
               {group.fields.map((field) => (
-                <div key={field} className="grid grid-cols-3 items-center px-6 py-4 border-b border-gray-100 last:border-0">
-                  <span className="text-sm text-gray-700">{field}</span>
+                <div
+                  key={field}
+                  className="grid grid-cols-3 items-center py-3"
+                  style={{ borderBottom: '1px solid rgba(0,24,109,0.05)' }}
+                >
+                  <span className="text-sm" style={{ color: '#33425C', fontFamily: 'Inter, sans-serif' }}>
+                    {field}
+                  </span>
                   <span />
-                  <div className="flex items-center justify-end gap-3">
-                    <span className="text-xs text-gray-400">{enabled.has(field) ? 'Ativado' : 'Desativado'}</span>
-                    <button
-                      onClick={() => toggle(field)}
-                      className={`relative w-10 h-5 rounded-full transition-colors ${
-                        enabled.has(field) ? 'bg-teal-500' : 'bg-gray-300'
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                          enabled.has(field) ? 'translate-x-5' : 'translate-x-0'
-                        }`}
-                      />
-                    </button>
+                  <div className="flex items-center justify-end gap-2.5">
+                    <span className="text-xs" style={{ color: enabled.has(field) ? '#00186D' : '#9CA3AF', fontFamily: 'Inter, sans-serif' }}>
+                      {enabled.has(field) ? 'Ativo' : 'Inativo'}
+                    </span>
+                    <Toggle enabled={enabled.has(field)} onToggle={() => toggle(field)} />
                   </div>
                 </div>
               ))}
             </div>
           ))}
-        </div>
+        </WizardCard>
 
-        <div className="flex justify-between mt-6">
-          <button
-            onClick={() => navigate(`/events/${id}/setup/payment`)}
-            className="text-sm text-gray-500 hover:text-gray-700"
-          >
-            &lt; PASSO ANTERIOR
+        <div className="flex items-center justify-between pb-8">
+          <button onClick={() => navigate(`/events/${id}/setup/payment`)} style={wizardNavBtn()}>
+            ← Passo anterior
           </button>
-          <button
-            onClick={handleNext}
-            disabled={saving}
-            className="bg-teal-500 hover:bg-teal-600 disabled:opacity-60 text-white font-semibold px-8 py-2 rounded-full text-sm transition-colors"
-          >
-            {saving ? 'SALVANDO...' : 'PRÓXIMO PASSO'}
+          <button onClick={handleNext} disabled={saving} style={wizardPrimaryBtn(saving)}>
+            {saving ? 'Salvando...' : 'Próximo passo →'}
           </button>
         </div>
       </div>

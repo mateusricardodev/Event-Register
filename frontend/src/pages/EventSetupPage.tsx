@@ -1,25 +1,27 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { CheckCircle, ImageIcon, Copy, ExternalLink } from 'lucide-react'
 import { EventWizardHeader } from '../components/EventWizardHeader'
 import { DashboardLayout } from '../components/DashboardLayout'
+import { WizardField, WizardCard, WizardInput, WizardTextarea, Toggle, wizardNavBtn, wizardPrimaryBtn, wizardSecondaryBtn } from '../components/WizardShared'
 import api, { API_BASE_URL } from '../api/axios'
 
 export function EventSetupPage() {
-  const { id } = useParams<{ id: string }>()
+  const { id }   = useParams<{ id: string }>()
   const navigate = useNavigate()
 
-  const [title, setTitle] = useState('')
-  const [about, setAbout] = useState('')
+  const [title, setTitle]               = useState('')
+  const [about, setAbout]               = useState('')
   const [aboutEnabled, setAboutEnabled] = useState(false)
-  const [isPublished, setIsPublished] = useState(false)
-  const [slug, setSlug] = useState('')
-  const [bannerUrl, setBannerUrl] = useState<string | null>(null)
-  const [uploading, setUploading] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [publishing, setPublishing] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [done, setDone] = useState(false)
-  const [copied, setCopied] = useState(false)
+  const [isPublished, setIsPublished]   = useState(false)
+  const [slug, setSlug]                 = useState('')
+  const [bannerUrl, setBannerUrl]       = useState<string | null>(null)
+  const [uploading, setUploading]       = useState(false)
+  const [saving, setSaving]             = useState(false)
+  const [publishing, setPublishing]     = useState(false)
+  const [saved, setSaved]               = useState(false)
+  const [done, setDone]                 = useState(false)
+  const [copied, setCopied]             = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -38,11 +40,7 @@ export function EventSetupPage() {
     setSaving(true)
     setSaved(false)
     try {
-      await api.put(`/events/${id}`, {
-        title,
-        about: aboutEnabled ? about : '',
-        isPublished,
-      })
+      await api.put(`/events/${id}`, { title, about: aboutEnabled ? about : '', isPublished })
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
     } finally {
@@ -54,11 +52,7 @@ export function EventSetupPage() {
     if (!id) return
     setPublishing(true)
     try {
-      await api.put(`/events/${id}`, {
-        title,
-        about: aboutEnabled ? about : '',
-        isPublished: true,
-      })
+      await api.put(`/events/${id}`, { title, about: aboutEnabled ? about : '', isPublished: true })
       setIsPublished(true)
       setDone(true)
       setTimeout(() => navigate('/dashboard'), 2500)
@@ -83,19 +77,43 @@ export function EventSetupPage() {
     }
   }
 
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(publicUrl)
+    } catch {
+      const el = document.createElement('textarea')
+      el.value = publicUrl
+      document.body.appendChild(el)
+      el.select()
+      document.execCommand('copy')
+      document.body.removeChild(el)
+    }
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
   const publicUrl = `${window.location.origin}/evento/${slug}`
 
   if (done) {
     return (
       <DashboardLayout active="eventos">
-        <div className="flex flex-col items-center justify-center gap-4 py-24">
-          <div className="w-16 h-16 rounded-full bg-teal-500 flex items-center justify-center">
-            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
+        <div className="flex flex-col items-center justify-center gap-5 py-24">
+          <div
+            className="w-16 h-16 rounded-full flex items-center justify-center"
+            style={{ background: 'rgba(0,24,109,0.07)' }}
+          >
+            <CheckCircle size={32} style={{ color: '#00186D' }} />
           </div>
-          <h2 className="text-xl font-semibold text-gray-800">Evento publicado com sucesso!</h2>
-          <p className="text-sm text-gray-500">Redirecionando para Meus Eventos...</p>
+          <div className="text-center">
+            <h2
+              style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.75rem', fontWeight: 600, color: '#00186D' }}
+            >
+              Evento publicado com sucesso!
+            </h2>
+            <p className="text-sm mt-1" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
+              Redirecionando para o painel...
+            </p>
+          </div>
         </div>
       </DashboardLayout>
     )
@@ -105,200 +123,148 @@ export function EventSetupPage() {
     <DashboardLayout active="eventos">
       <EventWizardHeader active="page" eventId={id} />
 
-      <div className="max-w-4xl mx-auto py-8 flex gap-6">
-        {/* Sidebar - seções */}
-        <aside className="w-56 shrink-0">
-          <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+      <div className="max-w-4xl mx-auto flex gap-6 pb-8">
+
+        {/* Sidebar de seções */}
+        <aside className="w-52 shrink-0">
+          <WizardCard>
+            <p
+              className="text-[10px] font-semibold uppercase tracking-[0.1em]"
+              style={{ color: '#6B7280', fontFamily: 'Cinzel, serif' }}
+            >
               Seções da página
+            </p>
+            <div className="flex items-center justify-between">
+              <span className="text-sm" style={{ color: '#33425C', fontFamily: 'Inter, sans-serif' }}>
+                Descrição
+              </span>
+              <Toggle enabled={aboutEnabled} onToggle={() => setAboutEnabled((v) => !v)} />
             </div>
-            <div className="px-4 py-3 flex items-center justify-between">
-              <span className="text-sm text-gray-700">Descrição</span>
-              <button
-                onClick={() => setAboutEnabled((v) => !v)}
-                className={`relative w-10 h-5 rounded-full transition-colors ${
-                  aboutEnabled ? 'bg-teal-500' : 'bg-gray-300'
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                    aboutEnabled ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
-              </button>
-            </div>
-          </div>
+          </WizardCard>
         </aside>
 
-        {/* Main content */}
+        {/* Conteúdo principal */}
         <div className="flex-1 flex flex-col gap-4">
-          {/* Title */}
-          <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Nome do evento</label>
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
-            />
-          </div>
 
-          {/* Cover image */}
-          <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Imagem de capa</label>
-            {bannerUrl ? (
-              <div className="relative w-full aspect-[660/650] rounded-lg overflow-hidden">
-                <img
-                  src={`${API_BASE_URL}${bannerUrl}`}
-                  alt="Capa do evento"
-                  className="w-full h-full object-cover"
-                />
-                <label className="absolute inset-0 flex items-center justify-center bg-black/40 cursor-pointer hover:bg-black/50 transition-colors">
-                  <span className="text-white text-sm font-medium">
-                    {uploading ? 'Enviando...' : 'Alterar imagem'}
-                  </span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleBannerUpload}
-                    disabled={uploading}
+          {/* Nome */}
+          <WizardCard>
+            <WizardField label="Nome do evento">
+              <WizardInput value={title} onChange={(e) => setTitle(e.target.value)} />
+            </WizardField>
+          </WizardCard>
+
+          {/* Banner */}
+          <WizardCard>
+            <WizardField label="Imagem de capa">
+              {bannerUrl ? (
+                <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden">
+                  <img
+                    src={`${API_BASE_URL}${bannerUrl}`}
+                    alt="Capa do evento"
+                    className="w-full h-full object-cover"
                   />
+                  <label
+                    className="absolute inset-0 flex items-center justify-center cursor-pointer transition-all"
+                    style={{ background: 'rgba(0,24,109,0.45)' }}
+                  >
+                    <span className="text-white text-sm font-medium" style={{ fontFamily: 'Inter, sans-serif' }}>
+                      {uploading ? 'Enviando...' : 'Alterar imagem'}
+                    </span>
+                    <input type="file" accept="image/*" className="hidden" onChange={handleBannerUpload} disabled={uploading} />
+                  </label>
+                </div>
+              ) : (
+                <label
+                  className="flex flex-col items-center justify-center w-full aspect-[16/9] rounded-xl cursor-pointer transition-all"
+                  style={{ border: '2px dashed rgba(0,24,109,0.2)', background: 'rgba(0,24,109,0.02)' }}
+                >
+                  {uploading ? (
+                    <span className="text-sm" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>Enviando...</span>
+                  ) : (
+                    <>
+                      <ImageIcon size={28} style={{ color: '#9CA3AF', marginBottom: '0.5rem' }} />
+                      <span className="text-sm" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
+                        Clique para anexar uma imagem
+                      </span>
+                      <span className="text-xs mt-1" style={{ color: '#9CA3AF', fontFamily: 'Inter, sans-serif' }}>
+                        PNG, JPG ou WebP · máx. 5 MB
+                      </span>
+                    </>
+                  )}
+                  <input type="file" accept="image/*" className="hidden" onChange={handleBannerUpload} disabled={uploading} />
                 </label>
-              </div>
-            ) : (
-              <label className="flex flex-col items-center justify-center w-full aspect-[660/650] border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-teal-400 transition-colors bg-gray-50">
-                {uploading ? (
-                  <span className="text-sm text-gray-400">Enviando...</span>
-                ) : (
-                  <>
-                    <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                    <span className="text-sm text-gray-400">Clique para anexar uma imagem</span>
-                  </>
-                )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleBannerUpload}
-                  disabled={uploading}
-                />
-              </label>
-            )}
-          </div>
+              )}
+            </WizardField>
+          </WizardCard>
 
-          {/* Descrição */}
+          {/* Descrição (condicional) */}
           {aboutEnabled && (
-            <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Descrição</label>
-              <textarea
-                value={about}
-                onChange={(e) => setAbout(e.target.value)}
-                rows={5}
-                placeholder="Descreva o evento para os participantes..."
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 resize-none"
-              />
-            </div>
+            <WizardCard>
+              <WizardField label="Descrição">
+                <WizardTextarea
+                  value={about}
+                  onChange={(e) => setAbout(e.target.value)}
+                  rows={5}
+                  placeholder="Descreva o evento para os participantes..."
+                />
+              </WizardField>
+            </WizardCard>
           )}
 
-          {/* Actions */}
-          <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5 flex flex-col gap-3">
+          {/* Ações */}
+          <WizardCard>
             {saved && (
-              <p className="text-xs text-teal-600 font-medium">Alterações salvas com sucesso!</p>
+              <p className="text-xs font-medium" style={{ color: '#166534', fontFamily: 'Inter, sans-serif' }}>
+                ✓ Alterações salvas com sucesso!
+              </p>
             )}
 
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="border border-teal-500 text-teal-600 hover:bg-teal-50 text-sm font-semibold px-6 py-2 rounded-full transition-colors disabled:opacity-60"
+            {/* Link público */}
+            {slug && (
+              <div
+                className="flex items-center gap-2 rounded-xl px-3 py-2.5"
+                style={{ background: 'rgba(0,24,109,0.04)', border: '1px solid rgba(0,24,109,0.1)' }}
               >
-                {saving ? 'SALVANDO...' : 'SALVAR'}
-              </button>
-
-              {slug && (
-                <a
-                  href={publicUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm font-semibold px-6 py-2 rounded-full transition-colors"
-                >
-                  PRÉ-VISUALIZAR
+                <span className="flex-1 text-xs truncate" style={{ color: '#33425C', fontFamily: 'Inter, sans-serif' }}>
+                  {publicUrl}
+                </span>
+                <button onClick={copyLink} className="p-1 rounded transition-all" style={{ color: copied ? '#00186D' : '#6B7280' }} title="Copiar link">
+                  <Copy size={14} />
+                </button>
+                <a href={publicUrl} target="_blank" rel="noopener noreferrer" className="p-1 rounded" style={{ color: '#6B7280' }} title="Pré-visualizar">
+                  <ExternalLink size={14} />
                 </a>
-              )}
+              </div>
+            )}
+            {copied && (
+              <p className="text-xs" style={{ color: '#00186D', fontFamily: 'Inter, sans-serif' }}>
+                Link copiado!
+              </p>
+            )}
 
-              {slug && (
-                <div className="relative">
-                  {copied && (
-                    <div className="absolute -top-9 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs font-medium px-3 py-1.5 rounded-lg whitespace-nowrap flex items-center gap-1.5">
-                      <svg className="w-3 h-3 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Link copiado com sucesso!
-                    </div>
-                  )}
-                  <button
-                    onClick={async () => {
-                      try {
-                        await navigator.clipboard.writeText(publicUrl)
-                        setCopied(true)
-                        setTimeout(() => setCopied(false), 2000)
-                      } catch {
-                        // fallback para contextos sem permissão de clipboard
-                        const el = document.createElement('textarea')
-                        el.value = publicUrl
-                        document.body.appendChild(el)
-                        el.select()
-                        document.execCommand('copy')
-                        document.body.removeChild(el)
-                        setCopied(true)
-                        setTimeout(() => setCopied(false), 2000)
-                      }
-                    }}
-                    className="border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm font-semibold px-6 py-2 rounded-full transition-colors"
-                  >
-                    COPIAR LINK
-                  </button>
-                </div>
-              )}
+            <div className="flex items-center gap-3 pt-1" style={{ borderTop: '1px solid rgba(0,24,109,0.07)' }}>
+              <span className="text-sm font-medium" style={{ color: '#33425C', fontFamily: 'Inter, sans-serif' }}>
+                Publicar evento
+              </span>
+              <Toggle enabled={isPublished} onToggle={() => setIsPublished((v) => !v)} />
+              <span className="text-xs" style={{ color: isPublished ? '#00186D' : '#9CA3AF', fontFamily: 'Inter, sans-serif' }}>
+                {isPublished ? 'Publicado' : 'Não publicado'}
+              </span>
             </div>
 
-            <div className="flex items-center gap-3 pt-1 border-t border-gray-100">
-              <span className="text-sm font-semibold text-gray-700">Publicar evento</span>
-              <button
-                onClick={() => setIsPublished((v) => !v)}
-                className={`relative w-10 h-5 rounded-full transition-colors ${
-                  isPublished ? 'bg-teal-500' : 'bg-gray-300'
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                    isPublished ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
+            <div className="flex items-center gap-3">
+              <button onClick={handleSave} disabled={saving} style={wizardSecondaryBtn()}>
+                {saving ? 'Salvando...' : 'Salvar'}
               </button>
-              <span className="text-xs text-gray-400">{isPublished ? 'Publicado' : 'Não publicado'}</span>
+              <button onClick={handlePublish} disabled={publishing} style={wizardPrimaryBtn(publishing)}>
+                {publishing ? 'Publicando...' : 'Publicar →'}
+              </button>
             </div>
+          </WizardCard>
 
-            <button
-              onClick={handlePublish}
-              disabled={publishing}
-              className="w-full bg-teal-500 hover:bg-teal-600 disabled:opacity-60 text-white font-semibold px-8 py-2 rounded-full text-sm transition-colors"
-            >
-              {publishing ? 'PUBLICANDO...' : 'PUBLICAR'}
-            </button>
-          </div>
-
-          {/* Navigation */}
-          <div className="flex justify-between">
-            <button
-              onClick={() => navigate(`/events/${id}/setup/form`)}
-              className="text-sm text-gray-500 hover:text-gray-700"
-            >
-              &lt; PASSO ANTERIOR
+          <div className="flex">
+            <button onClick={() => navigate(`/events/${id}/setup/form`)} style={wizardNavBtn()}>
+              ← Passo anterior
             </button>
           </div>
         </div>
