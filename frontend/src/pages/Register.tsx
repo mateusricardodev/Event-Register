@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { Eye, EyeOff, Mail, Lock, Users } from 'lucide-react'
 import api from '../api/axios'
 
 export function Register() {
   const [form, setForm] = useState({ name: '', email: '', password: '' })
-  const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [error, setError]   = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
@@ -27,79 +29,213 @@ export function Register() {
   }
 
   return (
-    <div className="min-h-screen flex">
-      <div className="w-full max-w-md flex flex-col p-10">
-        <span className="text-purple-700 font-bold text-lg mb-8">e·inscrição</span>
-        <h2 className="text-xl font-semibold text-gray-800 mb-6">Cadastre-se</h2>
+    <div className="min-h-screen flex" style={{ background: '#F5F2E8' }}>
 
-        {error && (
-          <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
-            {error}
-          </div>
-        )}
+      {/* ── Lado esquerdo — imagem ── */}
+      <div className="hidden lg:flex w-[55%] relative overflow-hidden">
+        <img
+          src="/interior-igreja.jpg"
+          alt="Interior de catedral"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div
+          className="absolute inset-0"
+          style={{ background: 'linear-gradient(135deg, rgba(0,24,109,0.82) 0%, rgba(0,24,109,0.45) 100%)' }}
+        />
+        <div className="relative z-10 flex flex-col justify-between h-full px-14 py-12">
+          <img src="/logo-ecclesio.png" alt="Ecclesio" className="h-10 object-contain" />
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
-            <input
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-purple-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
-            <input
-              name="email"
-              type="email"
-              value={form.email}
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-purple-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
-            <input
-              name="password"
-              type="password"
-              value={form.password}
-              onChange={handleChange}
-              required
-              minLength={6}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-purple-500"
-            />
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-px w-8" style={{ background: '#D4B16A' }} />
+              <span
+                className="text-xs font-semibold tracking-[0.2em] uppercase"
+                style={{ color: '#D4B16A', fontFamily: 'Cinzel, serif' }}
+              >
+                Comece agora
+              </span>
+            </div>
+            <h1
+              className="text-white leading-tight mb-4"
+              style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '3rem', fontWeight: 600 }}
+            >
+              Crie sua conta<br />
+              e organize seu<br />
+              <span style={{ color: '#D4B16A', fontStyle: 'italic' }}>próximo evento.</span>
+            </h1>
+            <p className="text-white/70 text-base leading-relaxed max-w-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
+              Em menos de 2 minutos você já pode criar seu primeiro evento e começar a receber inscrições.
+            </p>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-2 bg-teal-500 hover:bg-teal-600 text-white text-sm font-semibold px-6 py-2 rounded-full transition-colors disabled:opacity-60 self-start"
-          >
-            {loading ? 'CRIANDO...' : 'CRIAR CONTA'}
-          </button>
-
-          <p className="text-sm text-gray-500 mt-1">
-            Já tem conta?{' '}
-            <Link to="/login" className="text-teal-600 hover:underline">
-              Entrar
-            </Link>
-          </p>
-        </form>
-      </div>
-
-      <div className="hidden md:flex flex-1 bg-purple-800 items-center justify-center p-12">
-        <div className="text-white text-center max-w-sm">
-          <h2 className="text-3xl font-bold leading-tight mb-4">
-            Somos a maior plataforma de eventos cristãos do Brasil!
-          </h2>
-          <p className="text-purple-200 text-sm">
-            Nossa plataforma oferece as ferramentas necessárias para você criar seus eventos de forma fácil e rápida, sem complicações.
+          <p className="text-white/30 text-xs" style={{ fontFamily: 'Inter, sans-serif' }}>
+            © {new Date().getFullYear()} Ecclesio. Todos os direitos reservados.
           </p>
         </div>
       </div>
+
+      {/* ── Lado direito — formulário ── */}
+      <div className="flex-1 flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-[420px]">
+
+          {/* Logo mobile */}
+          <div className="lg:hidden flex justify-center mb-8">
+            <img src="/logo-ecclesio.png" alt="Ecclesio" className="h-9 object-contain" />
+          </div>
+
+          <div
+            className="rounded-2xl p-8 w-full"
+            style={{
+              background: '#FFFFFF',
+              boxShadow: '0 4px 32px rgba(0,24,109,0.08), 0 1px 4px rgba(0,0,0,0.04)',
+              border: '1px solid rgba(0,24,109,0.08)',
+            }}
+          >
+            <div className="h-0.5 w-12 mb-6 rounded-full" style={{ background: '#D4B16A' }} />
+
+            <h2
+              className="mb-1"
+              style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.875rem', fontWeight: 600, color: '#00186D', lineHeight: 1.2 }}
+            >
+              Criar conta
+            </h2>
+            <p className="text-sm mb-7" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
+              Preencha os dados abaixo para começar
+            </p>
+
+            {error && (
+              <div
+                className="text-sm rounded-xl px-4 py-3 mb-5"
+                style={{ background: '#FEF2F2', color: '#991B1B', border: '1px solid #FECACA', fontFamily: 'Inter, sans-serif' }}
+              >
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+              <Field label="Nome completo">
+                <div className="relative">
+                  <Users className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#6B7280' }} />
+                  <input
+                    name="name"
+                    type="text"
+                    placeholder="Seu nome completo"
+                    value={form.name}
+                    onChange={handleChange}
+                    required
+                    style={inputStyle}
+                    className="w-full pl-10 pr-4 py-3 text-sm focus:outline-none transition-all"
+                  />
+                </div>
+              </Field>
+
+              <Field label="E-mail">
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#6B7280' }} />
+                  <input
+                    name="email"
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={form.email}
+                    onChange={handleChange}
+                    required
+                    style={inputStyle}
+                    className="w-full pl-10 pr-4 py-3 text-sm focus:outline-none transition-all"
+                  />
+                </div>
+              </Field>
+
+              <Field label="Senha">
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#6B7280' }} />
+                  <input
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Mínimo 6 caracteres"
+                    value={form.password}
+                    onChange={handleChange}
+                    required
+                    minLength={6}
+                    style={inputStyle}
+                    className="w-full pl-10 pr-10 py-3 text-sm focus:outline-none transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2"
+                    style={{ color: '#6B7280' }}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </Field>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2 text-sm mt-1"
+                style={{
+                  background: loading ? '#33425C' : '#00186D',
+                  color: '#FFFFFF',
+                  fontFamily: 'Inter, sans-serif',
+                  opacity: loading ? 0.75 : 1,
+                }}
+              >
+                {loading ? (
+                  <>
+                    <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                    </svg>
+                    Criando conta...
+                  </>
+                ) : (
+                  <>
+                    Criar conta
+                    <span style={{ color: '#D4B16A' }}>→</span>
+                  </>
+                )}
+              </button>
+
+              <p className="text-center text-sm" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
+                Já tem conta?{' '}
+                <Link to="/login" style={{ color: '#00186D', fontWeight: 600 }}>
+                  Entrar
+                </Link>
+              </p>
+            </form>
+
+            <p className="text-center text-xs mt-6" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
+              Ao criar uma conta, você concorda com os{' '}
+              <span className="cursor-pointer" style={{ color: '#00186D' }}>Termos de uso</span>
+              {' '}e{' '}
+              <span className="cursor-pointer" style={{ color: '#00186D' }}>Política de privacidade</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const inputStyle: React.CSSProperties = {
+  background: '#FAFAFA',
+  border: '1px solid #E5E0D4',
+  borderRadius: '10px',
+  color: '#0A0A09',
+  fontFamily: 'Inter, sans-serif',
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label
+        className="block text-sm font-medium mb-1.5"
+        style={{ color: '#33425C', fontFamily: 'Inter, sans-serif' }}
+      >
+        {label}
+      </label>
+      {children}
     </div>
   )
 }
