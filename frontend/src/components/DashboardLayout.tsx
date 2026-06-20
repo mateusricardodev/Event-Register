@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
-  Home, Calendar, Users, Settings, Bell, Search, Menu, X,
+  LayoutDashboard, Calendar, Users, Settings, Search, Menu, X, LogOut, Bell,
 } from 'lucide-react'
 import { useAuthStore } from '../store/auth.store'
 
 const NAV_ITEMS = [
-  { label: 'Dashboard', icon: Home, to: '/dashboard', key: 'dashboard' },
+  { label: 'Dashboard', icon: LayoutDashboard, to: '/dashboard', key: 'dashboard' },
   { label: 'Eventos', icon: Calendar, to: '/eventos', key: 'eventos' },
   { label: 'Inscrições', icon: Users, to: '/buscar-inscricoes', key: 'inscricoes' },
   { label: 'Configurações', icon: Settings, to: '/dashboard', key: 'config' },
@@ -40,107 +40,135 @@ export function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F9FC]">
-      {/* ── NAVBAR ──────────────────────────────────────────────────────── */}
-      <header className="bg-[#1E1057] text-white sticky top-0 z-30">
-        <div className="h-16 px-4 flex items-center gap-4">
-          {/* Hamburger (mobile) */}
+    <div className="min-h-screen flex flex-col" style={{ background: '#F5F2E8' }}>
+
+      {/* ── TOPBAR ─────────────────────────────────────────────────────────── */}
+      <header
+        className="sticky top-0 z-30 flex items-center h-[60px] px-5 gap-4"
+        style={{
+          background: '#00186D',
+          borderBottom: '1px solid rgba(255,255,255,0.07)',
+        }}
+      >
+        {/* Hamburger mobile */}
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="lg:hidden p-1.5 rounded-lg transition-colors"
+          style={{ color: 'rgba(255,255,255,0.7)' }}
+          aria-label="Abrir menu"
+        >
+          <Menu size={20} />
+        </button>
+
+        {/* Logo */}
+        <Link to="/dashboard" className="shrink-0 flex items-center">
+          <img src="/logo-ecclesio.png" alt="Ecclesio" className="h-7 object-contain" />
+        </Link>
+
+        {/* Divisor */}
+        <div className="hidden lg:block h-5 w-px mx-1" style={{ background: 'rgba(255,255,255,0.15)' }} />
+
+        {/* Busca */}
+        <form
+          onSubmit={(e) => { e.preventDefault(); navigate('/buscar-inscricoes') }}
+          className="hidden md:flex flex-1 max-w-md"
+        >
+          <div className="relative w-full">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'rgba(255,255,255,0.4)' }} />
+            <input
+              placeholder="Buscar eventos, inscrições..."
+              className="w-full text-sm rounded-lg pl-9 pr-3 py-1.5 focus:outline-none transition-all"
+              style={{
+                background: 'rgba(255,255,255,0.08)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                color: 'rgba(255,255,255,0.85)',
+                fontFamily: 'Inter, sans-serif',
+              }}
+            />
+          </div>
+        </form>
+
+        {/* Direita */}
+        <div className="flex items-center gap-2 ml-auto">
           <button
-            onClick={() => setSidebarOpen(true)}
-            className="lg:hidden p-2 -ml-2 rounded-lg hover:bg-white/10 transition-colors"
-            aria-label="Abrir menu"
+            className="p-2 rounded-lg transition-colors relative"
+            style={{ color: 'rgba(255,255,255,0.6)' }}
+            aria-label="Notificações"
           >
-            <Menu size={22} />
+            <Bell size={18} />
           </button>
 
-          {/* Logo */}
-          <Link to="/dashboard" className="flex items-center gap-2 shrink-0">
-            <span className="w-8 h-8 rounded-lg bg-violet-500/30 flex items-center justify-center">
-              <Calendar size={18} className="text-violet-300" />
-            </span>
-            <span className="font-bold text-lg tracking-tight">
-              inscrições<span className="text-violet-400">.app</span>
-            </span>
-          </Link>
-
-          {/* Busca (centro) */}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              navigate('/buscar-inscricoes')
-            }}
-            className="hidden md:flex flex-1 max-w-xl mx-auto"
+          {/* Avatar + nome */}
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2.5 rounded-xl px-2 py-1.5 transition-colors group"
+            style={{ color: 'white' }}
+            title="Sair"
           >
-            <div className="relative w-full">
-              <Search
-                size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50"
-              />
-              <input
-                placeholder="Buscar eventos, inscrições e participantes..."
-                className="w-full bg-white/10 placeholder-white/50 text-white text-sm rounded-lg pl-9 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-violet-400"
-              />
-            </div>
-          </form>
-
-          {/* Direita: sino + avatar */}
-          <div className="flex items-center gap-3 ml-auto md:ml-0">
-            <button
-              className="relative p-2 rounded-lg hover:bg-white/10 transition-colors"
-              aria-label="Notificações"
+            <span
+              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+              style={{ background: '#D4B16A', color: '#00186D' }}
             >
-              <Bell size={20} />
-            </button>
-            <button onClick={handleLogout} className="flex items-center gap-2" title="Sair">
-              <span className="w-9 h-9 rounded-full bg-teal-400 text-[#1E1057] font-bold text-sm flex items-center justify-center">
-                {initials || '?'}
+              {initials || '?'}
+            </span>
+            <span className="hidden sm:flex flex-col items-start leading-tight">
+              <span className="text-sm font-semibold" style={{ fontFamily: 'Inter, sans-serif' }}>
+                {fullName}
               </span>
-              <span className="hidden sm:flex flex-col items-start leading-tight">
-                <span className="text-sm font-semibold">{fullName}</span>
-                <span className="text-xs text-white/60">Organizador</span>
+              <span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'Inter, sans-serif' }}>
+                Organizador
               </span>
-            </button>
-          </div>
+            </span>
+            <LogOut size={14} className="hidden sm:block ml-1 opacity-0 group-hover:opacity-60 transition-opacity" />
+          </button>
         </div>
       </header>
 
-      <div className="flex">
-        {/* ── SIDEBAR (desktop) ─────────────────────────────────────────── */}
-        <aside className="hidden lg:flex flex-col w-[200px] shrink-0 bg-white border-r border-gray-200 min-h-[calc(100vh-4rem)] p-3">
-          <SidebarNav active={active} />
+      <div className="flex flex-1">
+        {/* ── SIDEBAR desktop ────────────────────────────────────────────── */}
+        <aside
+          className="hidden lg:flex flex-col w-[220px] shrink-0 min-h-[calc(100vh-60px)] sticky top-[60px] self-start"
+          style={{
+            background: '#FFFFFF',
+            borderRight: '1px solid rgba(0,24,109,0.08)',
+          }}
+        >
+          <SidebarContent active={active} />
         </aside>
 
-        {/* ── SIDEBAR (mobile drawer) ───────────────────────────────────── */}
+        {/* ── SIDEBAR mobile drawer ──────────────────────────────────────── */}
         {sidebarOpen && (
           <div className="lg:hidden fixed inset-0 z-40 flex">
-            <div
-              className="absolute inset-0 bg-black/40"
-              onClick={() => setSidebarOpen(false)}
-            />
-            <aside className="relative w-64 bg-white h-full p-3 shadow-xl">
-              <div className="flex items-center justify-between mb-2 px-2">
-                <span className="font-semibold text-gray-700 text-sm">Menu</span>
+            <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
+            <aside
+              className="relative w-72 h-full shadow-2xl flex flex-col"
+              style={{ background: '#FFFFFF' }}
+            >
+              <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'rgba(0,24,109,0.08)' }}>
+                <img src="/logo-ecclesio.png" alt="Ecclesio" className="h-7 object-contain" />
                 <button
                   onClick={() => setSidebarOpen(false)}
-                  className="p-1 rounded hover:bg-gray-100"
-                  aria-label="Fechar menu"
+                  className="p-1.5 rounded-lg"
+                  style={{ color: '#6B7280' }}
                 >
-                  <X size={18} className="text-gray-500" />
+                  <X size={18} />
                 </button>
               </div>
-              <SidebarNav active={active} onNavigate={() => setSidebarOpen(false)} />
+              <SidebarContent active={active} onNavigate={() => setSidebarOpen(false)} />
             </aside>
           </div>
         )}
 
-        {/* ── CONTEÚDO PRINCIPAL ────────────────────────────────────────── */}
-        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-8 min-w-0">{children}</main>
+        {/* ── CONTEÚDO ───────────────────────────────────────────────────── */}
+        <main className="flex-1 min-w-0 px-5 sm:px-8 py-8">
+          {children}
+        </main>
       </div>
     </div>
   )
 }
 
-function SidebarNav({
+function SidebarContent({
   active,
   onNavigate,
 }: {
@@ -148,7 +176,14 @@ function SidebarNav({
   onNavigate?: () => void
 }) {
   return (
-    <nav className="flex flex-col gap-1">
+    <nav className="flex flex-col gap-0.5 p-3 flex-1">
+      <p
+        className="px-3 pt-2 pb-1 text-[10px] font-semibold tracking-[0.12em] uppercase"
+        style={{ color: '#6B7280', fontFamily: 'Cinzel, serif' }}
+      >
+        Principal
+      </p>
+
       {NAV_ITEMS.map((item) => {
         const isActive = item.key === active
         return (
@@ -156,13 +191,15 @@ function SidebarNav({
             key={item.key}
             to={item.to}
             onClick={onNavigate}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-              isActive
-                ? 'bg-violet-100 text-violet-700'
-                : 'text-gray-600 hover:bg-gray-100'
-            }`}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all"
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              background: isActive ? 'rgba(0,24,109,0.06)' : 'transparent',
+              color: isActive ? '#00186D' : '#33425C',
+              borderLeft: isActive ? '3px solid #D4B16A' : '3px solid transparent',
+            }}
           >
-            <item.icon size={18} />
+            <item.icon size={17} style={{ opacity: isActive ? 1 : 0.6 }} />
             {item.label}
           </Link>
         )
