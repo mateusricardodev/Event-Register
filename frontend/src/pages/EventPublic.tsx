@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { Calendar, MapPin } from 'lucide-react'
 import api, { API_BASE_URL } from '../api/axios'
 
 interface PaymentMethod {
@@ -25,18 +26,18 @@ interface EventData {
 }
 
 const TYPE_LABELS: Record<string, string> = {
-  pix: 'PIX',
+  pix:         'PIX',
   credit_card: 'Cartão de crédito',
-  debit_card: 'Cartão de débito',
-  cash: 'Dinheiro',
+  debit_card:  'Cartão de débito',
+  cash:        'Dinheiro',
 }
 
 export function EventPublic() {
-  const { slug } = useParams<{ slug: string }>()
-  const navigate = useNavigate()
-  const [event, setEvent] = useState<EventData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [notFound, setNotFound] = useState(false)
+  const { slug }   = useParams<{ slug: string }>()
+  const navigate   = useNavigate()
+  const [event, setEvent]           = useState<EventData | null>(null)
+  const [loading, setLoading]       = useState(true)
+  const [notFound, setNotFound]     = useState(false)
   const [selectedMethodId, setSelectedMethodId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -53,122 +54,162 @@ export function EventPublic() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F2EDE4] flex items-center justify-center">
-        <p className="text-gray-400 text-sm">Carregando evento...</p>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#F5F2E8' }}>
+        <p className="text-sm" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>Carregando evento...</p>
       </div>
     )
   }
 
   if (notFound || !event) {
     return (
-      <div className="min-h-screen bg-[#F2EDE4] flex flex-col items-center justify-center gap-3">
-        <p className="text-lg font-semibold text-[#1B2B5E]">Evento não encontrado</p>
-        <p className="text-sm text-gray-400">O endereço pode estar incorreto ou o evento não está publicado.</p>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3" style={{ background: '#F5F2E8' }}>
+        <p className="text-lg font-semibold" style={{ color: '#00186D', fontFamily: 'Cinzel, serif' }}>
+          Evento não encontrado
+        </p>
+        <p className="text-sm" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
+          O endereço pode estar incorreto ou o evento não está publicado.
+        </p>
       </div>
     )
   }
 
   const startDate = new Date(event.date)
-  const endDate = event.endDate ? new Date(event.endDate) : null
+  const endDate   = event.endDate ? new Date(event.endDate) : null
+  const formatDate = (d: Date) => d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
 
-  const formatDate = (d: Date) => d.toLocaleDateString('pt-BR')
-
-  const selectedMethod = event.paymentMethods.find(m => m.id === selectedMethodId) ?? null
+  const selectedMethod   = event.paymentMethods.find(m => m.id === selectedMethodId) ?? null
   const hasPaymentMethods = event.paymentMethods.length > 0
 
   function handleRegister() {
     if (!selectedMethod) return
     navigate(`/evento/${slug}/inscricao`, {
       state: {
-        paymentMethodId: selectedMethod.id,
+        paymentMethodId:   selectedMethod.id,
         paymentMethodType: selectedMethod.type,
-        amount: Number(selectedMethod.value),
+        amount:            Number(selectedMethod.value),
       },
     })
   }
 
   return (
-    <div className="min-h-screen bg-[#F2EDE4]">
-      {/* Hero */}
-      <div className="w-full aspect-[4/3] md:aspect-[16/6] overflow-hidden">
+    <div className="min-h-screen" style={{ background: '#F5F2E8' }}>
+      {/* Topbar mínima */}
+      <div
+        className="w-full py-3 px-6 flex items-center justify-between"
+        style={{ background: '#00186D' }}
+      >
+        <img src="/logo-ecclesio.png" alt="Ecclesio" className="h-6 brightness-0 invert" />
+      </div>
+
+      {/* Banner / Hero */}
+      <div className="w-full" style={{ maxHeight: '380px', overflow: 'hidden' }}>
         {event.bannerUrl ? (
           <img
             src={`${API_BASE_URL}${event.bannerUrl}`}
             alt={event.title}
-            className="w-full h-full object-contain bg-gray-900"
+            className="w-full object-cover"
+            style={{ maxHeight: '380px' }}
           />
         ) : (
-          <div className="w-full h-full bg-[#1B2B5E] flex flex-col items-center justify-center gap-3 px-6">
-            <span className="font-cinzel text-xl md:text-3xl font-bold text-[#F2EDE4] text-center leading-snug">
+          <div
+            className="w-full flex flex-col items-center justify-center gap-3 py-20 px-6"
+            style={{ background: '#00186D', minHeight: '220px' }}
+          >
+            <h1
+              className="text-center"
+              style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '2.5rem', fontWeight: 600, color: '#FFFFFF', lineHeight: 1.2 }}
+            >
               {event.title}
-            </span>
-            <div className="h-px w-16 bg-[#C9A84C]" />
+            </h1>
+            <div className="flex items-center gap-3">
+              <div style={{ height: '1px', width: '48px', background: '#D4B16A' }} />
+              <span style={{ color: '#D4B16A', fontSize: '1rem' }}>✦</span>
+              <div style={{ height: '1px', width: '48px', background: '#D4B16A' }} />
+            </div>
           </div>
         )}
       </div>
 
-      {/* Seção de inscrição */}
-      <div className="max-w-lg mx-auto px-5 py-10 flex flex-col gap-6">
+      {/* Conteúdo */}
+      <div className="max-w-lg mx-auto px-5 py-10 flex flex-col gap-5">
 
-        {/* Cabeçalho */}
+        {/* Título e ornamento */}
         <div className="flex flex-col items-center gap-3 text-center">
-          <h2 className="font-cinzel text-2xl font-bold tracking-[0.3em] text-[#1B2B5E] uppercase">
-            Inscrição
-          </h2>
+          {event.bannerUrl && (
+            <h1
+              style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '2rem', fontWeight: 600, color: '#00186D', lineHeight: 1.2 }}
+            >
+              {event.title}
+            </h1>
+          )}
           <div className="flex items-center gap-3">
-            <div className="h-px w-14 bg-[#C9A84C]" />
-            <span className="text-[#C9A84C] text-base leading-none">✝</span>
-            <div className="h-px w-14 bg-[#C9A84C]" />
+            <div style={{ height: '1px', width: '40px', background: '#D4B16A' }} />
+            <span style={{ color: '#D4B16A', fontSize: '0.875rem' }}>✦</span>
+            <div style={{ height: '1px', width: '40px', background: '#D4B16A' }} />
           </div>
-          <p className="font-inter text-sm text-gray-500 max-w-xs leading-relaxed">
+          <p className="text-sm" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
             Garanta sua participação neste momento único.
           </p>
         </div>
 
-        {/* Card de data e local */}
-        <div className="bg-white rounded-2xl shadow-sm p-5 flex flex-col gap-5">
-          <div className="flex items-center gap-4">
-            <div className="w-11 h-11 rounded-full bg-[#1B2B5E] flex items-center justify-center shrink-0">
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
+        {/* Info card */}
+        <div
+          className="rounded-2xl p-5 flex flex-col gap-4"
+          style={{ background: '#FFFFFF', border: '1px solid rgba(0,24,109,0.08)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+              style={{ background: 'rgba(0,24,109,0.08)' }}
+            >
+              <Calendar size={18} style={{ color: '#00186D' }} />
             </div>
-            <div>
-              <p className="font-inter font-bold text-[#1B2B5E]">
-                {formatDate(startDate)}{endDate && ` até ${formatDate(endDate)}`}
-              </p>
-            </div>
+            <p className="text-sm font-semibold capitalize" style={{ color: '#0A0A09', fontFamily: 'Inter, sans-serif' }}>
+              {formatDate(startDate)}{endDate && ` — ${formatDate(endDate)}`}
+            </p>
           </div>
-
           {event.location && (
-            <div className="flex items-center gap-4">
-              <div className="w-11 h-11 rounded-full bg-[#1B2B5E] flex items-center justify-center shrink-0">
-                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                  />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
+            <div className="flex items-center gap-3">
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                style={{ background: 'rgba(0,24,109,0.08)' }}
+              >
+                <MapPin size={18} style={{ color: '#00186D' }} />
               </div>
-              <p className="font-inter font-bold text-[#1B2B5E]">{event.location}</p>
+              <p className="text-sm font-semibold" style={{ color: '#0A0A09', fontFamily: 'Inter, sans-serif' }}>{event.location}</p>
             </div>
           )}
         </div>
 
-        {/* Card de valor + botão */}
+        {/* Sobre */}
+        {event.about && (
+          <div
+            className="rounded-2xl p-5"
+            style={{ background: '#FFFFFF', border: '1px solid rgba(0,24,109,0.08)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
+          >
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] mb-2" style={{ color: '#D4B16A', fontFamily: 'Cinzel, serif' }}>
+              Sobre o evento
+            </p>
+            <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: '#33425C', fontFamily: 'Inter, sans-serif' }}>
+              {event.about}
+            </p>
+          </div>
+        )}
+
+        {/* Pagamento + CTA */}
         {hasPaymentMethods ? (
           <PaymentMethodSelector
             methods={event.paymentMethods}
             selectedId={selectedMethodId}
             onSelect={setSelectedMethodId}
             onRegister={handleRegister}
-            description={event.about}
           />
         ) : (
-          <div className="bg-white rounded-2xl shadow-sm p-5 text-center">
-            <p className="font-inter text-sm text-gray-400">Inscrições em breve</p>
+          <div
+            className="rounded-2xl p-5 text-center"
+            style={{ background: '#FFFFFF', border: '1px solid rgba(0,24,109,0.08)' }}
+          >
+            <p className="text-sm" style={{ color: '#9CA3AF', fontFamily: 'Inter, sans-serif' }}>Inscrições em breve</p>
           </div>
         )}
 
@@ -182,48 +223,48 @@ interface PaymentMethodSelectorProps {
   selectedId: string | null
   onSelect: (id: string) => void
   onRegister: () => void
-  description?: string | null
 }
 
-function PaymentMethodSelector({ methods, selectedId, onSelect, onRegister, description }: PaymentMethodSelectorProps) {
-  const single = methods.length === 1
+function PaymentMethodSelector({ methods, selectedId, onSelect, onRegister }: PaymentMethodSelectorProps) {
+  const single         = methods.length === 1
   const selectedMethod = methods.find(m => m.id === selectedId)
-  const amount = selectedMethod ? Number(selectedMethod.value) : null
+  const amount         = selectedMethod ? Number(selectedMethod.value) : null
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm p-5 flex flex-col gap-5">
-
-      {/* Seletor de método (somente quando há mais de um) */}
+    <div
+      className="rounded-2xl p-5 flex flex-col gap-4"
+      style={{ background: '#FFFFFF', border: '1px solid rgba(0,24,109,0.08)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
+    >
       {!single && (
         <div className="flex flex-col gap-2">
-          <p className="font-cinzel text-xs font-bold text-[#C9A84C] uppercase tracking-widest">
+          <p className="text-xs font-semibold uppercase tracking-[0.1em]" style={{ color: '#D4B16A', fontFamily: 'Cinzel, serif' }}>
             Forma de pagamento
           </p>
           {methods.map(method => {
             const selected = method.id === selectedId
-            const value = Number(method.value)
+            const value    = Number(method.value)
             return (
               <button
                 key={method.id}
                 type="button"
                 onClick={() => onSelect(method.id)}
-                className={[
-                  'font-inter w-full text-left rounded-xl border px-4 py-3 transition-all text-sm',
-                  selected
-                    ? 'border-[#1B2B5E] bg-[#1B2B5E]/5 ring-2 ring-[#1B2B5E]'
-                    : 'border-gray-200 hover:border-[#1B2B5E]/40 cursor-pointer',
-                ].join(' ')}
+                className="w-full text-left rounded-xl px-4 py-3 transition-all text-sm"
+                style={{
+                  border:     selected ? '1.5px solid #00186D' : '1px solid rgba(0,24,109,0.12)',
+                  background: selected ? 'rgba(0,24,109,0.04)' : 'transparent',
+                  boxShadow:  selected ? '0 0 0 2px rgba(0,24,109,0.12)' : 'none',
+                }}
               >
                 <div className="flex items-center justify-between">
-                  <span className={`font-semibold ${selected ? 'text-[#1B2B5E]' : 'text-gray-800'}`}>
+                  <span className="font-semibold" style={{ color: selected ? '#00186D' : '#0A0A09', fontFamily: 'Inter, sans-serif' }}>
                     {TYPE_LABELS[method.type] ?? method.type}
                   </span>
-                  <span className={`font-bold ${selected ? 'text-[#1B2B5E]' : 'text-gray-700'}`}>
+                  <span className="font-bold" style={{ color: selected ? '#00186D' : '#33425C', fontFamily: 'Inter, sans-serif' }}>
                     {value === 0 ? 'Grátis' : `R$ ${value.toFixed(2).replace('.', ',')}`}
                   </span>
                 </div>
                 {method.description && (
-                  <p className={`font-inter text-xs mt-1 ${selected ? 'text-[#1B2B5E]/70' : 'text-gray-500'}`}>
+                  <p className="text-xs mt-1" style={{ color: selected ? 'rgba(0,24,109,0.6)' : '#6B7280', fontFamily: 'Inter, sans-serif' }}>
                     {method.description}
                   </p>
                 )}
@@ -233,40 +274,39 @@ function PaymentMethodSelector({ methods, selectedId, onSelect, onRegister, desc
         </div>
       )}
 
-      {/* Preço em destaque */}
       {amount !== null && (
         <div>
-          <p className="font-cinzel text-xs font-bold text-[#C9A84C] uppercase tracking-widest">Valor</p>
-          <p className="font-cormorant text-4xl font-bold text-[#1B2B5E] mt-1">
+          <p className="text-xs font-semibold uppercase tracking-[0.1em]" style={{ color: '#D4B16A', fontFamily: 'Cinzel, serif' }}>
+            Valor
+          </p>
+          <p
+            className="mt-1"
+            style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '2.5rem', fontWeight: 700, color: '#00186D', lineHeight: 1 }}
+          >
             {amount === 0 ? 'Gratuito' : `R$ ${amount.toFixed(2).replace('.', ',')}`}
           </p>
           {selectedMethod && (
-            <p className="font-inter text-sm text-gray-500 mt-1">
-              Pagamento via{' '}
-              <span className="font-bold text-gray-700">
-                {TYPE_LABELS[selectedMethod.type] ?? selectedMethod.type}
-              </span>
+            <p className="text-sm mt-1" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
+              Pagamento via <span className="font-semibold" style={{ color: '#33425C' }}>{TYPE_LABELS[selectedMethod.type] ?? selectedMethod.type}</span>
             </p>
           )}
         </div>
       )}
 
-      {/* Botão CTA */}
       <button
         onClick={onRegister}
         disabled={!selectedId}
-        className="font-bebas w-full bg-[#1B2B5E] hover:bg-[#152348] disabled:opacity-50 disabled:cursor-not-allowed text-[#F2EDE4] py-4 rounded-full text-xl tracking-widest uppercase transition-colors flex items-center justify-center gap-2"
+        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm transition-all"
+        style={{
+          background:  selectedId ? '#00186D' : 'rgba(0,24,109,0.3)',
+          color:       '#FFFFFF',
+          fontFamily:  'Inter, sans-serif',
+          cursor:      selectedId ? 'pointer' : 'not-allowed',
+          boxShadow:   selectedId ? '0 4px 14px rgba(0,24,109,0.25)' : 'none',
+        }}
       >
-        Inscreva-se já! <span>→</span>
+        Inscreva-se agora →
       </button>
-
-      {/* Descrição */}
-      {description && (
-        <p className="font-inter text-xs text-gray-400 leading-relaxed text-center whitespace-pre-line">
-          {description}
-        </p>
-      )}
-
     </div>
   )
 }

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { EventWizardHeader } from '../components/EventWizardHeader'
 import { DashboardLayout } from '../components/DashboardLayout'
-import { WizardField, WizardCard, WizardInput, WizardSelect, WizardTextarea, wizardNavBtn, wizardPrimaryBtn } from '../components/WizardShared'
+import { WizardField, WizardCard, WizardInput, WizardSelect, WizardTextarea, wizardPrimaryBtn } from '../components/WizardShared'
 import api from '../api/axios'
 
 const CATEGORIES = [
