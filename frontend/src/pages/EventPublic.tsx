@@ -7,6 +7,7 @@ interface PaymentMethod {
   type: string
   value: string
   installments: number
+  description: string | null
 }
 
 interface EventData {
@@ -221,6 +222,11 @@ function PaymentMethodSelector({ methods, selectedId, onSelect, onRegister, desc
                     {value === 0 ? 'Grátis' : `R$ ${value.toFixed(2).replace('.', ',')}`}
                   </span>
                 </div>
+                {method.description && (
+                  <p className={`font-inter text-xs mt-1 ${selected ? 'text-[#1B2B5E]/70' : 'text-gray-500'}`}>
+                    {method.description}
+                  </p>
+                )}
               </button>
             )
           })}

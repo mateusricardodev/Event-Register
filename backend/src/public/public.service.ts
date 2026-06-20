@@ -39,7 +39,7 @@ export class PublicService {
         isPublished: true,
         formFields: true,
         paymentMethods: {
-          select: { id: true, type: true, value: true, installments: true },
+          select: { id: true, type: true, value: true, installments: true, description: true },
           orderBy: { createdAt: 'asc' },
         },
         user: { select: { name: true } },
