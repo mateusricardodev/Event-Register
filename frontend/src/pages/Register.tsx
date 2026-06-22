@@ -21,8 +21,9 @@ export function Register() {
     try {
       await api.post('/auth/register', form)
       navigate('/login')
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erro ao criar conta')
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } }
+      setError(e?.response?.data?.message ?? 'Erro ao criar conta')
     } finally {
       setLoading(false)
     }

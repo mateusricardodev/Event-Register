@@ -62,8 +62,9 @@ export function Login() {
       setName('')
       setConfirmPassword('')
       setMode('login')
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erro ao criar conta')
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } }
+      setError(e?.response?.data?.message ?? 'Erro ao criar conta')
     } finally {
       setLoading(false)
     }

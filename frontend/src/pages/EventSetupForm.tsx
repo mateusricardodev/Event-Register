@@ -35,7 +35,7 @@ export function EventSetupForm() {
     if (!id) return
     api.get(`/events/${id}`).then(({ data }) => {
       if (data.formFields) {
-        try { setEnabled(new Set(JSON.parse(data.formFields))) } catch {}
+        try { setEnabled(new Set(JSON.parse(data.formFields))) } catch { /* invalid JSON */ }
       }
     })
   }, [id])
@@ -43,7 +43,7 @@ export function EventSetupForm() {
   function toggle(field: string) {
     setEnabled((prev) => {
       const next = new Set(prev)
-      next.has(field) ? next.delete(field) : next.add(field)
+      if (next.has(field)) { next.delete(field) } else { next.add(field) }
       return next
     })
   }

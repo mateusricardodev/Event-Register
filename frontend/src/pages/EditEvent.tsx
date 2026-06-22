@@ -78,8 +78,9 @@ export function EditEvent() {
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
       return true
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erro ao salvar evento')
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } }
+      setError(e?.response?.data?.message ?? 'Erro ao salvar evento')
       return false
     } finally {
       setSaving(false)

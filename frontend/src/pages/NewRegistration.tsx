@@ -44,8 +44,9 @@ export function NewRegistration() {
       })
       setSuccess(true)
       setTimeout(() => navigate(`/events/${eventId}`), 2000)
-    } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Erro ao criar inscrição.')
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } }
+      setError(e?.response?.data?.message ?? 'Erro ao criar inscrição.')
     } finally {
       setLoading(false)
     }

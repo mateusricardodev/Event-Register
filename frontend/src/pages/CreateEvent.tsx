@@ -46,8 +46,9 @@ export function CreateEvent() {
         organizerPhone:  form.organizerPhone || undefined,
       })
       navigate(`/events/${data.id}/setup/payment`)
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erro ao criar evento')
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } }
+      setError(e?.response?.data?.message ?? 'Erro ao criar evento')
     } finally {
       setLoading(false)
     }

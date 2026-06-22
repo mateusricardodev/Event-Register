@@ -75,16 +75,16 @@ export function PixPayment() {
     if (stage !== 'pending') return
     const timer = setInterval(() => {
       setSecondsLeft((prev) => {
-        if (prev <= 1) { clearInterval(timer); return 0 }
+        if (prev <= 1) {
+          clearInterval(timer)
+          setStage('failed')
+          return 0
+        }
         return prev - 1
       })
     }, 1000)
     return () => clearInterval(timer)
   }, [stage])
-
-  useEffect(() => {
-    if (stage === 'pending' && secondsLeft === 0) setStage('failed')
-  }, [secondsLeft, stage])
 
   useEffect(() => {
     if (!state?.registrationId || stage !== 'pending') return

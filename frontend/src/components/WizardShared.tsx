@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React from 'react'
 
 export const inputStyle: React.CSSProperties = {
@@ -114,7 +115,7 @@ export function wizardPrimaryBtn(disabled?: boolean): React.CSSProperties {
   }
 }
 
-export function wizardNavBtn(_?: unknown): React.CSSProperties {
+export function wizardNavBtn(): React.CSSProperties {
   return {
     background: 'transparent',
     color: '#6B7280',

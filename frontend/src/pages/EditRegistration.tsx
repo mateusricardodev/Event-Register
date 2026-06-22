@@ -66,7 +66,7 @@ export function EditRegistration() {
         const eventData = evtRes.data
         const reg: Registration = regRes.data.data.find((r: Registration) => r.id === regId)
         if (eventData.formFields) {
-          try { setFormFieldKeys(JSON.parse(eventData.formFields) as string[]) } catch {}
+          try { setFormFieldKeys(JSON.parse(eventData.formFields) as string[]) } catch { /* invalid JSON */ }
         }
         if (reg) {
           setForm({
@@ -83,7 +83,7 @@ export function EditRegistration() {
               setExtraMap(rest)
               if (usaMed) setUsaMedicamento(usaMed as 'sim' | 'nao')
               if (qualMed) setQualMedicamento(qualMed)
-            } catch {}
+            } catch { /* invalid JSON */ }
           }
         }
         setLoading(false)
@@ -123,8 +123,9 @@ export function EditRegistration() {
       })
       setSuccess(true)
       setTimeout(() => navigate(`/events/${eventId}`), 2000)
-    } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Erro ao salvar alterações.')
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } }
+      setError(e?.response?.data?.message ?? 'Erro ao salvar alterações.')
     } finally {
       setSaving(false)
     }

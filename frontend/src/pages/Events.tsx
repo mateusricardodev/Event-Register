@@ -39,8 +39,9 @@ export function Events() {
       await api.delete(`/events/${confirmId}`)
       setEvents((prev) => prev.filter((e) => e.id !== confirmId))
       setConfirmId(null)
-    } catch (err: any) {
-      setDeleteError(err.response?.data?.message || 'Erro ao excluir evento')
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } }
+      setDeleteError(e?.response?.data?.message ?? 'Erro ao excluir evento')
     } finally {
       setDeleting(false)
     }
