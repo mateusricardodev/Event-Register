@@ -99,17 +99,6 @@ const sectionLabelStyle: React.CSSProperties = {
   letterSpacing: '0.1em',
 }
 
-function SectionDivider({ label }: { label: string }) {
-  return (
-    <div
-      className="px-6 py-5 flex flex-col gap-4"
-      style={{ borderTop: '1px solid rgba(0,24,109,0.07)' }}
-    >
-      <p style={sectionLabelStyle}>{label}</p>
-    </div>
-  )
-}
-
 export function PublicRegistration() {
   const { slug }       = useParams<{ slug: string }>()
   const navigate       = useNavigate()
