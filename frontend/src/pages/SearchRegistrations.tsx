@@ -43,10 +43,12 @@ export function SearchRegistrations() {
             api
               .get(`/events/${e.id}/registrations`)
               .then((r) =>
-                (r.data.data as Omit<RegItem, 'event'>[]).map((reg) => ({
-                  ...reg,
-                  event: { id: e.id, title: e.title },
-                })),
+                (r.data.data as Omit<RegItem, 'event'>[])
+                  .filter((reg) => reg.status !== 'canceled')
+                  .map((reg) => ({
+                    ...reg,
+                    event: { id: e.id, title: e.title },
+                  })),
               )
               .catch(() => [] as RegItem[]),
           ),

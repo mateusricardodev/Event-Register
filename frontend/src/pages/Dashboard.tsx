@@ -54,7 +54,9 @@ export function Dashboard() {
             api
               .get(`/events/${e.id}/registrations`)
               .then((r) =>
-                (r.data.data as RegItem[]).map((reg) => ({ ...reg, eventTitle: e.title })),
+                (r.data.data as RegItem[])
+                  .filter((reg) => reg.status !== 'canceled')
+                  .map((reg) => ({ ...reg, eventTitle: e.title })),
               )
               .catch(() => [] as RegItem[]),
           ),

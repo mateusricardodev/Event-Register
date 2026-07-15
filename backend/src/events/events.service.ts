@@ -21,7 +21,12 @@ export class EventsService {
       orderBy: { date: 'asc' },
       include: {
         user: { select: { id: true, name: true } },
-        _count: { select: { tickets: true, registrations: true } },
+        _count: {
+          select: {
+            tickets: true,
+            registrations: { where: { status: { not: 'canceled' } } },
+          },
+        },
       },
     });
   }
@@ -33,7 +38,7 @@ export class EventsService {
         user: { select: { id: true, name: true, email: true } },
         tickets: true,
         paymentMethods: { orderBy: { createdAt: 'asc' } },
-        _count: { select: { registrations: true } },
+        _count: { select: { registrations: { where: { status: { not: 'canceled' } } } } },
       },
     });
 
@@ -49,7 +54,7 @@ export class EventsService {
         user: { select: { id: true, name: true } },
         tickets: true,
         paymentMethods: true,
-        _count: { select: { registrations: true } },
+        _count: { select: { registrations: { where: { status: { not: 'canceled' } } } } },
       },
     });
 

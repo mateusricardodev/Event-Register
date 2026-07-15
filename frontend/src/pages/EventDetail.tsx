@@ -82,7 +82,7 @@ export function EventDetail() {
     const created = new Date(r.createdAt)
     const matchFrom   = !dateFrom || created >= new Date(dateFrom)
     const matchTo     = !dateTo   || created <= new Date(dateTo + 'T23:59:59')
-    const matchStatus = !statusFilter || r.status === statusFilter
+    const matchStatus = statusFilter ? r.status === statusFilter : r.status !== 'canceled'
     return matchSearch && matchFrom && matchTo && matchStatus
   })
 
@@ -93,7 +93,7 @@ export function EventDetail() {
   }
 
   const statCards = [
-    { label: 'Total',       value: registrations.length, icon: Users,       accent: '#00186D' },
+    { label: 'Total',       value: counts.confirmed + counts.pending, icon: Users,       accent: '#00186D' },
     { label: 'Confirmados', value: counts.confirmed,     icon: CheckCircle, accent: '#166534' },
     { label: 'Pendentes',   value: counts.pending,       icon: Clock,       accent: '#92400E' },
     { label: 'Cancelados',  value: counts.canceled,      icon: XCircle,     accent: '#991B1B' },
