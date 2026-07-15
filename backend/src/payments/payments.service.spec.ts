@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   NotFoundException,
@@ -280,6 +281,105 @@ describe('PaymentsService', () => {
         expect.objectContaining({ data: { status: 'confirmed' } }),
       );
       expect(mockMail.sendRegistrationConfirmation).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // ─── confirmManually ─────────────────────────────────────────────────────────
+
+  describe('confirmManually', () => {
+    const baseRegForManual = {
+      ...baseRegistration,
+      event: { id: EVENT_ID, title: 'Congresso 2026', createdBy: USER_ID, date: new Date('2026-09-01'), location: 'São Paulo' },
+      code: 'ABC123',
+      payment: null,
+    };
+
+    const mockManualTx = (executeRawResult = 1) => {
+      mockDb.$transaction.mockImplementation(async (fn: (tx: typeof mockDb) => Promise<unknown>) => {
+        mockDb.$executeRaw.mockResolvedValue(executeRawResult);
+        mockDb.payment.create.mockResolvedValue({});
+        mockDb.payment.update.mockResolvedValue({});
+        mockDb.registration.update.mockResolvedValue({
+          id: REG_ID,
+          code: 'ABC123',
+          status: executeRawResult === 0 ? 'overbooked' : 'confirmed',
+          user: { name: 'João', email: 'joao@email.com' },
+          event: { title: 'Congresso 2026', date: new Date('2026-09-01'), location: 'São Paulo' },
+          ticket: { id: TICKET_ID, name: 'Inteira' },
+          payment: { amount: 50 },
+        });
+        return fn(mockDb);
+      });
+    };
+
+    it('confirma inscrição pending sem payment: cria Payment paid/manual e Registration=confirmed', async () => {
+      mockDb.registration.findUnique.mockResolvedValue(baseRegForManual);
+      mockManualTx(1);
+      mockDb.registration.updateMany.mockResolvedValue({ count: 1 });
+
+      await service.confirmManually(REG_ID, USER_ID);
+
+      expect(mockDb.payment.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ status: 'paid', provider: 'manual' }) }),
+      );
+      expect(mockDb.registration.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { status: 'confirmed' } }),
+      );
+      expect(mockMail.sendRegistrationConfirmation).toHaveBeenCalledTimes(1);
+    });
+
+    it('atualiza payment existente para paid/manual em vez de criar um novo', async () => {
+      mockDb.registration.findUnique.mockResolvedValue({
+        ...baseRegForManual,
+        payment: { id: 'pay-1', status: 'pending' },
+      });
+      mockManualTx(1);
+      mockDb.registration.updateMany.mockResolvedValue({ count: 1 });
+
+      await service.confirmManually(REG_ID, USER_ID);
+
+      expect(mockDb.payment.update).toHaveBeenCalledWith({
+        where: { id: 'pay-1' },
+        data: { status: 'paid', provider: 'manual' },
+      });
+      expect(mockDb.payment.create).not.toHaveBeenCalled();
+    });
+
+    it('lança NotFoundException para inscrição inexistente', async () => {
+      mockDb.registration.findUnique.mockResolvedValue(null);
+
+      await expect(service.confirmManually(REG_ID, USER_ID)).rejects.toThrow(NotFoundException);
+    });
+
+    it('lança ForbiddenException quando o usuário não é o dono do evento', async () => {
+      mockDb.registration.findUnique.mockResolvedValue(baseRegForManual);
+
+      await expect(service.confirmManually(REG_ID, 'outro-organizador')).rejects.toThrow(ForbiddenException);
+      expect(mockDb.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('lança BadRequestException para inscrição cancelada', async () => {
+      mockDb.registration.findUnique.mockResolvedValue({ ...baseRegForManual, status: 'canceled' });
+
+      await expect(service.confirmManually(REG_ID, USER_ID)).rejects.toThrow(BadRequestException);
+    });
+
+    it('lança ConflictException quando a inscrição já está confirmada', async () => {
+      mockDb.registration.findUnique.mockResolvedValue({ ...baseRegForManual, status: 'confirmed' });
+
+      await expect(service.confirmManually(REG_ID, USER_ID)).rejects.toThrow(ConflictException);
+    });
+
+    it('overbooked: estoque esgotado marca Registration=overbooked e não envia email', async () => {
+      mockDb.registration.findUnique.mockResolvedValue(baseRegForManual);
+      mockManualTx(0);
+
+      await service.confirmManually(REG_ID, USER_ID);
+
+      expect(mockDb.registration.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { status: 'overbooked' } }),
+      );
+      expect(mockMail.sendRegistrationConfirmation).not.toHaveBeenCalled();
     });
   });
 

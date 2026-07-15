@@ -7,6 +7,7 @@ import {
   Inject,
   NotFoundException,
   Param,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -51,6 +52,17 @@ export class PaymentsController {
     @Param('registrationId') registrationId: string,
   ) {
     return this.paymentsService.getStatus(registrationId, user.id);
+  }
+
+  /** Confirmação manual do pagamento pelo organizador (dono do evento). */
+  @UseGuards(JwtGuard)
+  @Patch('registrations/:registrationId/confirm-manual')
+  async confirmManually(
+    @CurrentUser() user: { id: string },
+    @Param('registrationId') registrationId: string,
+  ) {
+    await this.paymentsService.confirmManually(registrationId, user.id);
+    return { ok: true };
   }
 
   /**

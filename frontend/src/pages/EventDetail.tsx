@@ -53,6 +53,9 @@ export function EventDetail() {
   const [statusFilter, setStatusFilter] = useState('')
   const [cancelConfirm, setCancelConfirm] = useState<string | null>(null)
   const [canceling, setCanceling]     = useState(false)
+  const [confirmPaymentModal, setConfirmPaymentModal] = useState<string | null>(null)
+  const [confirmingPayment, setConfirmingPayment]      = useState(false)
+  const [confirmError, setConfirmError]                = useState('')
 
   useEffect(() => {
     if (!id) return
@@ -73,6 +76,23 @@ export function EventDetail() {
     } finally {
       setCanceling(false)
       setCancelConfirm(null)
+    }
+  }
+
+  async function handleConfirmPayment(regId: string) {
+    setConfirmingPayment(true)
+    setConfirmError('')
+    try {
+      await api.patch(`/payments/registrations/${regId}/confirm-manual`)
+      setRegistrations((prev) => prev.map((r) => (r.id === regId ? { ...r, status: 'confirmed' } : r)))
+      setConfirmPaymentModal(null)
+    } catch (err) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Não foi possível confirmar o pagamento.'
+      setConfirmError(message)
+    } finally {
+      setConfirmingPayment(false)
     }
   }
 
@@ -262,7 +282,7 @@ export function EventDetail() {
               { label: 'Tipo',        cls: 'hidden md:block w-28 shrink-0' },
               { label: 'Status',      cls: 'w-24 text-center shrink-0' },
               { label: 'Valor',       cls: 'w-24 text-right shrink-0' },
-              { label: '',            cls: 'w-[100px] shrink-0' },
+              { label: '',            cls: 'w-[130px] shrink-0' },
             ].map((col) => (
               <span
                 key={col.label}
@@ -329,7 +349,7 @@ export function EventDetail() {
                     {reg.payment ? brl(Number(reg.payment.amount)) : brl(0)}
                   </span>
 
-                  <div className="flex items-center gap-2 shrink-0 w-[100px] justify-end">
+                  <div className="flex items-center gap-2 shrink-0 w-[130px] justify-end">
                     <Link
                       to={`/events/${id}/registrations/${reg.id}/edit`}
                       className="p-1.5 rounded-lg transition-all"
@@ -338,6 +358,16 @@ export function EventDetail() {
                     >
                       <Pencil size={14} />
                     </Link>
+                    {reg.status === 'pending' && (
+                      <button
+                        onClick={() => { setConfirmError(''); setConfirmPaymentModal(reg.id) }}
+                        className="p-1.5 rounded-lg transition-all"
+                        style={{ color: '#166534' }}
+                        title="Confirmar pagamento manualmente"
+                      >
+                        <CheckCircle size={14} />
+                      </button>
+                    )}
                     {reg.status !== 'canceled' ? (
                       <button
                         onClick={() => setCancelConfirm(reg.id)}
@@ -399,6 +429,51 @@ export function EventDetail() {
                 style={{ background: '#DC2626', color: '#FFFFFF', fontFamily: 'Inter, sans-serif', opacity: canceling ? 0.7 : 1 }}
               >
                 {canceling ? 'Cancelando...' : 'Confirmar cancelamento'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal de confirmação manual de pagamento ── */}
+      {confirmPaymentModal && (
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50 px-4"
+          style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(4px)' }}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl p-7"
+            style={{ background: '#FFFFFF', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}
+          >
+            <h3
+              className="font-semibold mb-2"
+              style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.25rem', color: '#00186D' }}
+            >
+              Confirmar pagamento
+            </h3>
+            <p className="text-sm mb-2" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
+              Use isto apenas se você já recebeu o pagamento fora do sistema (transferência, dinheiro, etc.). A inscrição passará para "Confirmado" e o participante receberá o e-mail de confirmação.
+            </p>
+            {confirmError && (
+              <p className="text-sm mb-2" style={{ color: '#DC2626', fontFamily: 'Inter, sans-serif' }}>
+                {confirmError}
+              </p>
+            )}
+            <div className="flex justify-end gap-3 mt-4">
+              <button
+                onClick={() => setConfirmPaymentModal(null)}
+                className="px-4 py-2 text-sm rounded-xl"
+                style={{ border: '1px solid rgba(0,24,109,0.15)', color: '#33425C', fontFamily: 'Inter, sans-serif' }}
+              >
+                Voltar
+              </button>
+              <button
+                onClick={() => handleConfirmPayment(confirmPaymentModal)}
+                disabled={confirmingPayment}
+                className="px-4 py-2 text-sm font-semibold rounded-xl"
+                style={{ background: '#166534', color: '#FFFFFF', fontFamily: 'Inter, sans-serif', opacity: confirmingPayment ? 0.7 : 1 }}
+              >
+                {confirmingPayment ? 'Confirmando...' : 'Confirmar pagamento'}
               </button>
             </div>
           </div>

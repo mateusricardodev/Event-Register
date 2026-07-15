@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Inject,
@@ -142,6 +143,99 @@ export class PaymentsService {
     }
 
     this.logger.log(`[webhook] Disparando email de confirmação para ${emailData.participantEmail}`);
+    void this.mail.sendRegistrationConfirmation({
+      participantName: emailData.participantName,
+      participantEmail: emailData.participantEmail,
+      eventTitle: emailData.eventTitle,
+      eventDate: emailData.eventDate,
+      eventLocation: emailData.eventLocation,
+      registrationId: emailData.registrationId,
+      registrationCode: emailData.registrationCode,
+      ticketName: emailData.ticketName,
+      amountPaid: emailData.amountPaid,
+    });
+  }
+
+  /**
+   * Confirmação manual pelo organizador (ex.: pagamento recebido fora do fluxo
+   * automático — transferência direta, dinheiro, etc.). Marca o Payment como
+   * pago com provider 'manual' e confirma a inscrição, disparando o mesmo
+   * e-mail de confirmação do fluxo automático.
+   */
+  async confirmManually(registrationId: string, userId: string): Promise<void> {
+    const registration = await this.prisma.db.registration.findUnique({
+      where: { id: registrationId },
+      include: { event: true, payment: true, ticket: { select: { price: true } } },
+    });
+    if (!registration) throw new NotFoundException('Inscrição não encontrada');
+    if (registration.event.createdBy !== userId)
+      throw new ForbiddenException('Sem permissão para confirmar esta inscrição');
+    if (registration.status === 'canceled')
+      throw new BadRequestException('Não é possível confirmar pagamento de uma inscrição cancelada');
+    if (registration.status === 'confirmed')
+      throw new ConflictException('Esta inscrição já está confirmada');
+
+    const emailData = await this.prisma.db.$transaction(async (tx) => {
+      let newStatus: 'confirmed' | 'overbooked' = 'confirmed';
+
+      if (registration.ticketId) {
+        const affected = await tx.$executeRaw`
+          UPDATE "Ticket" SET sold = sold + 1
+          WHERE id = ${registration.ticketId} AND sold < quantity
+        `;
+        if (affected === 0) newStatus = 'overbooked';
+      }
+
+      if (registration.payment) {
+        await tx.payment.update({
+          where: { id: registration.payment.id },
+          data: { status: 'paid', provider: 'manual' },
+        });
+      } else {
+        await tx.payment.create({
+          data: {
+            registrationId,
+            amount: Number(registration.ticket?.price ?? 0),
+            status: 'paid',
+            provider: 'manual',
+          },
+        });
+      }
+
+      const reg = await tx.registration.update({
+        where: { id: registrationId },
+        data: { status: newStatus },
+        include: {
+          ticket: { select: { id: true, name: true } },
+          event: { select: { title: true, date: true, location: true } },
+          user: { select: { name: true, email: true } },
+          payment: { select: { amount: true } },
+        },
+      });
+
+      if (newStatus !== 'confirmed') return null;
+
+      return {
+        registrationId: reg.id,
+        registrationCode: reg.code,
+        participantName: reg.user.name,
+        participantEmail: reg.user.email,
+        eventTitle: reg.event.title,
+        eventDate: reg.event.date,
+        eventLocation: reg.event.location,
+        ticketName: reg.ticket?.name ?? null,
+        amountPaid: Number(reg.payment?.amount ?? 0),
+      };
+    });
+
+    if (!emailData) return;
+
+    const marked = await this.prisma.db.registration.updateMany({
+      where: { id: emailData.registrationId, confirmationEmailSentAt: null },
+      data: { confirmationEmailSentAt: new Date() },
+    });
+    if (marked.count === 0) return;
+
     void this.mail.sendRegistrationConfirmation({
       participantName: emailData.participantName,
       participantEmail: emailData.participantEmail,
