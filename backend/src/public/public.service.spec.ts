@@ -226,6 +226,27 @@ describe('PublicService', () => {
       expect(mockMail.sendRegistrationConfirmation).toHaveBeenCalledTimes(1);
     });
 
+    it('pagamento em dinheiro: status confirmed, sem PIX, email enviado', async () => {
+      mockDb.event.findUnique.mockResolvedValue(baseEvent);
+      mockDb.eventPaymentMethod.findUnique.mockResolvedValue({ ...basePaymentMethod, type: 'cash' });
+      mockDb.registration.findFirst.mockResolvedValue(null);
+      mockDb.registration.count.mockResolvedValue(0);
+      mockDb.user.findUnique.mockResolvedValue(baseUser);
+      mockDb.registration.create.mockResolvedValue({
+        id: 'reg-cash', userId: SHADOW_USER_ID, eventId: EVENT_ID, status: 'confirmed', cpf: '52998224725',
+      });
+      mockDb.registration.updateMany.mockResolvedValue({ count: 1 });
+
+      const result = await service.register(SLUG, baseDto);
+
+      expect(result.status).toBe('confirmed');
+      expect(mockDb.registration.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ status: 'confirmed' }) }),
+      );
+      expect(mockPayments.createPixForRegistration).not.toHaveBeenCalled();
+      expect(mockMail.sendRegistrationConfirmation).toHaveBeenCalledTimes(1);
+    });
+
     it('lança NotFoundException para evento inexistente ou não publicado', async () => {
       mockDb.event.findUnique.mockResolvedValue(null);
       await expect(service.register(SLUG, baseDto)).rejects.toThrow(NotFoundException);

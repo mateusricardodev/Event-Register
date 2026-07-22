@@ -206,16 +206,19 @@ export function PublicRegistration() {
       })
 
       if (data.status === 'confirmed') {
+        const method = event?.paymentMethods.find(m => m.id === paymentMethodId)
         navigate(`/evento/${slug}/pagamento-pix`, {
           state: {
-            registrationId:  data.registrationId,
-            code:            data.code,
-            participantName: form.fullName,
-            participantCpf:  form.cpf,
-            amount:          0,
-            eventTitle:      event?.title,
-            email:           form.email,
-            free:            true,
+            registrationId:    data.registrationId,
+            code:              data.code,
+            participantName:   form.fullName,
+            participantCpf:    form.cpf,
+            amount:            0,
+            eventTitle:        event?.title,
+            email:             form.email,
+            free:              true,
+            paymentMethodType: method?.type,
+            amountDue:         method?.type === 'cash' ? Number(method.value) : undefined,
           },
         })
         return

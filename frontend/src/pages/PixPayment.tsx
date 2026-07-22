@@ -27,6 +27,9 @@ interface PixState {
   email?: string
   reused?: boolean
   free?: boolean
+  paymentMethodType?: string
+  /** Valor a acertar presencialmente (pagamento em dinheiro) */
+  amountDue?: number
 }
 
 type Stage = 'pending' | 'confirmed' | 'failed' | 'overbooked'
@@ -112,6 +115,7 @@ export function PixPayment() {
   if (!state?.registrationId) return null
 
   const amount = state.amount ?? 0
+  const isCash = state.paymentMethodType === 'cash'
   const mm = String(Math.floor(secondsLeft / 60)).padStart(2, '0')
   const ss = String(secondsLeft % 60).padStart(2, '0')
 
@@ -245,7 +249,22 @@ export function PixPayment() {
           </div>
 
           <h1 className="font-cinzel text-2xl font-bold text-[#1B2B5E] mb-2">Inscrição confirmada!</h1>
-          <p className="font-inter text-gray-500 text-sm mb-6">Seu pagamento foi processado com sucesso.</p>
+          <p className="font-inter text-gray-500 text-sm mb-6">
+            {isCash
+              ? 'Sua vaga está garantida. O pagamento será feito diretamente com o organizador.'
+              : 'Seu pagamento foi processado com sucesso.'}
+          </p>
+
+          {isCash && (
+            <div className="bg-[#F2EDE4] border border-[#C9A84C]/40 rounded-xl p-4 mb-6 text-left">
+              <p className="font-cinzel text-xs text-[#C9A84C] uppercase tracking-widest mb-1">Pagamento em dinheiro</p>
+              <p className="font-inter text-sm text-gray-600">
+                {state.amountDue && state.amountDue > 0
+                  ? <>Leve <span className="font-semibold text-[#1B2B5E]">R$ {Number(state.amountDue).toFixed(2).replace('.', ',')}</span> em dinheiro e acerte com o organizador no dia do evento.</>
+                  : 'Acerte o pagamento em dinheiro com o organizador no dia do evento.'}
+              </p>
+            </div>
+          )}
 
           <div className="bg-[#E7F8EE] border border-[#25D366]/30 rounded-xl p-5 flex flex-col items-center gap-3 mb-6">
             <svg viewBox="0 0 32 32" className="w-10 h-10" xmlns="http://www.w3.org/2000/svg">

@@ -100,6 +100,9 @@ export class PublicService {
       throw new BadRequestException('Forma de pagamento não pertence a este evento');
 
     const amount = Number(paymentMethod.value);
+    // Dinheiro é acertado presencialmente com o organizador: não gera cobrança
+    // online, a inscrição já sai confirmada como se fosse gratuita.
+    const requiresOnlinePayment = amount > 0 && paymentMethod.type !== 'cash';
 
     // CPF já tem inscrição confirmada neste evento
     const alreadyConfirmed = await this.prisma.db.registration.findFirst({
@@ -109,7 +112,7 @@ export class PublicService {
       throw new ConflictException('Este CPF já possui inscrição confirmada neste evento');
 
     // Anti-duplicidade para PIX pendente: reutiliza o mesmo QR Code se ainda válido
-    if (amount > 0) {
+    if (requiresOnlinePayment) {
       const existing = await this.prisma.db.registration.findFirst({
         where: {
           eventId: event.id,
@@ -171,7 +174,7 @@ export class PublicService {
         data: {
           userId: user.id,
           eventId: event.id,
-          status: amount === 0 ? 'confirmed' : 'pending',
+          status: requiresOnlinePayment ? 'pending' : 'confirmed',
           cpf: normalizedCpf,
           phone: dto.phone ?? null,
           extraFields: dto.extraFields ? JSON.stringify(dto.extraFields) : null,
@@ -180,8 +183,8 @@ export class PublicService {
       });
     }, { isolationLevel: 'Serializable' as never });
 
-    // Inscrição gratuita: confirma direto e envia e-mail
-    if (amount === 0) {
+    // Sem cobrança online (gratuita ou dinheiro): confirma direto e envia e-mail
+    if (!requiresOnlinePayment) {
       const marked = await this.prisma.db.registration.updateMany({
         where: { id: registration.id, confirmationEmailSentAt: null },
         data: { confirmationEmailSentAt: new Date() },

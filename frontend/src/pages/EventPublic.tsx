@@ -287,7 +287,9 @@ function PaymentMethodSelector({ methods, selectedId, onSelect, onRegister }: Pa
           </p>
           {selectedMethod && (
             <p className="text-sm mt-1" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
-              Pagamento via <span className="font-semibold" style={{ color: '#33425C' }}>{TYPE_LABELS[selectedMethod.type] ?? selectedMethod.type}</span>
+              {selectedMethod.type === 'cash'
+                ? 'Pagamento em dinheiro, direto com o organizador no dia do evento'
+                : <>Pagamento via <span className="font-semibold" style={{ color: '#33425C' }}>{TYPE_LABELS[selectedMethod.type] ?? selectedMethod.type}</span></>}
             </p>
           )}
         </div>
