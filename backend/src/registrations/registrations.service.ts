@@ -199,64 +199,6 @@ export class RegistrationsService {
     });
   }
 
-  async createPublic(slug: string, dto: CreateRegistrationOrganizerDto) {
-    const event = await this.prisma.db.event.findUnique({ where: { slug } });
-    if (!event) throw new NotFoundException('Evento não encontrado');
-    if (!event.isPublished)
-      throw new BadRequestException('Este evento não está disponível para inscrições');
-
-    const registration = await this.prisma.db.$transaction(async (tx) => {
-      if (event.maxParticipants) {
-        const count = await tx.registration.count({
-          where: { eventId: event.id, status: { not: 'canceled' } },
-        });
-        if (count >= event.maxParticipants)
-          throw new BadRequestException('Evento lotado');
-      }
-
-      const duplicate = await tx.registration.findFirst({
-        where: { eventId: event.id, cpf: dto.cpf, status: { not: 'canceled' } },
-      });
-      if (duplicate)
-        throw new BadRequestException('CPF já inscrito neste evento');
-
-      let user = await tx.user.findUnique({ where: { email: dto.email } });
-      if (!user) {
-        const randomPassword = await bcrypt.hash(randomBytes(32).toString('hex'), 10);
-        user = await tx.user.create({
-          data: { name: dto.name, email: dto.email, password: randomPassword },
-        });
-      }
-
-      const code = await generateUniqueRegistrationCode(tx);
-      return tx.registration.create({
-        data: {
-          userId: user.id,
-          eventId: event.id,
-          status: 'confirmed',
-          cpf: dto.cpf,
-          phone: dto.phone,
-          birthDate: dto.birthDate ? new Date(dto.birthDate) : null,
-          extraFields: dto.extraFields ? JSON.stringify(dto.extraFields) : null,
-          code,
-        },
-        include: { event: { select: { id: true, title: true, date: true } } },
-      });
-    }, { isolationLevel: 'Serializable' as never });
-
-    void this.mail.sendRegistrationConfirmation({
-      participantName: dto.name,
-      participantEmail: dto.email,
-      eventTitle: event.title,
-      eventDate: event.date,
-      eventLocation: event.location,
-      registrationId: registration.id,
-      registrationCode: registration.code,
-    });
-
-    return registration;
-  }
-
   async search(q: string, userId: string) {
     if (!q || q.trim().length < 2) return [];
 

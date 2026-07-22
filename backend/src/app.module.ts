@@ -14,7 +14,10 @@ import { PublicModule } from './public/public.module.js';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
+    // THROTTLE_SKIP=1 desativa o rate limit (usado apenas nos testes e2e)
+    ThrottlerModule.forRoot([
+      { ttl: 60000, limit: 60, skipIf: () => process.env.THROTTLE_SKIP === '1' },
+    ]),
     PrismaModule,
     AuthModule,
     EventsModule,

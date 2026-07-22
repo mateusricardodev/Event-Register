@@ -19,6 +19,7 @@ process.env.DATABASE_URL =
   process.env.TEST_DATABASE_URL ??
   'postgresql://postgres:postgres@localhost:5433/inscricoes_test?schema=public';
 process.env.JWT_SECRET = 'e2e-test-secret';
+process.env.THROTTLE_SKIP = '1';
 process.env.MAIL_HOST = 'localhost';
 process.env.MAIL_PORT = '1025';
 process.env.MAIL_SECURE = 'false';
@@ -168,6 +169,39 @@ describe('inscrições.app (e2e)', () => {
     return res.body;
   }
 
+  /** Modalidade gratuita (value 0) — inscrição pública confirma na hora, sem PIX. */
+  async function createFreePaymentMethod(token: string, eventId: string) {
+    const res = await request(app.getHttpServer())
+      .post(`/events/${eventId}/payment-methods`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ type: 'pix', value: 0 })
+      .expect(201);
+
+    return res.body;
+  }
+
+  /** Gera um CPF válido (dígitos verificadores corretos) a partir de um seed. */
+  function genCpf(seed: number): string {
+    const d = String(seed % 1_000_000_000).padStart(9, '0').split('').map(Number);
+    const calc = (arr: number[]) => {
+      const sum = arr.reduce((s, n, i) => s + n * (arr.length + 1 - i), 0);
+      const rem = (sum * 10) % 11;
+      return rem >= 10 ? 0 : rem;
+    };
+    const d10 = calc(d);
+    return [...d, d10, calc([...d, d10])].join('');
+  }
+
+  function publicRegistration(seed: number, paymentMethodId: string) {
+    return {
+      paymentMethodId,
+      fullName: `Participante ${seed}`,
+      email: `participante${seed}@test.com`,
+      cpf: genCpf(123450000 + seed),
+      termsAccepted: true,
+    };
+  }
+
   // ──────────────────────────────────────────────────────────────────────────
   // EVENTS
   // ──────────────────────────────────────────────────────────────────────────
@@ -233,9 +267,10 @@ describe('inscrições.app (e2e)', () => {
   // ──────────────────────────────────────────────────────────────────────────
 
   describe('Inscrições públicas', () => {
-    it('POST /events/public/:slug/register — inscreve sem autenticação', async () => {
+    it('POST /public/events/:slug/register — inscreve sem autenticação', async () => {
       const token = await registerAndLogin();
       const event = await createEvent(token);
+      const method = await createFreePaymentMethod(token, event.id);
 
       // Publicar o evento
       await request(app.getHttpServer())
@@ -244,26 +279,29 @@ describe('inscrições.app (e2e)', () => {
         .send({ isPublished: true });
 
       const res = await request(app.getHttpServer())
-        .post(`/events/public/${event.slug}/register`)
-        .send({ name: 'Participante', email: 'part@test.com', cpf: '12345678900' })
+        .post(`/public/events/${event.slug}/register`)
+        .send(publicRegistration(1, method.id))
         .expect(201);
 
-      expect(res.body).toHaveProperty('id');
+      expect(res.body).toHaveProperty('registrationId');
+      expect(res.body.status).toBe('confirmed');
     });
 
-    it('POST /events/public/:slug/register — 400 para evento não publicado', async () => {
+    it('POST /public/events/:slug/register — 404 para evento não publicado', async () => {
       const token = await registerAndLogin('pub@test.com');
       const event = await createEvent(token); // isPublished = false por padrão
+      const method = await createFreePaymentMethod(token, event.id);
 
       await request(app.getHttpServer())
-        .post(`/events/public/${event.slug}/register`)
-        .send({ name: 'X', email: 'x@test.com', cpf: '00000000000' })
-        .expect(400);
+        .post(`/public/events/${event.slug}/register`)
+        .send(publicRegistration(2, method.id))
+        .expect(404);
     });
 
-    it('POST /events/public/:slug/register — 400 quando evento lotado', async () => {
+    it('POST /public/events/:slug/register — 409 quando evento lotado', async () => {
       const token = await registerAndLogin('full@test.com');
       const event = await createEvent(token, { maxParticipants: 1 });
+      const method = await createFreePaymentMethod(token, event.id);
 
       await request(app.getHttpServer())
         .put(`/events/${event.id}`)
@@ -272,22 +310,38 @@ describe('inscrições.app (e2e)', () => {
 
       // Primeira inscrição — deve funcionar
       await request(app.getHttpServer())
-        .post(`/events/public/${event.slug}/register`)
-        .send({ name: 'A', email: 'a@test.com', cpf: '11111111111' })
+        .post(`/public/events/${event.slug}/register`)
+        .send(publicRegistration(3, method.id))
         .expect(201);
 
-      // Segunda inscrição — deve retornar 400
+      // Segunda inscrição — deve retornar 409 (Conflict)
       await request(app.getHttpServer())
-        .post(`/events/public/${event.slug}/register`)
-        .send({ name: 'B', email: 'b@test.com', cpf: '22222222222' })
-        .expect(400);
+        .post(`/public/events/${event.slug}/register`)
+        .send(publicRegistration(4, method.id))
+        .expect(409);
     });
 
-    it('POST /events/public/:slug/register — 400 para slug inexistente', async () => {
+    it('POST /public/events/:slug/register — 404 para slug inexistente', async () => {
       await request(app.getHttpServer())
-        .post('/events/public/nao-existe/register')
-        .send({ name: 'X', email: 'x@test.com', cpf: '00000000000' })
+        .post('/public/events/nao-existe/register')
+        .send(publicRegistration(5, '00000000-0000-0000-0000-000000000000'))
         .expect(404);
+    });
+
+    it('POST /public/events/:slug/register — 400 para CPF inválido', async () => {
+      const token = await registerAndLogin('cpf@test.com');
+      const event = await createEvent(token);
+      const method = await createFreePaymentMethod(token, event.id);
+
+      await request(app.getHttpServer())
+        .put(`/events/${event.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ isPublished: true });
+
+      await request(app.getHttpServer())
+        .post(`/public/events/${event.slug}/register`)
+        .send({ ...publicRegistration(6, method.id), cpf: '12345678900' })
+        .expect(400);
     });
   });
 
@@ -316,12 +370,13 @@ describe('inscrições.app (e2e)', () => {
         .expect(200);
 
       // 5. Inscrição pública (sem auth)
+      const method = await createFreePaymentMethod(token, event.id);
       const regRes = await request(app.getHttpServer())
-        .post(`/events/public/${event.slug}/register`)
-        .send({ name: 'Participante', email: 'participante@test.com', cpf: '98765432100' })
+        .post(`/public/events/${event.slug}/register`)
+        .send({ ...publicRegistration(50, method.id), email: 'participante@test.com' })
         .expect(201);
 
-      expect(regRes.body).toHaveProperty('id');
+      expect(regRes.body).toHaveProperty('registrationId');
 
       // 6. Listar inscrições (autenticado como organizador)
       const listRes = await request(app.getHttpServer())
@@ -329,8 +384,8 @@ describe('inscrições.app (e2e)', () => {
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
-      expect(listRes.body.length).toBe(1);
-      expect(listRes.body[0].user.email).toBe('participante@test.com');
+      expect(listRes.body.data.length).toBe(1);
+      expect(listRes.body.data[0].user.email).toBe('participante@test.com');
     });
   });
 
@@ -343,6 +398,7 @@ describe('inscrições.app (e2e)', () => {
     it('FALHA ESPERADA: evento com 1 vaga aceita N inscrições simultâneas', async () => {
       const token = await registerAndLogin('race@test.com');
       const event = await createEvent(token, { maxParticipants: 1 });
+      const method = await createFreePaymentMethod(token, event.id);
 
       await request(app.getHttpServer())
         .put(`/events/${event.id}`)
@@ -352,8 +408,8 @@ describe('inscrições.app (e2e)', () => {
       // Dispara 10 inscrições simultâneas
       const promises = Array.from({ length: 10 }, (_, i) =>
         request(app.getHttpServer())
-          .post(`/events/public/${event.slug}/register`)
-          .send({ name: `User ${i}`, email: `race${i}@test.com`, cpf: `${String(i).padStart(11, '0')}` }),
+          .post(`/public/events/${event.slug}/register`)
+          .send(publicRegistration(100 + i, method.id)),
       );
 
       const results = await Promise.all(promises);

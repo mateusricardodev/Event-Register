@@ -71,12 +71,4 @@ export class RegistrationsController {
   cancel(@Param('id') id: string, @CurrentUser() user: { id: string }) {
     return this.registrationsService.cancel(id, user.id);
   }
-
-  @Post('events/public/:slug/register')
-  createPublic(
-    @Param('slug') slug: string,
-    @Body() dto: CreateRegistrationOrganizerDto,
-  ) {
-    return this.registrationsService.createPublic(slug, dto);
-  }
 }

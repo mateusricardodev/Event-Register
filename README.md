@@ -263,7 +263,6 @@ Não há guards de permissão além do `JwtGuard`. A autorização é manual nos
 | GET | `/public/events/:slug` | Dados do evento + formas de pagamento |
 | POST | `/public/events/:slug/register` | Inscrição sem login (gera PIX quando há cobrança) |
 | GET | `/public/payments/status/:registrationId` | Polling do status, com reconciliação no provider |
-| POST | `/events/public/:slug/register` | Rota legada de inscrição pública |
 
 ### Inscrições
 
