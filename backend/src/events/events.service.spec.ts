@@ -65,15 +65,20 @@ describe('EventsService', () => {
   // ─── findOne ───────────────────────────────────────────────────────────────
 
   describe('findOne', () => {
-    it('retorna o evento quando encontrado', async () => {
+    it('retorna o evento quando encontrado pelo dono', async () => {
       mockDb.event.findUnique.mockResolvedValue(baseEvent);
-      const result = await service.findOne(EVENT_ID);
+      const result = await service.findOne(EVENT_ID, OWNER_ID);
       expect(result).toEqual(baseEvent);
     });
 
     it('lança NotFoundException para id inexistente', async () => {
       mockDb.event.findUnique.mockResolvedValue(null);
-      await expect(service.findOne('id-fake')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('id-fake', OWNER_ID)).rejects.toThrow(NotFoundException);
+    });
+
+    it('lança ForbiddenException quando não é o dono do evento', async () => {
+      mockDb.event.findUnique.mockResolvedValue(baseEvent);
+      await expect(service.findOne(EVENT_ID, 'outro-user')).rejects.toThrow(ForbiddenException);
     });
   });
 

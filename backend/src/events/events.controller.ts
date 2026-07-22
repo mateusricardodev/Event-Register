@@ -42,8 +42,8 @@ export class EventsController {
 
   @UseGuards(JwtGuard)
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.eventsService.findOne(id);
+  findOne(@Param('id') id: string, @CurrentUser() user: { id: string }) {
+    return this.eventsService.findOne(id, user.id);
   }
 
   @UseGuards(JwtGuard)

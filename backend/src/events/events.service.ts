@@ -31,7 +31,7 @@ export class EventsService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, userId: string) {
     const event = await this.prisma.db.event.findUnique({
       where: { id },
       include: {
@@ -43,6 +43,8 @@ export class EventsService {
     });
 
     if (!event) throw new NotFoundException('Evento não encontrado');
+    if (event.createdBy !== userId)
+      throw new ForbiddenException('Sem permissão para acessar este evento');
 
     return event;
   }
