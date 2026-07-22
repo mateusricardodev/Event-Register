@@ -135,6 +135,28 @@ describe('PublicService', () => {
       await expect(service.findEventBySlug(SLUG)).rejects.toThrow(NotFoundException);
     });
 
+    it('filtra modalidades fora da janela de vigência e oculta as datas', async () => {
+      const past   = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
+      const future = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000);
+      mockDb.event.findUnique.mockResolvedValue({
+        ...baseEvent,
+        slug: SLUG,
+        paymentMethods: [
+          { id: 'pm-expirado', type: 'pix', value: 50, installments: 1, startDate: null, endDate: past },
+          { id: 'pm-futuro',   type: 'pix', value: 80, installments: 1, startDate: future, endDate: null },
+          { id: 'pm-ativo',    type: 'pix', value: 99, installments: 1, startDate: past, endDate: future },
+          { id: 'pm-sem-datas', type: 'cash', value: 99, installments: 1, startDate: null, endDate: null },
+        ],
+        user: { name: 'Org' },
+      });
+
+      const result = await service.findEventBySlug(SLUG);
+
+      expect(result.paymentMethods.map((m: { id: string }) => m.id))
+        .toEqual(['pm-ativo', 'pm-sem-datas']);
+      expect(result.paymentMethods[0]).not.toHaveProperty('startDate');
+    });
+
     it('nunca expõe dados de outros inscritos', async () => {
       mockDb.event.findUnique.mockResolvedValue({
         ...baseEvent,
@@ -267,6 +289,47 @@ describe('PublicService', () => {
       mockDb.event.findUnique.mockResolvedValue(baseEvent);
       mockDb.eventPaymentMethod.findUnique.mockResolvedValue({ ...basePaymentMethod, eventId: 'outro' });
       await expect(service.register(SLUG, baseDto)).rejects.toThrow(BadRequestException);
+    });
+
+    it('lança BadRequestException para modalidade com vigência expirada', async () => {
+      mockDb.event.findUnique.mockResolvedValue(baseEvent);
+      mockDb.eventPaymentMethod.findUnique.mockResolvedValue({
+        ...basePaymentMethod,
+        endDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+      });
+      await expect(service.register(SLUG, baseDto)).rejects.toThrow(BadRequestException);
+      expect(mockDb.registration.create).not.toHaveBeenCalled();
+    });
+
+    it('lança BadRequestException para modalidade que ainda não começou', async () => {
+      mockDb.event.findUnique.mockResolvedValue(baseEvent);
+      mockDb.eventPaymentMethod.findUnique.mockResolvedValue({
+        ...basePaymentMethod,
+        startDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+      });
+      await expect(service.register(SLUG, baseDto)).rejects.toThrow(BadRequestException);
+    });
+
+    it('aceita modalidade no último dia de vigência (endDate inclusivo)', async () => {
+      mockDb.event.findUnique.mockResolvedValue(baseEvent);
+      // endDate à meia-noite de hoje: ainda válido durante o dia todo
+      const todayMidnight = new Date();
+      todayMidnight.setUTCHours(0, 0, 0, 0);
+      mockDb.eventPaymentMethod.findUnique.mockResolvedValue({
+        ...basePaymentMethod,
+        value: 0,
+        endDate: todayMidnight,
+      });
+      mockDb.registration.findFirst.mockResolvedValue(null);
+      mockDb.registration.count.mockResolvedValue(0);
+      mockDb.user.findUnique.mockResolvedValue(baseUser);
+      mockDb.registration.create.mockResolvedValue({
+        id: 'reg-lote', userId: SHADOW_USER_ID, eventId: EVENT_ID, status: 'confirmed',
+      });
+      mockDb.registration.updateMany.mockResolvedValue({ count: 1 });
+
+      const result = await service.register(SLUG, baseDto);
+      expect(result.status).toBe('confirmed');
     });
 
     it('lança ConflictException quando evento lotado (maxParticipants)', async () => {

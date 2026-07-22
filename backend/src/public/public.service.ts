@@ -12,6 +12,21 @@ import { MailService } from '../mail/mail.service.js';
 import { generateUniqueRegistrationCode } from '../common/registration-code.js';
 import { PublicRegistrationDto } from './dto/public-registration.dto.js';
 
+/**
+ * Janela de vigência de uma modalidade (lote). `endDate` é inclusivo: a
+ * modalidade vale durante todo o dia final (data armazenada à meia-noite,
+ * tolerância de 24h cobre o dia inteiro).
+ */
+function isPaymentMethodActive(
+  method: { startDate: Date | null; endDate: Date | null },
+  now = new Date(),
+): boolean {
+  if (method.startDate && now < method.startDate) return false;
+  if (method.endDate && now.getTime() > method.endDate.getTime() + 24 * 60 * 60 * 1000)
+    return false;
+  return true;
+}
+
 @Injectable()
 export class PublicService {
   constructor(
@@ -39,7 +54,10 @@ export class PublicService {
         isPublished: true,
         formFields: true,
         paymentMethods: {
-          select: { id: true, type: true, value: true, installments: true, description: true },
+          select: {
+            id: true, type: true, value: true, installments: true, description: true,
+            startDate: true, endDate: true,
+          },
           orderBy: { createdAt: 'asc' },
         },
         user: { select: { name: true } },
@@ -48,7 +66,13 @@ export class PublicService {
 
     if (!event || !event.isPublished) throw new NotFoundException('Evento não encontrado');
 
-    return event;
+    // Expõe apenas modalidades dentro da janela de vigência (lotes ativos)
+    return {
+      ...event,
+      paymentMethods: event.paymentMethods
+        .filter((m) => isPaymentMethodActive(m))
+        .map(({ startDate: _s, endDate: _e, ...rest }) => rest),
+    };
   }
 
   async getPaymentStatus(registrationId: string) {
@@ -98,6 +122,8 @@ export class PublicService {
     if (!paymentMethod) throw new NotFoundException('Forma de pagamento não encontrada');
     if (paymentMethod.eventId !== event.id)
       throw new BadRequestException('Forma de pagamento não pertence a este evento');
+    if (!isPaymentMethodActive(paymentMethod))
+      throw new BadRequestException('Esta modalidade não está mais disponível');
 
     const amount = Number(paymentMethod.value);
     // Dinheiro é acertado presencialmente com o organizador: não gera cobrança
