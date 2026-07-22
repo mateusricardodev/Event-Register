@@ -1,10 +1,12 @@
 import { IsOptional, IsString, IsObject } from 'class-validator';
+import { IsCpf } from '../../common/validators/is-cpf.validator.js';
 
 export class UpdateRegistrationDto {
   @IsString()
   @IsOptional()
   name?: string;
 
+  @IsCpf()
   @IsString()
   @IsOptional()
   cpf?: string;

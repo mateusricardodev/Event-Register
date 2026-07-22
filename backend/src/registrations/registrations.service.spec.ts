@@ -174,6 +174,23 @@ describe('RegistrationsService', () => {
 
       await expect(service.createByOrganizer(EVENT_ID, OWNER_ID, dto)).rejects.toThrow(BadRequestException);
     });
+
+    it('normaliza CPF formatado antes do dedup e da gravação', async () => {
+      mockDb.event.findUnique.mockResolvedValue(baseEvent);
+      mockDb.registration.count.mockResolvedValue(0);
+      mockDb.registration.findFirst.mockResolvedValue(null);
+      mockDb.user.findUnique.mockResolvedValue(baseUser);
+      mockDb.registration.create.mockResolvedValue({ id: 'r1' });
+
+      await service.createByOrganizer(EVENT_ID, OWNER_ID, { ...dto, cpf: '529.982.247-25' });
+
+      expect(mockDb.registration.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ cpf: '52998224725' }) }),
+      );
+      expect(mockDb.registration.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ cpf: '52998224725' }) }),
+      );
+    });
   });
 
   // ─── update ─────────────────────────────────────────────────────────────────

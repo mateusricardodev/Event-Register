@@ -97,6 +97,9 @@ export class RegistrationsService {
     if (event.createdBy !== userId)
       throw new ForbiddenException('Sem permissão para adicionar inscrições a este evento');
 
+    // Normaliza para só dígitos — o dedup por evento depende de formato único
+    const normalizedCpf = dto.cpf.replace(/\D/g, '');
+
     const registration = await this.prisma.db.$transaction(async (tx) => {
       if (event.maxParticipants) {
         const count = await tx.registration.count({
@@ -107,7 +110,7 @@ export class RegistrationsService {
       }
 
       const duplicate = await tx.registration.findFirst({
-        where: { eventId, cpf: dto.cpf, status: { not: 'canceled' } },
+        where: { eventId, cpf: normalizedCpf, status: { not: 'canceled' } },
       });
       if (duplicate)
         throw new BadRequestException('CPF já inscrito neste evento');
@@ -126,7 +129,7 @@ export class RegistrationsService {
           userId: user.id,
           eventId,
           status: 'confirmed',
-          cpf: dto.cpf,
+          cpf: normalizedCpf,
           phone: dto.phone,
           birthDate: dto.birthDate ? new Date(dto.birthDate) : null,
           code,
@@ -167,7 +170,7 @@ export class RegistrationsService {
     return this.prisma.db.registration.update({
       where: { id },
       data: {
-        ...(dto.cpf && { cpf: dto.cpf }),
+        ...(dto.cpf && { cpf: dto.cpf.replace(/\D/g, '') }),
         ...(dto.phone !== undefined && { phone: dto.phone }),
         ...(dto.birthDate !== undefined && {
           birthDate: dto.birthDate ? new Date(dto.birthDate) : null,
