@@ -18,17 +18,17 @@ O que derruba a nota: **uma rota legada pública que permite inscrição confirm
 
 ### 🔴 Críticos (corrigir antes de lançar)
 
-#### C1 — Rota pública legada permite inscrição confirmada sem pagar
+#### ✅ C1 (corrigido em 13df0e1) — Rota pública legada permite inscrição confirmada sem pagar
 - **Arquivo:** `backend/src/registrations/registrations.controller.ts:75` → `registrations.service.ts:202` (`createPublic`)
 - **Problema:** `POST /events/public/:slug/register` (sem guard, correto para rota pública) cria a inscrição com `status: 'confirmed'` **sem passar pelo fluxo de pagamento**, sem exigir `paymentMethodId`, sem checar data de encerramento e sem o throttle reforçado. É a rota antiga, anterior ao fluxo PIX — o frontend hoje só usa `POST /public/events/:slug/register`. Qualquer pessoa que descubra a rota (ela está inclusive documentada no README) se inscreve de graça em evento pago.
 - **Correção:** remover a rota e o método `createPublic` do `RegistrationsService` (e os specs/e2e que os cobrem). Se quiser manter compatibilidade, fazer a rota delegar para `PublicService.register`.
 
-#### C2 — `GET /events/:id` não valida dono do recurso
+#### ✅ C2 (corrigido em 8b75000) — `GET /events/:id` não valida dono do recurso
 - **Arquivo:** `backend/src/events/events.controller.ts:44` → `events.service.ts:34` (`findOne`)
 - **Problema:** único endpoint de evento autenticado **sem** `checkOwnership`. Qualquer usuário logado (inclusive um "user sombra" que trocar a senha... ou outro organizador) lê evento alheio trocando o ID: título, formFields, métodos de pagamento, contagem de inscritos, e **e-mail do organizador**. Vaza dados entre tenants.
 - **Correção:** passar `user.id` do controller e validar `event.createdBy !== userId → ForbiddenException`, como nos demais métodos.
 
-#### C3 — Janela de vigência das modalidades de pagamento é ignorada
+#### ✅ C3 (corrigido em 6b8f15f) — Janela de vigência das modalidades de pagamento é ignorada
 - **Arquivos:** `backend/src/public/public.service.ts:41` (listagem) e `:95` (register)
 - **Problema:** `EventPaymentMethod` tem `startDate`/`endDate` (o wizard coleta e exibe como "lote"), mas nem `findEventBySlug` filtra métodos fora da vigência, nem `register()` valida a janela ao aceitar o `paymentMethodId`. Um lote promocional expirado continua comprável pelo preço antigo — inclusive por chamada direta à API com o ID do método antigo.
 - **Correção:** na listagem pública, filtrar `(startDate == null OR startDate <= now) AND (endDate == null OR endDate >= now)`; no `register()`, revalidar a mesma condição e lançar `BadRequestException('Esta modalidade não está mais disponível')`.
@@ -37,12 +37,12 @@ O que derruba a nota: **uma rota legada pública que permite inscrição confirm
 
 ### 🟡 Importantes (corrigir em breve)
 
-#### I1 — Dashboard soma receita de pagamentos NÃO pagos
+#### ✅ I1 (corrigido em 9601076) — Dashboard soma receita de pagamentos NÃO pagos
 - **Arquivo:** `frontend/src/pages/Dashboard.tsx:80`
 - **Problema:** `revenue` soma `payment.amount` de qualquer inscrição com payment, incluindo `pending` e `failed`. "Total arrecadado" mostra dinheiro que não entrou.
 - **Correção:** `r.payment?.status === 'paid' ? Number(r.payment.amount) : 0`.
 
-#### I2 — Métricas calculadas só sobre a 1ª página (50 inscrições)
+#### ✅ I2 (mitigado em 9601076 — limit=1000; paginação real fica para depois) — Métricas calculadas só sobre a 1ª página (50 inscrições)
 - **Arquivos:** `frontend/src/pages/Dashboard.tsx:52-66` e `frontend/src/pages/EventDetail.tsx:62-69`
 - **Problema:** ambos buscam `GET /events/:id/registrations` sem `limit`, que pagina em 50. Evento com 200 inscritos mostra contadores e listagem truncados em 50, sem indicação. O Dashboard ainda faz N+1 (uma chamada por evento).
 - **Correção:** curto prazo, `?limit=1000`; correto, endpoint agregado de estatísticas no backend (`/events/:id/stats` já existe no checkin como referência de padrão) e paginação real na tabela do EventDetail.
@@ -57,12 +57,12 @@ O que derruba a nota: **uma rota legada pública que permite inscrição confirm
 - **Problema:** `if (secret && xSignature)` — uma requisição **sem** `x-signature` pula a validação mesmo com secret configurado. O impacto real é contido (o status é consultado na API do MP, não confiado do body), mas o gate de segurança fica decorativo.
 - **Correção:** quando `secret` estiver configurado, exigir assinatura: sem header ou inválida → retorna 200 e ignora.
 
-#### I5 — CPF sem normalização nas rotas do organizador
+#### ✅ I5 (corrigido em b643474) — CPF sem normalização nas rotas do organizador
 - **Arquivos:** `backend/src/registrations/registrations.service.ts:109, 169, 218`
 - **Problema:** `public.service` normaliza (`cpf.replace(/\D/g,'')`), mas `createByOrganizer`, `update` e `createPublic` gravam/dedupam o CPF como veio no body. Via API, `"529.982.247-25"` e `"52998224725"` coexistem e o dedup por evento falha entre formatos.
 - **Correção:** normalizar no service (ou num transformer do DTO) antes de qualquer busca/gravação.
 
-#### I6 — `CreatePaymentMethodDto` aceita `value` sem tipo e `type` livre
+#### ✅ I6 (corrigido em b643474) — `CreatePaymentMethodDto` aceita `value` sem tipo e `type` livre
 - **Arquivo:** `backend/src/events/dto/create-payment-method.dto.ts`
 - **Problema:** `value` só tem `@IsOptional()` — aceita string ou negativo (string → 500 do Prisma; negativo → modalidade tratada como grátis). `type` é string livre em vez de whitelist.
 - **Correção:** `@IsNumber() @Min(0)` em `value`; `@IsIn(['pix','credit_card','debit_card','cash'])` em `type`. Idem `UpdateRegistrationDto.cpf` → adicionar `@IsCpf()`.

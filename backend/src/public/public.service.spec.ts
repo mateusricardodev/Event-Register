@@ -248,25 +248,51 @@ describe('PublicService', () => {
       expect(mockMail.sendRegistrationConfirmation).toHaveBeenCalledTimes(1);
     });
 
-    it('pagamento em dinheiro: status confirmed, sem PIX, email enviado', async () => {
+    it('dinheiro: inscrição pendente com Payment cash, sem PIX e sem email', async () => {
       mockDb.event.findUnique.mockResolvedValue(baseEvent);
       mockDb.eventPaymentMethod.findUnique.mockResolvedValue({ ...basePaymentMethod, type: 'cash' });
       mockDb.registration.findFirst.mockResolvedValue(null);
       mockDb.registration.count.mockResolvedValue(0);
       mockDb.user.findUnique.mockResolvedValue(baseUser);
       mockDb.registration.create.mockResolvedValue({
-        id: 'reg-cash', userId: SHADOW_USER_ID, eventId: EVENT_ID, status: 'confirmed', cpf: '52998224725',
+        id: 'reg-cash', userId: SHADOW_USER_ID, eventId: EVENT_ID, status: 'pending', code: 'ABC-DEF-GHJ',
       });
-      mockDb.registration.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await service.register(SLUG, baseDto);
 
-      expect(result.status).toBe('confirmed');
+      expect(result.status).toBe('pending');
+      expect(result).toMatchObject({ paymentType: 'cash', amount: 99.9 });
       expect(mockDb.registration.create).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ status: 'confirmed' }) }),
+        expect.objectContaining({ data: expect.objectContaining({ status: 'pending' }) }),
+      );
+      expect(mockDb.payment.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ provider: 'cash', status: 'pending', amount: 99.9 }),
+        }),
       );
       expect(mockPayments.createPixForRegistration).not.toHaveBeenCalled();
-      expect(mockMail.sendRegistrationConfirmation).toHaveBeenCalledTimes(1);
+      // Email só sai na confirmação manual pelo organizador
+      expect(mockMail.sendRegistrationConfirmation).not.toHaveBeenCalled();
+    });
+
+    it('dinheiro: mesmo CPF pendente reaproveita a inscrição existente', async () => {
+      mockDb.event.findUnique.mockResolvedValue(baseEvent);
+      mockDb.eventPaymentMethod.findUnique.mockResolvedValue({ ...basePaymentMethod, type: 'cash' });
+      mockDb.registration.findFirst
+        .mockResolvedValueOnce(null) // checagem de CPF confirmado
+        .mockResolvedValueOnce({    // inscrição cash pendente existente
+          id: 'reg-existente', code: 'JKM-NPQ-RST', payment: { amount: 99.9 },
+        });
+
+      const result = await service.register(SLUG, baseDto);
+
+      expect(result).toMatchObject({
+        registrationId: 'reg-existente',
+        status: 'pending',
+        paymentType: 'cash',
+        reused: true,
+      });
+      expect(mockDb.registration.create).not.toHaveBeenCalled();
     });
 
     it('lança NotFoundException para evento inexistente ou não publicado', async () => {

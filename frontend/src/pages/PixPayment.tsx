@@ -27,12 +27,13 @@ interface PixState {
   email?: string
   reused?: boolean
   free?: boolean
-  paymentMethodType?: string
+  /** Inscrição em dinheiro: vaga garantida, pagamento presencial pendente */
+  cashPending?: boolean
   /** Valor a acertar presencialmente (pagamento em dinheiro) */
   amountDue?: number
 }
 
-type Stage = 'pending' | 'confirmed' | 'failed' | 'overbooked'
+type Stage = 'pending' | 'confirmed' | 'failed' | 'overbooked' | 'cash'
 
 function Spinner({ className = 'w-5 h-5' }: { className?: string }) {
   return (
@@ -50,7 +51,9 @@ export function PixPayment() {
   const location = useLocation()
   const state = location.state as PixState | null
 
-  const [stage, setStage] = useState<Stage>(state?.free ? 'confirmed' : 'pending')
+  const [stage, setStage] = useState<Stage>(
+    state?.cashPending ? 'cash' : state?.free ? 'confirmed' : 'pending',
+  )
   const [copied, setCopied] = useState(false)
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
   const [downloading, setDownloading] = useState(false)
@@ -115,7 +118,6 @@ export function PixPayment() {
   if (!state?.registrationId) return null
 
   const amount = state.amount ?? 0
-  const isCash = state.paymentMethodType === 'cash'
   const mm = String(Math.floor(secondsLeft / 60)).padStart(2, '0')
   const ss = String(secondsLeft % 60).padStart(2, '0')
 
@@ -237,6 +239,86 @@ export function PixPayment() {
     }
   }
 
+  // ─── Stage D: Dinheiro — vaga garantida, pagamento presencial ─────────────
+  if (stage === 'cash') {
+    return (
+      <div className="min-h-screen bg-[#F2EDE4] flex items-center justify-center px-4 py-12">
+        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-8 text-center max-w-md w-full">
+          <div className="w-20 h-20 bg-[#C9A84C]/15 rounded-full flex items-center justify-center mx-auto mb-5">
+            <svg className="w-10 h-10 text-[#C9A84C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+
+          <h1 className="font-cinzel text-2xl font-bold text-[#1B2B5E] mb-2">Inscrição recebida!</h1>
+          <p className="font-inter text-gray-500 text-sm mb-6">
+            Sua vaga está garantida. O pagamento será feito em dinheiro, no dia do evento.
+          </p>
+
+          <div className="bg-[#F2EDE4] border border-[#C9A84C]/40 rounded-xl p-4 mb-6 text-left">
+            <p className="font-cinzel text-xs text-[#C9A84C] uppercase tracking-widest mb-1">Pagamento em dinheiro</p>
+            <p className="font-inter text-sm text-gray-600">
+              {state.amountDue && state.amountDue > 0 ? (
+                <>Leve <span className="font-semibold text-[#1B2B5E]">R$ {Number(state.amountDue).toFixed(2).replace('.', ',')}</span> em
+                dinheiro e acerte com o organizador no credenciamento.</>
+              ) : (
+                'Acerte o pagamento com o organizador no credenciamento.'
+              )}
+            </p>
+          </div>
+
+          {state.email && (
+            <p className="font-inter text-sm text-gray-500 mb-6">
+              Enviaremos o e-mail de confirmação para{' '}
+              <span className="font-semibold text-gray-700">{state.email}</span>{' '}
+              assim que o organizador registrar o pagamento.
+            </p>
+          )}
+
+          {state.code && (
+            <div className="bg-[#F2EDE4] border border-[#1B2B5E]/10 rounded-xl p-4 mb-6 flex flex-col items-center gap-3">
+              <p className="font-cinzel text-xs text-[#C9A84C] uppercase tracking-widest">Código de credenciamento</p>
+              {qrDataUrl ? (
+                <img src={qrDataUrl} alt="QR Code da inscrição" className="w-44 h-44 rounded-lg" />
+              ) : (
+                <div className="w-44 h-44 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <Spinner className="w-6 h-6 text-[#1B2B5E]" />
+                </div>
+              )}
+              <p className="font-mono text-lg font-bold text-[#1B2B5E] tracking-widest">{state.code}</p>
+              <p className="font-inter text-xs text-gray-400 text-center">Apresente este QR code no credenciamento do evento</p>
+            </div>
+          )}
+
+          <button
+            onClick={handleDownload}
+            disabled={downloading}
+            className="font-bebas w-full bg-[#C9A84C] hover:bg-[#b8973e] disabled:opacity-60 disabled:cursor-not-allowed text-white py-3 rounded-full text-xl tracking-widest uppercase transition-colors flex items-center justify-center gap-2 mb-3"
+          >
+            {downloading ? (
+              <><Spinner className="w-4 h-4" /> Gerando...</>
+            ) : (
+              <>
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Baixar Ingresso
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={() => navigate(`/evento/${slug}`)}
+            className="font-bebas w-full bg-[#1B2B5E] hover:bg-[#152348] text-[#F2EDE4] py-3 rounded-full text-xl tracking-widest uppercase transition-colors"
+          >
+            Voltar ao evento
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   // ─── Stage B: Confirmed ───────────────────────────────────────────────────
   if (stage === 'confirmed') {
     return (
@@ -249,22 +331,7 @@ export function PixPayment() {
           </div>
 
           <h1 className="font-cinzel text-2xl font-bold text-[#1B2B5E] mb-2">Inscrição confirmada!</h1>
-          <p className="font-inter text-gray-500 text-sm mb-6">
-            {isCash
-              ? 'Sua vaga está garantida. O pagamento será feito diretamente com o organizador.'
-              : 'Seu pagamento foi processado com sucesso.'}
-          </p>
-
-          {isCash && (
-            <div className="bg-[#F2EDE4] border border-[#C9A84C]/40 rounded-xl p-4 mb-6 text-left">
-              <p className="font-cinzel text-xs text-[#C9A84C] uppercase tracking-widest mb-1">Pagamento em dinheiro</p>
-              <p className="font-inter text-sm text-gray-600">
-                {state.amountDue && state.amountDue > 0
-                  ? <>Leve <span className="font-semibold text-[#1B2B5E]">R$ {Number(state.amountDue).toFixed(2).replace('.', ',')}</span> em dinheiro e acerte com o organizador no dia do evento.</>
-                  : 'Acerte o pagamento em dinheiro com o organizador no dia do evento.'}
-              </p>
-            </div>
-          )}
+          <p className="font-inter text-gray-500 text-sm mb-6">Seu pagamento foi processado com sucesso.</p>
 
           <div className="bg-[#E7F8EE] border border-[#25D366]/30 rounded-xl p-5 flex flex-col items-center gap-3 mb-6">
             <svg viewBox="0 0 32 32" className="w-10 h-10" xmlns="http://www.w3.org/2000/svg">

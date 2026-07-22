@@ -126,9 +126,10 @@ export class PublicService {
       throw new BadRequestException('Esta modalidade não está mais disponível');
 
     const amount = Number(paymentMethod.value);
-    // Dinheiro é acertado presencialmente com o organizador: não gera cobrança
-    // online, a inscrição já sai confirmada como se fosse gratuita.
-    const requiresOnlinePayment = amount > 0 && paymentMethod.type !== 'cash';
+    // Dinheiro (valor > 0): vaga garantida, mas a inscrição fica pendente até o
+    // organizador registrar o recebimento presencial (confirmação manual).
+    const isCashPayment = amount > 0 && paymentMethod.type === 'cash';
+    const requiresOnlinePayment = amount > 0 && !isCashPayment;
 
     // CPF já tem inscrição confirmada neste evento
     const alreadyConfirmed = await this.prisma.db.registration.findFirst({
@@ -136,6 +137,29 @@ export class PublicService {
     });
     if (alreadyConfirmed)
       throw new ConflictException('Este CPF já possui inscrição confirmada neste evento');
+
+    // Anti-duplicidade para dinheiro pendente: mesmo CPF reaproveita a inscrição
+    if (isCashPayment) {
+      const existing = await this.prisma.db.registration.findFirst({
+        where: {
+          eventId: event.id,
+          cpf: normalizedCpf,
+          status: 'pending',
+          payment: { provider: 'cash', status: 'pending' },
+        },
+        select: { id: true, code: true, payment: { select: { amount: true } } },
+      });
+      if (existing) {
+        return {
+          registrationId: existing.id,
+          code: existing.code,
+          amount: Number(existing.payment?.amount ?? amount),
+          status: 'pending' as const,
+          paymentType: 'cash' as const,
+          reused: true,
+        };
+      }
+    }
 
     // Anti-duplicidade para PIX pendente: reutiliza o mesmo QR Code se ainda válido
     if (requiresOnlinePayment) {
@@ -196,20 +220,46 @@ export class PublicService {
 
       const code = await generateUniqueRegistrationCode(tx);
 
-      return tx.registration.create({
+      const created = await tx.registration.create({
         data: {
           userId: user.id,
           eventId: event.id,
-          status: requiresOnlinePayment ? 'pending' : 'confirmed',
+          status: requiresOnlinePayment || isCashPayment ? 'pending' : 'confirmed',
           cpf: normalizedCpf,
           phone: dto.phone ?? null,
           extraFields: dto.extraFields ? JSON.stringify(dto.extraFields) : null,
           code,
         },
       });
+
+      // Dinheiro: registra o valor devido para a confirmação manual do organizador
+      if (isCashPayment) {
+        await tx.payment.create({
+          data: {
+            registrationId: created.id,
+            amount,
+            status: 'pending',
+            provider: 'cash',
+          },
+        });
+      }
+
+      return created;
     }, { isolationLevel: 'Serializable' as never });
 
-    // Sem cobrança online (gratuita ou dinheiro): confirma direto e envia e-mail
+    // Dinheiro: vaga garantida, aguardando pagamento presencial. O e-mail de
+    // confirmação só sai quando o organizador registrar o recebimento.
+    if (isCashPayment) {
+      return {
+        registrationId: registration.id,
+        code: registration.code,
+        amount,
+        status: 'pending' as const,
+        paymentType: 'cash' as const,
+      };
+    }
+
+    // Inscrição gratuita: confirma direto e envia e-mail
     if (!requiresOnlinePayment) {
       const marked = await this.prisma.db.registration.updateMany({
         where: { id: registration.id, confirmationEmailSentAt: null },
