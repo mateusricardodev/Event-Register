@@ -41,7 +41,7 @@ export function SearchRegistrations() {
         const lists = await Promise.all(
           events.map((e) =>
             api
-              .get(`/events/${e.id}/registrations`)
+              .get(`/events/${e.id}/registrations?limit=1000`)
               .then((r) =>
                 (r.data.data as Omit<RegItem, 'event'>[])
                   .filter((reg) => reg.status !== 'canceled')

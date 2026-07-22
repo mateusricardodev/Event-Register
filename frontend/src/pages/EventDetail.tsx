@@ -59,7 +59,7 @@ export function EventDetail() {
 
   useEffect(() => {
     if (!id) return
-    Promise.all([api.get(`/events/${id}`), api.get(`/events/${id}/registrations`)])
+    Promise.all([api.get(`/events/${id}`), api.get(`/events/${id}/registrations?limit=1000`)])
       .then(([evtRes, regRes]) => {
         setEvent(evtRes.data)
         setRegistrations(regRes.data.data)

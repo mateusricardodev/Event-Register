@@ -72,7 +72,8 @@ export class RegistrationsService {
     if (event.createdBy !== userId)
       throw new ForbiddenException('Sem permissão para acessar estas inscrições');
 
-    const skip = (page - 1) * limit;
+    limit = Math.min(Math.max(limit, 1), 1000);
+    const skip = (Math.max(page, 1) - 1) * limit;
     const [data, total] = await Promise.all([
       this.prisma.db.registration.findMany({
         where: { eventId },

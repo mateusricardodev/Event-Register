@@ -60,7 +60,7 @@ export function EditRegistration() {
     if (!eventId || !regId) return
     Promise.all([
       api.get(`/events/${eventId}`),
-      api.get(`/events/${eventId}/registrations`),
+      api.get(`/events/${eventId}/registrations?limit=1000`),
     ])
       .then(([evtRes, regRes]) => {
         const eventData = evtRes.data

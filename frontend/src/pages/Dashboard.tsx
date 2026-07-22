@@ -52,7 +52,7 @@ export function Dashboard() {
         const regLists = await Promise.all(
           evs.map((e) =>
             api
-              .get(`/events/${e.id}/registrations`)
+              .get(`/events/${e.id}/registrations?limit=1000`)
               .then((r) =>
                 (r.data.data as RegItem[])
                   .filter((reg) => reg.status !== 'canceled')
@@ -77,7 +77,8 @@ export function Dashboard() {
   const totalEvents    = events.length
   const totalRegs      = regs.length
   const confirmedRegs  = regs.filter((r) => r.status === 'confirmed').length
-  const revenue        = regs.reduce((s, r) => s + (r.payment ? Number(r.payment.amount) : 0), 0)
+  // Receita: apenas pagamentos efetivamente pagos (exclui pending/failed)
+  const revenue        = regs.reduce((s, r) => s + (r.payment?.status === 'paid' ? Number(r.payment.amount) : 0), 0)
 
   const now      = new Date()
   const upcoming = [...events]
