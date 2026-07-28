@@ -201,6 +201,7 @@ describe('PublicService', () => {
         'reg-1',
         SHADOW_USER_ID,
         99.9,
+        'pix',
       );
     });
 
@@ -267,7 +268,9 @@ describe('PublicService', () => {
       );
       expect(mockDb.payment.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({ provider: 'cash', status: 'pending', amount: 99.9 }),
+          data: expect.objectContaining({
+            provider: 'cash', method: 'cash', status: 'pending', amount: 99.9,
+          }),
         }),
       );
       expect(mockPayments.createPixForRegistration).not.toHaveBeenCalled();

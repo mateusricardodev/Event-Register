@@ -22,7 +22,12 @@ export class PaymentsService {
     @Inject(PAYMENT_PROVIDER_TOKEN) private readonly provider: IPaymentProvider,
   ) {}
 
-  async createPixForRegistration(registrationId: string, userId: string, amount?: number) {
+  async createPixForRegistration(
+    registrationId: string,
+    userId: string,
+    amount?: number,
+    method?: string,
+  ) {
     const registration = await this.prisma.db.registration.findUnique({
       where: { id: registrationId },
       include: { event: true, user: true, payment: true },
@@ -38,6 +43,9 @@ export class PaymentsService {
     const effectiveAmount = amount ?? Number(registration.payment?.amount ?? 0);
     if (effectiveAmount <= 0)
       throw new ConflictException('Não foi possível determinar o valor do pagamento');
+
+    // Modalidade: a informada agora ou a da tentativa anterior (retry autenticado)
+    const effectiveMethod = method ?? registration.payment?.method ?? 'pix';
 
     // Discard any previous pending attempt so the user can retry
     if (registration.payment) {
@@ -58,6 +66,7 @@ export class PaymentsService {
         registrationId,
         amount: effectiveAmount,
         status: 'pending',
+        method: effectiveMethod,
         provider: process.env.PAYMENT_PROVIDER ?? 'mock',
         providerPaymentId: result.providerPaymentId,
         qrCodeBase64: result.qrCodeBase64,

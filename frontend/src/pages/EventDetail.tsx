@@ -14,7 +14,21 @@ interface Registration {
   birthDate: string | null
   user: { id: string; name: string; email: string }
   ticket: { id: string; name: string; price: string } | null
-  payment: { id: string; status: string; amount: string } | null
+  payment: { id: string; status: string; amount: string; method: string | null } | null
+}
+
+/** Modalidade escolhida pelo participante (EventPaymentMethod.type). */
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  pix:         'Pix',
+  credit_card: 'Crédito',
+  debit_card:  'Débito',
+  cash:        'Dinheiro',
+}
+
+function paymentMethodLabel(reg: Registration): string {
+  const method = reg.payment?.method
+  if (!method) return '—'
+  return PAYMENT_METHOD_LABELS[method] ?? method
 }
 
 interface Event {
@@ -334,8 +348,12 @@ export function EventDetail() {
                     {reg.cpf ? reg.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : '—'}
                   </span>
 
-                  <span className="hidden md:block text-xs w-28 shrink-0 truncate" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
-                    {reg.ticket?.name ?? '—'}
+                  <span
+                    className="hidden md:block text-xs w-28 shrink-0 truncate"
+                    style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}
+                    title={paymentMethodLabel(reg)}
+                  >
+                    {paymentMethodLabel(reg)}
                   </span>
 
                   <span

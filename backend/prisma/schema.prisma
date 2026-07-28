@@ -136,6 +136,10 @@ model Payment {
   registrationId    String        @unique
   amount            Decimal
   status            PaymentStatus @default(pending)
+  // Modalidade escolhida pelo participante (EventPaymentMethod.type):
+  // 'pix' | 'credit_card' | 'debit_card' | 'cash'. Diferente de `provider`,
+  // que identifica o gateway usado ('mercadopago', 'mock', 'cash', 'manual').
+  method            String?
   provider          String        @default("mock")
   providerPaymentId String?
   qrCodeBase64      String?

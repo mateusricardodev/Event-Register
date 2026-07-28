@@ -239,6 +239,7 @@ export class PublicService {
             registrationId: created.id,
             amount,
             status: 'pending',
+            method: paymentMethod.type,
             provider: 'cash',
           },
         });
@@ -291,6 +292,7 @@ export class PublicService {
       registration.id,
       registration.userId,
       amount,
+      paymentMethod.type,
     );
 
     return {

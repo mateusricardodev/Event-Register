@@ -58,7 +58,7 @@ export class RegistrationsService {
         include: {
           event: { select: { id: true, title: true, date: true, location: true } },
           ticket: { select: { id: true, name: true, price: true } },
-          payment: { select: { id: true, status: true, amount: true } },
+          payment: { select: { id: true, status: true, amount: true, method: true } },
         },
       }),
       this.prisma.db.registration.count({ where: { userId } }),
@@ -83,7 +83,7 @@ export class RegistrationsService {
         include: {
           user: { select: { id: true, name: true, email: true } },
           ticket: { select: { id: true, name: true, price: true } },
-          payment: { select: { id: true, status: true, amount: true } },
+          payment: { select: { id: true, status: true, amount: true, method: true } },
         },
       }),
       this.prisma.db.registration.count({ where: { eventId } }),
@@ -183,7 +183,7 @@ export class RegistrationsService {
       include: {
         user: { select: { id: true, name: true, email: true } },
         ticket: { select: { id: true, name: true, price: true } },
-        payment: { select: { id: true, status: true, amount: true } },
+        payment: { select: { id: true, status: true, amount: true, method: true } },
       },
     });
   }
@@ -222,7 +222,7 @@ export class RegistrationsService {
         user: { select: { id: true, name: true, email: true } },
         ticket: { select: { id: true, name: true, price: true } },
         event: { select: { id: true, title: true } },
-        payment: { select: { id: true, status: true, amount: true } },
+        payment: { select: { id: true, status: true, amount: true, method: true } },
       },
     });
   }
