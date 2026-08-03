@@ -25,29 +25,17 @@ interface EventData {
   paymentMethods: PaymentMethod[]
 }
 
-const TYPE_LABELS: Record<string, string> = {
-  pix:         'PIX',
-  credit_card: 'Cartão de crédito',
-  debit_card:  'Cartão de débito',
-  cash:        'Dinheiro',
-}
-
 export function EventPublic() {
   const { slug }   = useParams<{ slug: string }>()
   const navigate   = useNavigate()
   const [event, setEvent]           = useState<EventData | null>(null)
   const [loading, setLoading]       = useState(true)
   const [notFound, setNotFound]     = useState(false)
-  const [selectedMethodId, setSelectedMethodId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!slug) return
     api.get(`/public/events/${slug}`)
-      .then(({ data }) => {
-        setEvent(data)
-        const methods: PaymentMethod[] = data.paymentMethods ?? []
-        if (methods.length === 1) setSelectedMethodId(methods[0].id)
-      })
+      .then(({ data }) => setEvent(data))
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false))
   }, [slug])
@@ -77,18 +65,10 @@ export function EventPublic() {
   const endDate   = event.endDate ? new Date(event.endDate) : null
   const formatDate = (d: Date) => d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
 
-  const selectedMethod   = event.paymentMethods.find(m => m.id === selectedMethodId) ?? null
   const hasPaymentMethods = event.paymentMethods.length > 0
 
   function handleRegister() {
-    if (!selectedMethod) return
-    navigate(`/evento/${slug}/inscricao`, {
-      state: {
-        paymentMethodId:   selectedMethod.id,
-        paymentMethodType: selectedMethod.type,
-        amount:            Number(selectedMethod.value),
-      },
-    })
+    navigate(`/evento/${slug}/inscricao`)
   }
 
   return (
@@ -196,14 +176,21 @@ export function EventPublic() {
           </div>
         )}
 
-        {/* Pagamento + CTA */}
+        {/* CTA */}
         {hasPaymentMethods ? (
-          <PaymentMethodSelector
-            methods={event.paymentMethods}
-            selectedId={selectedMethodId}
-            onSelect={setSelectedMethodId}
-            onRegister={handleRegister}
-          />
+          <button
+            onClick={handleRegister}
+            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm transition-all"
+            style={{
+              background: '#00186D',
+              color:      '#FFFFFF',
+              fontFamily: 'Inter, sans-serif',
+              cursor:     'pointer',
+              boxShadow:  '0 4px 14px rgba(0,24,109,0.25)',
+            }}
+          >
+            Inscreva-se agora →
+          </button>
         ) : (
           <div
             className="rounded-2xl p-5 text-center"
@@ -214,101 +201,6 @@ export function EventPublic() {
         )}
 
       </div>
-    </div>
-  )
-}
-
-interface PaymentMethodSelectorProps {
-  methods: PaymentMethod[]
-  selectedId: string | null
-  onSelect: (id: string) => void
-  onRegister: () => void
-}
-
-function PaymentMethodSelector({ methods, selectedId, onSelect, onRegister }: PaymentMethodSelectorProps) {
-  const single         = methods.length === 1
-  const selectedMethod = methods.find(m => m.id === selectedId)
-  const amount         = selectedMethod ? Number(selectedMethod.value) : null
-
-  return (
-    <div
-      className="rounded-2xl p-5 flex flex-col gap-4"
-      style={{ background: '#FFFFFF', border: '1px solid rgba(0,24,109,0.08)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
-    >
-      {!single && (
-        <div className="flex flex-col gap-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.1em]" style={{ color: '#D4B16A', fontFamily: 'Cinzel, serif' }}>
-            Forma de pagamento
-          </p>
-          {methods.map(method => {
-            const selected = method.id === selectedId
-            const value    = Number(method.value)
-            return (
-              <button
-                key={method.id}
-                type="button"
-                onClick={() => onSelect(method.id)}
-                className="w-full text-left rounded-xl px-4 py-3 transition-all text-sm"
-                style={{
-                  border:     selected ? '1.5px solid #00186D' : '1px solid rgba(0,24,109,0.12)',
-                  background: selected ? 'rgba(0,24,109,0.04)' : 'transparent',
-                  boxShadow:  selected ? '0 0 0 2px rgba(0,24,109,0.12)' : 'none',
-                }}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold" style={{ color: selected ? '#00186D' : '#0A0A09', fontFamily: 'Inter, sans-serif' }}>
-                    {TYPE_LABELS[method.type] ?? method.type}
-                  </span>
-                  <span className="font-bold" style={{ color: selected ? '#00186D' : '#33425C', fontFamily: 'Inter, sans-serif' }}>
-                    {value === 0 ? 'Grátis' : `R$ ${value.toFixed(2).replace('.', ',')}`}
-                  </span>
-                </div>
-                {method.description && (
-                  <p className="text-xs mt-1" style={{ color: selected ? 'rgba(0,24,109,0.6)' : '#6B7280', fontFamily: 'Inter, sans-serif' }}>
-                    {method.description}
-                  </p>
-                )}
-              </button>
-            )
-          })}
-        </div>
-      )}
-
-      {amount !== null && (
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.1em]" style={{ color: '#D4B16A', fontFamily: 'Cinzel, serif' }}>
-            Valor
-          </p>
-          <p
-            className="mt-1"
-            style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '2.5rem', fontWeight: 700, color: '#00186D', lineHeight: 1 }}
-          >
-            {amount === 0 ? 'Gratuito' : `R$ ${amount.toFixed(2).replace('.', ',')}`}
-          </p>
-          {selectedMethod && (
-            <p className="text-sm mt-1" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
-              {selectedMethod.type === 'cash'
-                ? 'Pagamento em dinheiro, direto com o organizador no dia do evento'
-                : <>Pagamento via <span className="font-semibold" style={{ color: '#33425C' }}>{TYPE_LABELS[selectedMethod.type] ?? selectedMethod.type}</span></>}
-            </p>
-          )}
-        </div>
-      )}
-
-      <button
-        onClick={onRegister}
-        disabled={!selectedId}
-        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm transition-all"
-        style={{
-          background:  selectedId ? '#00186D' : 'rgba(0,24,109,0.3)',
-          color:       '#FFFFFF',
-          fontFamily:  'Inter, sans-serif',
-          cursor:      selectedId ? 'pointer' : 'not-allowed',
-          boxShadow:   selectedId ? '0 4px 14px rgba(0,24,109,0.25)' : 'none',
-        }}
-      >
-        Inscreva-se agora →
-      </button>
     </div>
   )
 }

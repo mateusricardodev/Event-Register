@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, Link, useNavigate, useLocation } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import api from '../api/axios'
 
 interface PaymentMethod {
@@ -16,12 +16,6 @@ interface EventInfo {
   location: string | null
   paymentMethods: PaymentMethod[]
   formFields: string | null
-}
-
-interface LocationState {
-  paymentMethodId?: string
-  paymentMethodType?: string
-  amount?: number
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -102,7 +96,6 @@ const sectionLabelStyle: React.CSSProperties = {
 export function PublicRegistration() {
   const { slug }       = useParams<{ slug: string }>()
   const navigate       = useNavigate()
-  const locationState  = (useLocation().state ?? {}) as LocationState
 
   const [event, setEvent]           = useState<EventInfo | null>(null)
   const [loading, setLoading]       = useState(true)
@@ -110,7 +103,7 @@ export function PublicRegistration() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError]           = useState('')
 
-  const [paymentMethodId, setPaymentMethodId]   = useState(locationState.paymentMethodId ?? '')
+  const [paymentMethodId, setPaymentMethodId]   = useState('')
   const [usaMedicamento, setUsaMedicamento]     = useState<'sim' | 'nao' | ''>('')
   const [qualMedicamento, setQualMedicamento]   = useState('')
   const [cepLoading, setCepLoading]             = useState(false)
@@ -343,72 +336,6 @@ export function PublicRegistration() {
           </div>
 
           <form onSubmit={handleSubmit}>
-            {/* Forma de pagamento */}
-            {locationState.paymentMethodId ? (
-              <div
-                className="px-6 py-4 flex items-center justify-between"
-                style={{ background: 'rgba(0,24,109,0.03)', borderBottom: '1px solid rgba(0,24,109,0.07)' }}
-              >
-                <div>
-                  <p style={sectionLabelStyle}>Forma de pagamento</p>
-                  <p className="text-sm font-bold mt-0.5" style={{ color: '#00186D', fontFamily: 'Inter, sans-serif' }}>
-                    {TYPE_LABELS[locationState.paymentMethodType ?? ''] ?? locationState.paymentMethodType}
-                  </p>
-                </div>
-                {locationState.amount !== undefined && (
-                  <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.75rem', fontWeight: 700, color: '#00186D' }}>
-                    {locationState.amount === 0
-                      ? 'Gratuito'
-                      : `R$ ${Number(locationState.amount).toFixed(2).replace('.', ',')}`}
-                  </p>
-                )}
-              </div>
-            ) : (
-              <div className="px-6 py-5 flex flex-col gap-3" style={{ borderBottom: '1px solid rgba(0,24,109,0.07)' }}>
-                <p style={sectionLabelStyle}>Forma de pagamento</p>
-                {event.paymentMethods.length === 0 ? (
-                  <p
-                    className="text-sm rounded-xl px-4 py-3"
-                    style={{ color: '#991B1B', background: '#FEF2F2', border: '1px solid #FECACA', fontFamily: 'Inter, sans-serif' }}
-                  >
-                    Nenhuma forma de pagamento disponível para este evento.
-                  </p>
-                ) : (
-                  event.paymentMethods.map(method => {
-                    const selected = method.id === paymentMethodId
-                    const value    = Number(method.value)
-                    return (
-                      <button
-                        key={method.id}
-                        type="button"
-                        onClick={() => setPaymentMethodId(method.id)}
-                        className="w-full text-left rounded-xl px-4 py-3 transition-all text-sm"
-                        style={{
-                          border:     selected ? '1.5px solid #00186D' : '1px solid rgba(0,24,109,0.12)',
-                          background: selected ? 'rgba(0,24,109,0.04)' : 'transparent',
-                          boxShadow:  selected ? '0 0 0 2px rgba(0,24,109,0.1)' : 'none',
-                        }}
-                      >
-                        <div className="flex justify-between items-center">
-                          <span className="font-semibold" style={{ color: selected ? '#00186D' : '#0A0A09', fontFamily: 'Inter, sans-serif' }}>
-                            {TYPE_LABELS[method.type] ?? method.type}
-                          </span>
-                          <span className="font-bold" style={{ color: selected ? '#00186D' : '#33425C', fontFamily: 'Inter, sans-serif' }}>
-                            {value === 0 ? 'Grátis' : `R$ ${value.toFixed(2).replace('.', ',')}`}
-                          </span>
-                        </div>
-                        {method.description && (
-                          <p className="text-xs mt-1" style={{ color: selected ? 'rgba(0,24,109,0.6)' : '#6B7280', fontFamily: 'Inter, sans-serif' }}>
-                            {method.description}
-                          </p>
-                        )}
-                      </button>
-                    )
-                  })
-                )}
-              </div>
-            )}
-
             {/* Dados básicos */}
             <div className="px-6 py-5 flex flex-col gap-4" style={{ borderBottom: '1px solid rgba(0,24,109,0.07)' }}>
               <p style={sectionLabelStyle}>Dados básicos</p>
@@ -555,6 +482,51 @@ export function PublicRegistration() {
                 </div>
               </div>
             )}
+
+            {/* Forma de pagamento */}
+            <div className="px-6 py-5 flex flex-col gap-3" style={{ borderBottom: '1px solid rgba(0,24,109,0.07)' }}>
+              <p style={sectionLabelStyle}>Forma de pagamento</p>
+              {event.paymentMethods.length === 0 ? (
+                <p
+                  className="text-sm rounded-xl px-4 py-3"
+                  style={{ color: '#991B1B', background: '#FEF2F2', border: '1px solid #FECACA', fontFamily: 'Inter, sans-serif' }}
+                >
+                  Nenhuma forma de pagamento disponível para este evento.
+                </p>
+              ) : (
+                event.paymentMethods.map(method => {
+                  const selected = method.id === paymentMethodId
+                  const value    = Number(method.value)
+                  return (
+                    <button
+                      key={method.id}
+                      type="button"
+                      onClick={() => setPaymentMethodId(method.id)}
+                      className="w-full text-left rounded-xl px-4 py-3 transition-all text-sm"
+                      style={{
+                        border:     selected ? '1.5px solid #00186D' : '1px solid rgba(0,24,109,0.12)',
+                        background: selected ? 'rgba(0,24,109,0.04)' : 'transparent',
+                        boxShadow:  selected ? '0 0 0 2px rgba(0,24,109,0.1)' : 'none',
+                      }}
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className="font-semibold" style={{ color: selected ? '#00186D' : '#0A0A09', fontFamily: 'Inter, sans-serif' }}>
+                          {TYPE_LABELS[method.type] ?? method.type}
+                        </span>
+                        <span className="font-bold" style={{ color: selected ? '#00186D' : '#33425C', fontFamily: 'Inter, sans-serif' }}>
+                          {value === 0 ? 'Grátis' : `R$ ${value.toFixed(2).replace('.', ',')}`}
+                        </span>
+                      </div>
+                      {method.description && (
+                        <p className="text-xs mt-1" style={{ color: selected ? 'rgba(0,24,109,0.6)' : '#6B7280', fontFamily: 'Inter, sans-serif' }}>
+                          {method.description}
+                        </p>
+                      )}
+                    </button>
+                  )
+                })
+              )}
+            </div>
 
             {/* Termos e Submit */}
             <div className="px-6 py-5 flex flex-col gap-4">
