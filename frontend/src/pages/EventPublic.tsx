@@ -74,13 +74,13 @@ export function EventPublic() {
   return (
     <div className="min-h-screen" style={{ background: '#F5F2E8' }}>
       {/* Banner / Hero */}
-      <div className="w-full" style={{ maxHeight: '200px', overflow: 'hidden' }}>
+      <div className="w-full" style={{ maxHeight: '300px', overflow: 'hidden' }}>
         {event.bannerUrl ? (
           <img
             src={`${API_BASE_URL}${event.bannerUrl}`}
             alt={event.title}
             className="w-full object-cover"
-            style={{ maxHeight: '200px' }}
+            style={{ maxHeight: '300px' }}
           />
         ) : (
           <div
