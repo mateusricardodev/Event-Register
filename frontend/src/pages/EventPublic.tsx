@@ -73,31 +73,23 @@ export function EventPublic() {
 
   return (
     <div className="min-h-screen" style={{ background: '#F5F2E8' }}>
-      {/* Topbar mínima */}
-      <div
-        className="w-full py-3 px-6 flex items-center justify-between"
-        style={{ background: '#00186D' }}
-      >
-        <img src="/logo-ecclesio.png" alt="Ecclesio" className="h-6 brightness-0 invert" />
-      </div>
-
       {/* Banner / Hero */}
-      <div className="w-full" style={{ maxHeight: '380px', overflow: 'hidden' }}>
+      <div className="w-full" style={{ maxHeight: '200px', overflow: 'hidden' }}>
         {event.bannerUrl ? (
           <img
             src={`${API_BASE_URL}${event.bannerUrl}`}
             alt={event.title}
             className="w-full object-cover"
-            style={{ maxHeight: '380px' }}
+            style={{ maxHeight: '200px' }}
           />
         ) : (
           <div
-            className="w-full flex flex-col items-center justify-center gap-3 py-20 px-6"
-            style={{ background: '#00186D', minHeight: '220px' }}
+            className="w-full flex flex-col items-center justify-center gap-2 py-10 px-6"
+            style={{ background: '#00186D', minHeight: '160px' }}
           >
             <h1
               className="text-center"
-              style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '2.5rem', fontWeight: 600, color: '#FFFFFF', lineHeight: 1.2 }}
+              style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '2rem', fontWeight: 600, color: '#FFFFFF', lineHeight: 1.2 }}
             >
               {event.title}
             </h1>
@@ -111,13 +103,13 @@ export function EventPublic() {
       </div>
 
       {/* Conteúdo */}
-      <div className="max-w-lg mx-auto px-5 py-10 flex flex-col gap-5">
+      <div className="max-w-lg mx-auto px-5 py-4 flex flex-col gap-3">
 
         {/* Título e ornamento */}
-        <div className="flex flex-col items-center gap-3 text-center">
+        <div className="flex flex-col items-center gap-2 text-center">
           {event.bannerUrl && (
             <h1
-              style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '2rem', fontWeight: 600, color: '#00186D', lineHeight: 1.2 }}
+              style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.5rem', fontWeight: 600, color: '#00186D', lineHeight: 1.2 }}
             >
               {event.title}
             </h1>
@@ -127,22 +119,19 @@ export function EventPublic() {
             <span style={{ color: '#D4B16A', fontSize: '0.875rem' }}>✦</span>
             <div style={{ height: '1px', width: '40px', background: '#D4B16A' }} />
           </div>
-          <p className="text-sm" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
-            Garanta sua participação neste momento único.
-          </p>
         </div>
 
         {/* Info card */}
         <div
-          className="rounded-2xl p-5 flex flex-col gap-4"
+          className="rounded-2xl p-4 flex flex-col gap-3"
           style={{ background: '#FFFFFF', border: '1px solid rgba(0,24,109,0.08)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
         >
           <div className="flex items-center gap-3">
             <div
-              className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+              className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
               style={{ background: 'rgba(0,24,109,0.08)' }}
             >
-              <Calendar size={18} style={{ color: '#00186D' }} />
+              <Calendar size={16} style={{ color: '#00186D' }} />
             </div>
             <p className="text-sm font-semibold capitalize" style={{ color: '#0A0A09', fontFamily: 'Inter, sans-serif' }}>
               {formatDate(startDate)}{endDate && ` — ${formatDate(endDate)}`}
@@ -151,30 +140,15 @@ export function EventPublic() {
           {event.location && (
             <div className="flex items-center gap-3">
               <div
-                className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
                 style={{ background: 'rgba(0,24,109,0.08)' }}
               >
-                <MapPin size={18} style={{ color: '#00186D' }} />
+                <MapPin size={16} style={{ color: '#00186D' }} />
               </div>
               <p className="text-sm font-semibold" style={{ color: '#0A0A09', fontFamily: 'Inter, sans-serif' }}>{event.location}</p>
             </div>
           )}
         </div>
-
-        {/* Sobre */}
-        {event.about && (
-          <div
-            className="rounded-2xl p-5"
-            style={{ background: '#FFFFFF', border: '1px solid rgba(0,24,109,0.08)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
-          >
-            <p className="text-xs font-semibold uppercase tracking-[0.1em] mb-2" style={{ color: '#D4B16A', fontFamily: 'Cinzel, serif' }}>
-              Sobre o evento
-            </p>
-            <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: '#33425C', fontFamily: 'Inter, sans-serif' }}>
-              {event.about}
-            </p>
-          </div>
-        )}
 
         {/* CTA */}
         {hasPaymentMethods ? (
@@ -193,10 +167,25 @@ export function EventPublic() {
           </button>
         ) : (
           <div
-            className="rounded-2xl p-5 text-center"
+            className="rounded-2xl p-4 text-center"
             style={{ background: '#FFFFFF', border: '1px solid rgba(0,24,109,0.08)' }}
           >
             <p className="text-sm" style={{ color: '#9CA3AF', fontFamily: 'Inter, sans-serif' }}>Inscrições em breve</p>
+          </div>
+        )}
+
+        {/* Sobre */}
+        {event.about && (
+          <div
+            className="rounded-2xl p-5"
+            style={{ background: '#FFFFFF', border: '1px solid rgba(0,24,109,0.08)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
+          >
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] mb-2" style={{ color: '#D4B16A', fontFamily: 'Cinzel, serif' }}>
+              Sobre o evento
+            </p>
+            <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: '#33425C', fontFamily: 'Inter, sans-serif' }}>
+              {event.about}
+            </p>
           </div>
         )}
 
