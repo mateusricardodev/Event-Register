@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Search, Plus, Pencil, ArrowLeft, Calendar, MapPin, Users, CheckCircle, Clock, XCircle } from 'lucide-react'
+import { Search, Plus, Pencil, ArrowLeft, Calendar, MapPin, Users, CheckCircle, Clock, XCircle, Download } from 'lucide-react'
 import { DashboardLayout } from '../components/DashboardLayout'
 import { useAuthStore } from '../store/auth.store'
 import api from '../api/axios'
@@ -70,6 +70,7 @@ export function EventDetail() {
   const [confirmPaymentModal, setConfirmPaymentModal] = useState<string | null>(null)
   const [confirmingPayment, setConfirmingPayment]      = useState(false)
   const [confirmError, setConfirmError]                = useState('')
+  const [exporting, setExporting]     = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -107,6 +108,35 @@ export function EventDetail() {
       setConfirmError(message)
     } finally {
       setConfirmingPayment(false)
+    }
+  }
+
+  async function handleExport() {
+    if (!id) return
+    setExporting(true)
+    try {
+      const params: Record<string, string> = {}
+      if (search)       params.search   = search
+      if (statusFilter) params.status   = statusFilter
+      if (dateFrom)     params.dateFrom = dateFrom
+      if (dateTo)       params.dateTo   = dateTo
+
+      const res = await api.get(`/events/${id}/registrations/export`, { params, responseType: 'blob' })
+      const disposition = res.headers['content-disposition'] as string | undefined
+      const filename = disposition?.match(/filename="?([^"]+)"?/)?.[1] ?? `inscritos-${id}.xlsx`
+
+      const url = window.URL.createObjectURL(new Blob([res.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+    } catch {
+      // silencioso: o botão volta ao estado normal e o usuário pode tentar de novo
+    } finally {
+      setExporting(false)
     }
   }
 
@@ -244,14 +274,30 @@ export function EventDetail() {
           <h2 className="font-semibold text-sm" style={{ color: '#00186D', fontFamily: 'Inter, sans-serif' }}>
             Inscrições
           </h2>
-          <Link
-            to={`/events/${id}/registrations/new`}
-            className="inline-flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-xl transition-all"
-            style={{ background: '#00186D', color: '#FFFFFF', fontFamily: 'Inter, sans-serif', boxShadow: '0 2px 8px rgba(0,24,109,0.18)' }}
-          >
-            <Plus size={14} />
-            Nova inscrição
-          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleExport}
+              disabled={exporting}
+              className="inline-flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-xl transition-all"
+              style={{
+                border: '1.5px solid rgba(0,24,109,0.25)',
+                color: '#00186D',
+                fontFamily: 'Inter, sans-serif',
+                opacity: exporting ? 0.7 : 1,
+              }}
+            >
+              <Download size={14} />
+              {exporting ? 'Exportando...' : 'Exportar planilha'}
+            </button>
+            <Link
+              to={`/events/${id}/registrations/new`}
+              className="inline-flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-xl transition-all"
+              style={{ background: '#00186D', color: '#FFFFFF', fontFamily: 'Inter, sans-serif', boxShadow: '0 2px 8px rgba(0,24,109,0.18)' }}
+            >
+              <Plus size={14} />
+              Nova inscrição
+            </Link>
+          </div>
         </div>
 
         {/* Filtros */}

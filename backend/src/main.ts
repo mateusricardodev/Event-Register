@@ -29,6 +29,7 @@ async function bootstrap() {
     origin: allowedOrigins,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
+    exposedHeaders: ['Content-Disposition'],
   });
 
   app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });
