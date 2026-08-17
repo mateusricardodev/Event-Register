@@ -6,12 +6,37 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
+import ExcelJS from 'exceljs';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { MailService } from '../mail/mail.service.js';
 import { CreateRegistrationDto } from './dto/create-registration.dto.js';
 import { CreateRegistrationOrganizerDto } from './dto/create-registration-organizer.dto.js';
 import { UpdateRegistrationDto } from './dto/update-registration.dto.js';
 import { generateUniqueRegistrationCode } from '../common/registration-code.js';
+
+const REGISTRATION_STATUS_LABELS: Record<string, string> = {
+  pending: 'Pendente',
+  confirmed: 'Confirmado',
+  canceled: 'Cancelado',
+  overbooked: 'Pago (sem vaga)',
+};
+
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  pix: 'Pix',
+  credit_card: 'Crédito',
+  debit_card: 'Débito',
+  cash: 'Dinheiro',
+};
+
+const PAYMENT_STATUS_LABELS: Record<string, string> = {
+  pending: 'Pendente',
+  paid: 'Pago',
+  failed: 'Falhou',
+};
+
+function formatCpf(cpf: string): string {
+  return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+}
 
 @Injectable()
 export class RegistrationsService {
@@ -89,6 +114,108 @@ export class RegistrationsService {
       this.prisma.db.registration.count({ where: { eventId } }),
     ]);
     return { data, total, page, limit };
+  }
+
+  async exportToXlsx(
+    eventId: string,
+    userId: string,
+    filters: { search?: string; status?: string; dateFrom?: string; dateTo?: string },
+  ) {
+    const event = await this.prisma.db.event.findUnique({ where: { id: eventId } });
+    if (!event) throw new NotFoundException('Evento não encontrado');
+    if (event.createdBy !== userId)
+      throw new ForbiddenException('Sem permissão para acessar estas inscrições');
+
+    const allowedStatuses = ['pending', 'confirmed', 'canceled', 'overbooked'];
+    const status = allowedStatuses.includes(filters.status ?? '') ? filters.status : undefined;
+    const search = filters.search?.trim();
+
+    const registrations = await this.prisma.db.registration.findMany({
+      where: {
+        eventId,
+        ...(status ? { status: status as never } : { status: { not: 'canceled' } }),
+        ...((filters.dateFrom || filters.dateTo) && {
+          createdAt: {
+            ...(filters.dateFrom && { gte: new Date(filters.dateFrom) }),
+            ...(filters.dateTo && { lte: new Date(`${filters.dateTo}T23:59:59`) }),
+          },
+        }),
+        ...(search && {
+          OR: [
+            { user: { name: { contains: search, mode: 'insensitive' } } },
+            { user: { email: { contains: search, mode: 'insensitive' } } },
+            { cpf: { contains: search } },
+            { id: { contains: search, mode: 'insensitive' } },
+          ],
+        }),
+      },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        ticket: { select: { id: true, name: true, price: true } },
+        payment: { select: { id: true, status: true, amount: true, method: true } },
+      },
+    });
+
+    const parsedExtras = registrations.map((reg) => {
+      if (!reg.extraFields) return {};
+      try {
+        return JSON.parse(reg.extraFields) as Record<string, string>;
+      } catch {
+        return {};
+      }
+    });
+    const extraKeys = [...new Set(parsedExtras.flatMap((e) => Object.keys(e)))].sort((a, b) =>
+      a.localeCompare(b, 'pt-BR'),
+    );
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Inscritos');
+    sheet.columns = [
+      { header: 'Nome', key: 'name', width: 28 },
+      { header: 'E-mail', key: 'email', width: 30 },
+      { header: 'CPF', key: 'cpf', width: 16 },
+      { header: 'Telefone', key: 'phone', width: 16 },
+      { header: 'Data de nascimento', key: 'birthDate', width: 16 },
+      { header: 'Código da inscrição', key: 'code', width: 16 },
+      { header: 'Status', key: 'status', width: 16 },
+      { header: 'Data da inscrição', key: 'createdAt', width: 18 },
+      { header: 'Tipo de ingresso', key: 'ticket', width: 22 },
+      { header: 'Valor', key: 'amount', width: 12 },
+      { header: 'Forma de pagamento', key: 'paymentMethod', width: 16 },
+      { header: 'Status do pagamento', key: 'paymentStatus', width: 16 },
+      { header: 'Check-in realizado', key: 'checkedIn', width: 16 },
+      { header: 'Data/hora do check-in', key: 'checkedInAt', width: 18 },
+      ...extraKeys.map((key) => ({ header: key, key: `extra:${key}`, width: 20 })),
+    ];
+    sheet.getRow(1).font = { bold: true };
+
+    registrations.forEach((reg, i) => {
+      sheet.addRow({
+        name: reg.user.name,
+        email: reg.user.email,
+        cpf: reg.cpf ? formatCpf(reg.cpf) : '',
+        phone: reg.phone ?? '',
+        birthDate: reg.birthDate ? reg.birthDate.toLocaleDateString('pt-BR') : '',
+        code: reg.code ?? '',
+        status: REGISTRATION_STATUS_LABELS[reg.status] ?? reg.status,
+        createdAt: reg.createdAt.toLocaleString('pt-BR'),
+        ticket: reg.ticket?.name ?? '',
+        amount: reg.payment ? Number(reg.payment.amount) : 0,
+        paymentMethod: reg.payment?.method
+          ? (PAYMENT_METHOD_LABELS[reg.payment.method] ?? reg.payment.method)
+          : '',
+        paymentStatus: reg.payment
+          ? (PAYMENT_STATUS_LABELS[reg.payment.status] ?? reg.payment.status)
+          : '',
+        checkedIn: reg.checkedIn ? 'Sim' : 'Não',
+        checkedInAt: reg.checkedInAt ? reg.checkedInAt.toLocaleString('pt-BR') : '',
+        ...Object.fromEntries(extraKeys.map((key) => [`extra:${key}`, parsedExtras[i][key] ?? ''])),
+      });
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    return { buffer: Buffer.from(buffer), filename: `inscritos-${event.slug ?? event.id}.xlsx` };
   }
 
   async createByOrganizer(eventId: string, userId: string, dto: CreateRegistrationOrganizerDto) {

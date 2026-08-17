@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, Patch, ParseIntPipe, Post, Put, Query, UseGuards, DefaultValuePipe } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, ParseIntPipe, Post, Put, Query, Res, UseGuards, DefaultValuePipe } from '@nestjs/common';
+import type { Response } from 'express';
 import { RegistrationsService } from './registrations.service.js';
 import { CreateRegistrationDto } from './dto/create-registration.dto.js';
 import { CreateRegistrationOrganizerDto } from './dto/create-registration-organizer.dto.js';
@@ -38,6 +39,30 @@ export class RegistrationsController {
     @Query('limit', new DefaultValuePipe(50), ParseIntPipe) limit: number,
   ) {
     return this.registrationsService.findByEvent(eventId, user.id, page, limit);
+  }
+
+  @UseGuards(JwtGuard)
+  @Get('events/:eventId/registrations/export')
+  async exportRegistrations(
+    @Param('eventId') eventId: string,
+    @CurrentUser() user: { id: string },
+    @Query('search') search: string | undefined,
+    @Query('status') status: string | undefined,
+    @Query('dateFrom') dateFrom: string | undefined,
+    @Query('dateTo') dateTo: string | undefined,
+    @Res() res: Response,
+  ) {
+    const { buffer, filename } = await this.registrationsService.exportToXlsx(eventId, user.id, {
+      search,
+      status,
+      dateFrom,
+      dateTo,
+    });
+    res.set({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': `attachment; filename="${filename}"`,
+    });
+    res.send(buffer);
   }
 
   @UseGuards(JwtGuard)
