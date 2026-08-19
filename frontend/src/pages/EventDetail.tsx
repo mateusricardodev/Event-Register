@@ -268,7 +268,7 @@ export function EventDetail() {
       >
         {/* Toolbar */}
         <div
-          className="flex items-center justify-between px-5 py-4"
+          className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4"
           style={{ borderBottom: '1px solid rgba(0,24,109,0.07)' }}
         >
           <h2 className="font-semibold text-sm" style={{ color: '#00186D', fontFamily: 'Inter, sans-serif' }}>
@@ -278,7 +278,7 @@ export function EventDetail() {
             <button
               onClick={handleExport}
               disabled={exporting}
-              className="inline-flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-xl transition-all"
+              className="inline-flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-semibold px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl transition-all"
               style={{
                 border: '1.5px solid rgba(0,24,109,0.25)',
                 color: '#00186D',
@@ -286,15 +286,15 @@ export function EventDetail() {
                 opacity: exporting ? 0.7 : 1,
               }}
             >
-              <Download size={14} />
+              <Download size={13} />
               {exporting ? 'Exportando...' : 'Exportar planilha'}
             </button>
             <Link
               to={`/events/${id}/registrations/new`}
-              className="inline-flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-xl transition-all"
+              className="inline-flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-semibold px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl transition-all"
               style={{ background: '#00186D', color: '#FFFFFF', fontFamily: 'Inter, sans-serif', boxShadow: '0 2px 8px rgba(0,24,109,0.18)' }}
             >
-              <Plus size={14} />
+              <Plus size={13} />
               Nova inscrição
             </Link>
           </div>
@@ -371,78 +371,84 @@ export function EventDetail() {
               return (
                 <li
                   key={reg.id}
-                  className="flex items-center gap-4 px-5 py-3.5 transition-colors"
+                  className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-4 px-4 sm:px-5 py-3 sm:py-3.5 transition-colors"
                   style={{ borderBottom: '1px solid rgba(0,24,109,0.05)' }}
                 >
-                  <span
-                    className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-                    style={{ background: 'rgba(0,24,109,0.07)', color: '#00186D', fontFamily: 'Inter, sans-serif' }}
-                  >
-                    {initials(reg.user.name)}
-                  </span>
+                  {/* Linha 1 no mobile: avatar + nome + status. Em sm+, vira parte da linha única. */}
+                  <div className="flex items-center gap-3 sm:contents">
+                    <span
+                      className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                      style={{ background: 'rgba(0,24,109,0.07)', color: '#00186D', fontFamily: 'Inter, sans-serif' }}
+                    >
+                      {initials(reg.user.name)}
+                    </span>
 
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-sm truncate" style={{ color: '#0A0A09', fontFamily: 'Inter, sans-serif' }}>
-                      {reg.user.name}
-                    </p>
-                    <p className="text-xs truncate" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
-                      {reg.user.email}
-                    </p>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-sm truncate" style={{ color: '#0A0A09', fontFamily: 'Inter, sans-serif' }}>
+                        {reg.user.name}
+                      </p>
+                      <p className="text-xs truncate" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
+                        {reg.user.email}
+                      </p>
+                    </div>
+
+                    <span className="hidden lg:block text-xs w-32 shrink-0 truncate" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
+                      {reg.cpf ? reg.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : '—'}
+                    </span>
+
+                    <span
+                      className="hidden md:block text-xs w-28 shrink-0 truncate"
+                      style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}
+                      title={paymentMethodLabel(reg)}
+                    >
+                      {paymentMethodLabel(reg)}
+                    </span>
+
+                    <span
+                      className="text-[11px] sm:text-xs font-semibold px-2 sm:px-2.5 py-1 rounded-full shrink-0 sm:w-24 sm:text-center"
+                      style={{ background: badge.bg, color: badge.color, fontFamily: 'Inter, sans-serif' }}
+                    >
+                      {badge.label}
+                    </span>
                   </div>
 
-                  <span className="hidden lg:block text-xs w-32 shrink-0 truncate" style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
-                    {reg.cpf ? reg.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : '—'}
-                  </span>
+                  {/* Linha 2 no mobile: valor + ações. Em sm+, vira parte da linha única. */}
+                  <div className="flex items-center justify-between sm:contents">
+                    <span className="text-sm shrink-0 sm:w-24 sm:text-right" style={{ color: '#0A0A09', fontFamily: 'Inter, sans-serif' }}>
+                      {reg.payment ? brl(Number(reg.payment.amount)) : brl(0)}
+                    </span>
 
-                  <span
-                    className="hidden md:block text-xs w-28 shrink-0 truncate"
-                    style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}
-                    title={paymentMethodLabel(reg)}
-                  >
-                    {paymentMethodLabel(reg)}
-                  </span>
-
-                  <span
-                    className="text-xs font-semibold px-2.5 py-1 rounded-full w-24 text-center shrink-0"
-                    style={{ background: badge.bg, color: badge.color, fontFamily: 'Inter, sans-serif' }}
-                  >
-                    {badge.label}
-                  </span>
-
-                  <span className="text-sm w-24 text-right shrink-0" style={{ color: '#0A0A09', fontFamily: 'Inter, sans-serif' }}>
-                    {reg.payment ? brl(Number(reg.payment.amount)) : brl(0)}
-                  </span>
-
-                  <div className="flex items-center gap-2 shrink-0 w-[130px] justify-end">
-                    <Link
-                      to={`/events/${id}/registrations/${reg.id}/edit`}
-                      className="p-1.5 rounded-lg transition-all"
-                      style={{ color: '#6B7280' }}
-                      title="Editar inscrição"
-                    >
-                      <Pencil size={14} />
-                    </Link>
-                    {reg.status === 'pending' && (
-                      <button
-                        onClick={() => { setConfirmError(''); setConfirmPaymentModal(reg.id) }}
+                    <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 sm:w-[130px] sm:justify-end">
+                      <Link
+                        to={`/events/${id}/registrations/${reg.id}/edit`}
                         className="p-1.5 rounded-lg transition-all"
-                        style={{ color: '#166534' }}
-                        title="Confirmar pagamento manualmente"
+                        style={{ color: '#6B7280' }}
+                        title="Editar inscrição"
                       >
-                        <CheckCircle size={14} />
-                      </button>
-                    )}
-                    {reg.status !== 'canceled' ? (
-                      <button
-                        onClick={() => setCancelConfirm(reg.id)}
-                        className="text-xs px-2.5 py-1.5 rounded-lg transition-all"
-                        style={{ border: '1px solid rgba(220,38,38,0.3)', color: '#DC2626', fontFamily: 'Inter, sans-serif' }}
-                      >
-                        Cancelar
-                      </button>
-                    ) : (
-                      <span className="w-[60px]" />
-                    )}
+                        <Pencil size={14} />
+                      </Link>
+                      {reg.status === 'pending' && (
+                        <button
+                          onClick={() => { setConfirmError(''); setConfirmPaymentModal(reg.id) }}
+                          className="p-1.5 rounded-lg transition-all"
+                          style={{ color: '#166534' }}
+                          title="Confirmar pagamento manualmente"
+                        >
+                          <CheckCircle size={14} />
+                        </button>
+                      )}
+                      {reg.status !== 'canceled' ? (
+                        <button
+                          onClick={() => setCancelConfirm(reg.id)}
+                          className="text-xs px-2.5 py-1.5 rounded-lg transition-all shrink-0"
+                          style={{ border: '1px solid rgba(220,38,38,0.3)', color: '#DC2626', fontFamily: 'Inter, sans-serif' }}
+                        >
+                          Cancelar
+                        </button>
+                      ) : (
+                        <span className="hidden sm:inline-block w-[60px]" />
+                      )}
+                    </div>
                   </div>
                 </li>
               )
