@@ -83,11 +83,17 @@ export class PaymentsController {
     const dataId = String(body.data.id);
     const secret = this.config.get<string>('MERCADOPAGO_WEBHOOK_SECRET');
 
-    if (secret && xSignature) {
+    if (secret) {
       const mp = this.provider as MercadoPagoPaymentProvider;
       if (typeof mp.validateWebhookSignature === 'function') {
-        const valid = mp.validateWebhookSignature(secret, xSignature, xRequestId ?? '', dataId);
-        if (!valid) return { ok: true }; // assinatura inválida — ignora silenciosamente
+        // Com o secret configurado, a assinatura é obrigatória — sem o
+        // header não há como validar, então a notificação é ignorada (antes
+        // a ausência do header pulava a checagem inteira e processava assim
+        // mesmo).
+        const valid =
+          !!xSignature &&
+          mp.validateWebhookSignature(secret, xSignature, xRequestId ?? '', dataId);
+        if (!valid) return { ok: true }; // assinatura ausente/inválida — ignora silenciosamente
       }
     }
 
