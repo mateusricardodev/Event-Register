@@ -38,6 +38,18 @@ function formatCpf(cpf: string): string {
   return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
 }
 
+/**
+ * Neutraliza injeção de fórmula (CSV/Excel Injection): campos vindos de
+ * inscrição pública (nome, e-mail, telefone, campos extras) vão sem filtro
+ * para a planilha exportada pelo organizador. Se o valor começar com
+ * = + - @ ou tab/CR, o Excel pode interpretá-lo como fórmula ao abrir o
+ * arquivo, permitindo exfiltrar a própria planilha (dados + valores pagos)
+ * ou, em versões antigas, executar comandos via DDE.
+ */
+function sanitizeCell(value: string): string {
+  return /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+}
+
 @Injectable()
 export class RegistrationsService {
   constructor(
@@ -192,10 +204,10 @@ export class RegistrationsService {
 
     registrations.forEach((reg, i) => {
       sheet.addRow({
-        name: reg.user.name,
-        email: reg.user.email,
+        name: sanitizeCell(reg.user.name),
+        email: sanitizeCell(reg.user.email),
         cpf: reg.cpf ? formatCpf(reg.cpf) : '',
-        phone: reg.phone ?? '',
+        phone: reg.phone ? sanitizeCell(reg.phone) : '',
         birthDate: reg.birthDate ? reg.birthDate.toLocaleDateString('pt-BR') : '',
         code: reg.code ?? '',
         status: REGISTRATION_STATUS_LABELS[reg.status] ?? reg.status,
@@ -210,7 +222,9 @@ export class RegistrationsService {
           : '',
         checkedIn: reg.checkedIn ? 'Sim' : 'Não',
         checkedInAt: reg.checkedInAt ? reg.checkedInAt.toLocaleString('pt-BR') : '',
-        ...Object.fromEntries(extraKeys.map((key) => [`extra:${key}`, parsedExtras[i][key] ?? ''])),
+        ...Object.fromEntries(
+          extraKeys.map((key) => [`extra:${key}`, sanitizeCell(parsedExtras[i][key] ?? '')]),
+        ),
       });
     });
 
