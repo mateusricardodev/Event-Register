@@ -194,6 +194,7 @@ export function PublicRegistration() {
         email:          form.email,
         cpf:            form.cpf.replace(/\D/g, ''),
         phone:          form.phone.replace(/\D/g, '') || undefined,
+        birthDate:      form.birthDate || undefined,
         ...(Object.keys(extraFields).length > 0 && { extraFields }),
         termsAccepted: true,
       })

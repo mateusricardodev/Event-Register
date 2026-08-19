@@ -31,6 +31,10 @@ export class PublicRegistrationDto {
   @IsOptional()
   phone?: string;
 
+  @IsString()
+  @IsOptional()
+  birthDate?: string;
+
   @IsObject()
   @IsOptional()
   extraFields?: Record<string, string>;

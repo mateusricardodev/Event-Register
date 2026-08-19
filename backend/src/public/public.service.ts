@@ -227,6 +227,7 @@ export class PublicService {
           status: requiresOnlinePayment || isCashPayment ? 'pending' : 'confirmed',
           cpf: normalizedCpf,
           phone: dto.phone ?? null,
+          birthDate: dto.birthDate ? new Date(dto.birthDate) : null,
           extraFields: dto.extraFields ? JSON.stringify(dto.extraFields) : null,
           code,
         },
