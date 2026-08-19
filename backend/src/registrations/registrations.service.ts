@@ -260,7 +260,7 @@ export class RegistrationsService {
       if (!user) {
         const randomPassword = await bcrypt.hash(randomBytes(32).toString('hex'), 10);
         user = await tx.user.create({
-          data: { name: dto.name, email: dto.email, password: randomPassword },
+          data: { name: dto.name, email: dto.email, password: randomPassword, isShadow: true },
         });
       }
 
@@ -301,7 +301,10 @@ export class RegistrationsService {
     if (registration.event.createdBy !== userId)
       throw new ForbiddenException('Sem permissão para editar esta inscrição');
 
-    if (dto.name) {
+    // Só propaga o nome para o User vinculado se for uma conta-placeholder
+    // (isShadow) criada para essa inscrição — nunca para uma conta real, que
+    // pode pertencer a alguém sem qualquer relação com este organizador.
+    if (dto.name && registration.user.isShadow) {
       await this.prisma.db.user.update({
         where: { id: registration.userId },
         data: { name: dto.name },

@@ -32,6 +32,11 @@ model User {
   email           String           @unique
   password        String
   role            Role             @default(user)
+  // Conta-placeholder criada automaticamente para um participante sem login
+  // (inscrição pública ou lançada pelo organizador) — senha é hash de bytes
+  // aleatórios, nunca escolhida por alguém. Só contas com isShadow=true têm
+  // o nome propagado quando o organizador edita uma inscrição vinculada.
+  isShadow        Boolean          @default(false)
   createdAt       DateTime         @default(now())
   events          Event[]
   registrations   Registration[]
