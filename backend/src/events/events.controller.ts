@@ -13,8 +13,8 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import multer from 'multer';
-import { extname, join } from 'path';
-import { readFileSync, unlinkSync } from 'fs';
+import { join } from 'path';
+import { readFileSync, renameSync, unlinkSync } from 'fs';
 import { fileTypeFromBuffer } from 'file-type';
 import { EventsService } from './events.service.js';
 import { CreateEventDto } from './dto/create-event.dto.js';
@@ -23,7 +23,20 @@ import { CreatePaymentMethodDto } from './dto/create-payment-method.dto.js';
 import { JwtGuard } from '../auth/guards/jwt.guard.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 
-const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
+/**
+ * Extensão salva no disco vem SEMPRE deste mapa (derivado dos magic bytes
+ * reais), nunca do nome de arquivo enviado pelo cliente — do contrário um
+ * arquivo polyglot (ex.: assinatura de GIF válida + payload HTML/JS, salvo
+ * com nome "x.html") seria servido por /uploads com Content-Type text/html,
+ * abrindo XSS armazenado no domínio da API.
+ */
+const EXTENSION_BY_MIME: Record<string, string> = {
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'image/gif': '.gif',
+  'image/webp': '.webp',
+};
+const ALLOWED_IMAGE_TYPES = new Set(Object.keys(EXTENSION_BY_MIME));
 
 @Controller('events')
 export class EventsController {
@@ -96,9 +109,10 @@ export class EventsController {
     FileInterceptor('file', {
       storage: multer.diskStorage({
         destination: join(process.cwd(), 'uploads'),
-        filename: (_req, file, cb) => {
+        filename: (_req, _file, cb) => {
+          // Extensão neutra e não-executável até o conteúdo ser validado abaixo.
           const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-          cb(null, `${unique}${extname(file.originalname)}`);
+          cb(null, `${unique}.upload`);
         },
       }),
       fileFilter: (_req, file, cb) => {
@@ -124,7 +138,11 @@ export class EventsController {
       throw new BadRequestException('Arquivo não é uma imagem válida');
     }
 
-    return this.eventsService.uploadBanner(id, user.id, file.filename);
+    // Renomeia para a extensão real do conteúdo validado (nunca a do cliente).
+    const finalFilename = file.filename.replace(/\.upload$/, EXTENSION_BY_MIME[detected.mime]);
+    renameSync(file.path, join(file.destination, finalFilename));
+
+    return this.eventsService.uploadBanner(id, user.id, finalFilename);
   }
 
   @UseGuards(JwtGuard)
