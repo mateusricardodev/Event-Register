@@ -49,22 +49,6 @@ export class EventsService {
     return event;
   }
 
-  async findBySlug(slug: string) {
-    const event = await this.prisma.db.event.findUnique({
-      where: { slug },
-      include: {
-        user: { select: { id: true, name: true } },
-        tickets: true,
-        paymentMethods: true,
-        _count: { select: { registrations: { where: { status: { not: 'canceled' } } } } },
-      },
-    });
-
-    if (!event) throw new NotFoundException('Evento não encontrado');
-
-    return event;
-  }
-
   async create(userId: string, dto: CreateEventDto) {
     if (dto.slug) {
       const existing = await this.prisma.db.event.findUnique({ where: { slug: dto.slug } });

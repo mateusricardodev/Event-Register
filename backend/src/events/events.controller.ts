@@ -48,11 +48,6 @@ export class EventsController {
     return this.eventsService.findAll(user.id);
   }
 
-  @Get('public/:slug')
-  findBySlug(@Param('slug') slug: string) {
-    return this.eventsService.findBySlug(slug);
-  }
-
   @UseGuards(JwtGuard)
   @Get(':id')
   findOne(@Param('id') id: string, @CurrentUser() user: { id: string }) {
